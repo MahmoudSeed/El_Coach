@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق أسهل تغذية (الكوتش) - الـ 100 وجبة بالمكونات والكميات بالجرام</title>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        h1 {
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: #e2e8f0;
+            color: var(--text);
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-height: 680px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+        .recipe-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: transform 0.2s;
+        }
+        .recipe-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+        }
+        .recipe-img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background-color: #e2e8f0;
+        }
+        .recipe-content {
+            padding: 15px;
+        }
+        .recipe-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: var(--primary-dark);
+        }
+        .recipe-tags {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .ingredients-box {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 12px;
+            margin-bottom: 10px;
+            color: #334155;
+            line-height: 1.5;
+        }
+        .ingredients-title {
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 3px;
+        }
+        .macros {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .grid-calc {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .result-box {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 14px;
+        }
+        .counter-badge {
+            background: #e2e8f0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>أسهل تغذية (الكوتش)</h1>
+        <div class="subtitle">دليل الـ 100 وجبة الصحية بالمكونات الدقيقة، الصور، وحاسبة السعرات (NASM)</div>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('recipes', this)">📚 مكتبة الـ 100 وجبة (بالمكونات والأوزان)</button>
+        <button class="tab-btn" onclick="switchTab('calculator', this)">🧮 حاسبة السعرات والمايكرو</button>
+    </div>
+
+    <!-- قسم الوجبات -->
+    <div id="recipes" class="section active card">
+        <h3>قائمة الوصفات الصحية المصورة والمحسوبة الأوزان</h3>
+        <input type="text" id="searchRecipe" class="search-box" placeholder="ابحث في الوصفات (مثال: دجاج، بيض، سلمون، شوفان)..." oninput="filterRecipes()">
+        <div id="recipeCounter" class="counter-badge">إجمالي الوصفات المعروضة: 100</div>
+        
+        <div class="recipe-grid" id="recipeContainer">
+            <!-- يتم تعبئتها ديناميكياً -->
+        </div>
+    </div>
+
+    <!-- قسم الحاسبة -->
+    <div id="calculator" class="section card">
+        <h3>حاسبة السعرات والمايكرو الشخصية</h3>
+        <div class="grid-calc">
+            <div class="form-group">
+                <label>الجنس</label>
+                <select id="gender" onchange="calculate()">
+                    <option value="male">ذكر</option>
+                    <option value="female">أنثى</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>العمر (سنة)</label>
+                <input type="number" id="age" value="28" oninput="calculate()">
+            </div>
+            <div class="form-group">
+                <label>الوزن (كجم)</label>
+                <input type="number" id="weight" value="75" oninput="calculate()">
+            </div>
+            <div class="form-group">
+                <label>الطول (سم)</label>
+                <input type="number" id="height" value="175" oninput="calculate()">
+            </div>
+            <div class="form-group">
+                <label>مستوى النشاط</label>
+                <select id="activity" onchange="calculate()">
+                    <option value="1.2">خامل (1.2)</option>
+                    <option value="1.375">نشاط خفيف (1.375)</option>
+                    <option value="1.55" selected>نشاط متوسط (1.55)</option>
+                    <option value="1.725">نشاط عالي (1.725)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>الهدف البدني</label>
+                <select id="goal" onchange="calculate()">
+                    <option value="-500" selected>تنشيف / خسارة دهون (-500)</option>
+                    <option value="0">محافظة على الوزن (0)</option>
+                    <option value="300">تضخيم عضلات (+300)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="result-box">
+            <div class="result-row"><span>معدل الأيض الأساسي (BMR):</span> <strong id="resBmr">0 kcal</strong></div>
+            <div class="result-row"><span>إحتياج المحافظة (TDEE):</span> <strong id="resTdee">0 kcal</strong></div>
+            <div class="result-row"><span>السعرات المستهدفة:</span> <strong id="resTarget" style="color:var(--primary-dark)">0 kcal</strong></div>
+            <div class="result-row"><span>البروتين المطلوب:</span> <strong id="resProtein">0 g</strong></div>
+            <div class="result-row"><span>الدهون الصحية:</span> <strong id="resFat">0 g</strong></div>
+            <div class="result-row"><span>الكربوهيدرات:</span> <strong id="resCarb">0 g</strong></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // قاعدة بيانات الـ 100 وجبة المتكاملة مع الكميات بالجرام والصور
+    const recipes = [
+        // الإفطار (25 وجبة)
+        {name: "عجة البيض بالسبانخ والجبن", category: "إفطار", ingredients: "بيض كامل 150ج (3 حبات) + بياض بيض 60ج + سبانخ طازجة 50ج + جبن فتا 30ج + زيت زيتون 5ج", calories: 340, protein: 28, carbs: 15, fats: 18, img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400"},
+        {name: "شوفان الطاقة بالفواكه والمكسرات", category: "إفطار", ingredients: "شوفان حبوب كاملة 50ج + حليب خالي الدسم 200مل + موز 60ج + توت 30ج + زبدة فول سوداني 15ج", calories: 390, protein: 16, carbs: 52, fats: 12, img: "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=400"},
+        {name: "بان كيك البروتين الصحي", category: "إفطار", ingredients: "دقيق الشوفان 45ج + واي بروتين 30ج + بياض بيض 60ج + حليب خالي الدسم 100مل", calories: 310, protein: 25, carbs: 35, fats: 8, img: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400"},
+        {name: "توست الأفوكادو مع البيض المسلوق", category: "إفطار", ingredients: "خبز أسمر 60ج (شريحتين) + أفوكادو 50ج + بيض مسلوق 100ج (حبتين)", calories: 330, protein: 18, carbs: 28, fats: 16, img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400"},
+        {name: "لبنة خفيفة مع الشوفان والعسل", category: "إفطار", ingredients: "لبنة قليل الدسم 100ج + شوفان 30ج + عسل طبيعي 15ج + مكسرات مشكلة 10ج", calories: 290, protein: 17, carbs: 40, fats: 7, img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400"},
+        {name: "شكشوكة صحية بقطرات زيت الزيتون", category: "إفطار", ingredients: "بيض 150ج (3 حبات) + طماطم مفرومة 120ج + بصل 40ج + زيت زيتون 7ج", calories: 280, protein: 20, carbs: 12, fats: 16, img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400"},
+        {name: "بودنج الشيا بحليب اللوز والتوت", category: "إفطار", ingredients: "بذور الشيا 30ج + حليب اللوز 200مل + توت مشكل 40ج + عسل 10ج", calories: 250, protein: 10, carbs: 22, fats: 12, img: "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=400"},
+        {name: "مربعات التمر وبروتين الشوفان", category: "إفطار", ingredients: "تمر مطحون 50ج + شوفان 40ج + زبدة فول سوداني 15ج + واي بروتين 20ج", calories: 320, protein: 21, carbs: 45, fats: 8, img: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=400"},
+        {name: "ساندويتش البيض المسلوق والأسمر", category: "إفطار", ingredients: "خبز أسمر 60ج + بيض مسلوق 100ج + خس وطماطم 40ج + مايونيز لايت 10ج", calories: 300, protein: 22, carbs: 30, fats: 10, img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400"},
+        {name: "مهلبية الشوفان بالقرفة", category: "إفطار", ingredients: "شوفان 40ج + حليب خالي الدسم 250مل + نشا ذرة 10ج + قرفة وعسل 10ج", calories: 270, protein: 12, carbs: 46, fats: 5, img: "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=400"},
+        {name: "عجة بياض البيض بالفطر والخضار", category: "إفطار", ingredients: "بياض بيض 150ج + فطر مشوي 60ج + بصل وفلفل رومي 50ج + زيت زيتون 5ج", calories: 220, protein: 26, carbs: 10, fats: 6, img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400"},
+        {name: "بان كيك الموز والمكسرات السريع", category: "إفطار", ingredients: "موز ناضج 80ج + بيض 100ج (حبتين) + دقيق الشوفان 30ج + لوز مجروش 10ج", calories: 340, protein: 15, carbs: 48, fats: 10, img: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400"},
+        {name: "خبز أسمر مع زبدة الفول السوداني والموز", category: "إفطار", ingredients: "خبز أسمر 60ج + زبدة فول سوداني 20ج + موز مقطع 60ج", calories: 360, protein: 14, carbs: 42, fats: 15, img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400"},
+        {name: "زبادي يوناني مع بذور الكتان والعسل", category: "إفطار", ingredients: "زبادي يوناني 150ج + بذور كتان مطحونة 10ج + عسل 15ج + لوز 10ج", calories: 260, protein: 22, carbs: 24, fats: 8, img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400"},
+        {name: "سلطة الجبن القريش والطماطم الملونة", category: "إفطار", ingredients: "جبن قريش 120ج + طماطم شيري 80ج + خيار 60ج + زيت زيتون 5ج", calories: 210, protein: 25, carbs: 8, fats: 9, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "عجة خضار بالطحينة المخففة", category: "إفطار", ingredients: "بيض 100ج (حبتين) + كوسة وجزر مبشور 80ج + طحينة 15ج + ليمون", calories: 310, protein: 19, carbs: 14, fats: 20, img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400"},
+        {name: "سموذي التوت الأخضر والبروتين", category: "إفطار", ingredients: "واي بروتين 30ج + سبانخ 40ج + توت مجمد 60ج + حليب لوز 200مل", calories: 290, protein: 30, carbs: 32, fats: 5, img: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=400"},
+        {name: "بليلة قمح صحية بالحليب خالي الدسم", category: "إفطار", ingredients: "حبوب قمح مسلوقة 80ج + حليب خالي الدسم 200مل + قرفة وستيفيا", calories: 350, protein: 16, carbs: 60, fats: 4, img: "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=400"},
+        {name: "رول التورتيلا بالأومليت والجبن الخفيف", category: "إفطار", ingredients: "خبز تورتيلا بر 60ج + بيض 100ج + جبن موزاريلا لايت 20ج + خس", calories: 340, protein: 24, carbs: 32, fats: 12, img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400"},
+        {name: "فطائر الشوفان والجبن القريش", category: "إفطار", ingredients: "شوفان 40ج + جبن قريش 80ج + بيض 50ج (حبة) + بيكنج بودر وفانيليا", calories: 320, protein: 23, carbs: 36, fats: 9, img: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400"},
+        {name: "فول مدمس بزيت الزيتون والكمون", category: "إفطار", ingredients: "فول مسلوق 150ج + زيت زيتون 10ج + ليمون وكمون + نصف رغيف أسمر 40ج", calories: 310, protein: 15, carbs: 40, fats: 11, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "ساندويتش اللبنة والنعناع الطازج", category: "إفطار", ingredients: "خبز أسمر 60ج + لبنة 50ج + نعناع طازج وزيت زيتون 5ج", calories: 250, protein: 12, carbs: 30, fats: 9, img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400"},
+        {name: "كورن فليكس حبوب كاملة مع حليب اللوز", category: "إفطار", ingredients: "حبوب ذرة كاملة 50ج + حليب اللوز 250مل + لوز مبشور 10ج", calories: 240, protein: 8, carbs: 45, fats: 4, img: "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=400"},
+        {name: "عصير المانجو والبروتين النباتي", category: "إفطار", ingredients: "مانجو مجمدة 100ج + بروتين نباتي 30ج + حليب لوز 200مل + بذور الشيا 10ج", calories: 280, protein: 25, carbs: 38, fats: 3, img: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=400"},
+        {name: "بيكنج بودر كب كيك بروتين الشوفان", category: "إفطار", ingredients: "دقيق شوفان 40ج + واي بروتين 30ج + حليب 80مل + بياض بيض 50ج", calories: 330, protein: 26, carbs: 34, fats: 9, img: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400"},
+
+        // الغداء (35 وجبة)
+        {name: "صدور الدجاج المشوية مع الأرز البسمتي", category: "غداء", ingredients: "صدور دجاج 180ج + أرز بسمتي مطبوخ 150ج + بروكلي وجزر مسلوق 100ج + زيت زيتون 8ج", calories: 460, protein: 45, carbs: 48, fats: 8, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "السلمون المشوي مع البطاطس المهروسة", category: "غداء", ingredients: "فيليه سلمون 160ج + بطاطس مسلوقة 150ج + هليون مشوي 80ج + زبدة خفيفة 10ج", calories: 510, protein: 38, carbs: 32, fats: 22, img: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400"},
+        {name: "ستيك لحم بقري مع الخضار المشوية", category: "غداء", ingredients: "ستيك فخذ بقري 160ج + بطاطا حلوة 120ج + فطر وكوسة مشوية 100ج + زيت زيتون 10ج", calories: 480, protein: 42, carbs: 25, fats: 20, img: "https://images.unsplash.com/photo-1558030006-450675393462?w=400"},
+        {name: "دجاج كاري صحي مع الكينوا", category: "غداء", ingredients: "صدور دجاج 160ج + كينوا مطبوخة 140ج + حليب جوز الهند خفيف 50مل + كاري وبصل", calories: 440, protein: 40, carbs: 42, fats: 10, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "سمك فيليه بالفرن مع الليمون والأعشاب", category: "غداء", ingredients: "فيليه سمك هامور أو قاص 180ج + أرز أبيض مطبوخ 130ج + سلطة خضراء 80ج + زيت زيتون 10ج", calories: 380, protein: 44, carbs: 18, fats: 14, img: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400"},
+        {name: "كبسة دجاج بني صحية", category: "غداء", ingredients: "دجاج بدون عظم 160ج + أرز بني 140ج + طماطم وبهارات كبسة + زيت زيتون 8ج", calories: 490, protein: 43, carbs: 52, fats: 11, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "مكرونة القمح الكامل بصدور الدجاج", category: "غداء", ingredients: "مكرونة قمح كامل جافة 70ج (تصبح 160ج مطبوخة) + صدور دجاج 150ج + صوص طماطم طبيعي", calories: 470, protein: 41, carbs: 55, fats: 9, img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400"},
+        {name: "لحم مفروم مشوي مع البرغل والخضار", category: "غداء", ingredients: "لحم بقري مفروم خالي الدسم 150ج + برغل مطبوخ 130ج + سلطة تبولة خفيفة 80ج", calories: 450, protein: 39, carbs: 38, fats: 15, img: "https://images.unsplash.com/photo-1558030006-450675393462?w=400"},
+        {name: "روبيان مشوي بالثوم مع الأرز البني", category: "غداء", ingredients: "روبيان (جمبري) مقشر 200ج + أرز بني مطبوخ 140ج + ثوم وبقدونس وزيت زيتون 7ج", calories: 410, protein: 42, carbs: 45, fats: 6, img: "https://images.unsplash.com/photo-1565680314444-aef554032d84?w=400"},
+        {name: "صينية دجاج بالبطاطس والبصل بالفرن", category: "غداء", ingredients: "صدور وأوراك دجاج منزوعة الجلد 160ج + بطاطس 130ج + بصل وطماطم شرائح + زيت 8ج", calories: 460, protein: 44, carbs: 36, fats: 13, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "شاورما دجاج صحية مع خبز التورتيلا", category: "غداء", ingredients: "صدور دجاج شرائح 160ج + خبز تورتيلا بر 60ج + صوص ثومية يوناني خفيف 20ج + خضار", calories: 430, protein: 40, carbs: 38, fats: 12, img: "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=400"},
+        {name: "فاهيتا لحم بقري مع الفلفل الملون", category: "غداء", ingredients: "ستيك لحم شرائح 150ج + فلفل رومي وبصل 120ج + خبز تورتيلا 50ج + زيت زيتون 10ج", calories: 450, protein: 42, carbs: 30, fats: 16, img: "https://images.unsplash.com/photo-1558030006-450675393462?w=400"},
+        {name: "دجاج مشوي بصوص البرتقال والصويا الخفيفة", category: "غداء", ingredients: "صدور دجاج 170ج + عصير برتقال طبيعي 50مل + صوص صويا منخفض الصوديوم + أرز 120ج", calories: 420, protein: 43, carbs: 40, fats: 8, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "سمك السلمون مع الأرز الأسود والخضار", category: "غداء", ingredients: "فيليه سلمون 150ج + أرز أسود مطبوخ 130ج + كوسة مبشورة وبروكلي 90ج", calories: 530, protein: 40, carbs: 35, fats: 24, img: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400"},
+        {name: "برجر دجاج منزلي مع خبز أسمر وسلطة", category: "غداء", ingredients: "برجر دجاج مفروم منزلي 160ج + خبز برجر بر 60ج + خس وطماطم ومخلل + صوص لايت", calories: 440, protein: 38, carbs: 42, fats: 11, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400"},
+        {name: "موصاكة خضار باللحم المفروم قليل الدسم", category: "غداء", ingredients: "باذنجان مشوي 150ج + لحم مفروم 120ج + صلصة طماطم طبيعية 80ج + زيت زيتون 8ج", calories: 390, protein: 32, carbs: 28, fats: 16, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "دجاج تندوري مع البطاطس المشوية", category: "غداء", ingredients: "صدور دجاج متبلة بالزبادي والبهارات 170ج + بطاطس مكعبات مشوية 130ج + زيت 7ج", calories: 450, protein: 46, carbs: 34, fats: 10, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "مفطح دجاج صحي بخبز البر", category: "غداء", ingredients: "دجاج مسلوق ومحمر بالفرن 160ج + أرز بسمتي 140ج + خبز بر محمص 30ج + مكسرات 10ج", calories: 500, protein: 45, carbs: 48, fats: 14, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "لحم بوست مع الكينوا والصلصة الحارة", category: "غداء", ingredients: "ستيك لحم 150ج + كينوا مطبوخة 130ج + فاصوليا بلاك بينز 50ج + صوص طماطم حار", calories: 470, protein: 41, carbs: 38, fats: 17, img: "https://images.unsplash.com/photo-1558030006-450675393462?w=400"},
+        {name: "شوربة عدس سميكة مع قطع الدجاج المسلوق", category: "غداء", ingredients: "عدس أصفر مطبوخ 150ج + صدور دجاج مكعبات 120ج + بصل وجزر + زيت زيتون 7ج", calories: 380, protein: 36, carbs: 40, fats: 8, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+        {name: "فيليه سمك الهامور مع البروكلي والبطاطس", category: "غداء", ingredients: "فيليه هامور 180ج + بطاطس مسلوقة 120ج + بروكلي على البخار 100ج + ليمون وزيت 6ج", calories: 390, protein: 45, carbs: 26, fats: 9, img: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400"},
+        {name: "دجاج مشوي بالفطر والبصل المعسل", category: "غداء", ingredients: "صدور دجاج 170ج + فطر طازج 80ج + بصل 60ج معسل بمسحة زيت 8ج + أرز 100ج", calories: 430, protein: 44, carbs: 22, fats: 12, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "مكرونة بالبشاميل الصحي (شوفان ودجاج)", category: "غداء", ingredients: "مكرونة قمح كامل 60ج + دجاج مفروم 120ج + حليب خالي الدسم 150مل + دقيق أسرار 15ج", calories: 490, protein: 38, carbs: 54, fats: 13, img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400"},
+        {name: "لحم ضأن قليل الدسم مشوي مع الخضار", category: "غداء", ingredients: "لحم غنم خالي الدهون 150ج + بطاطس وكوسة مشوية 140ج + زيت زيتون 12ج", calories: 520, protein: 40, carbs: 20, fats: 30, img: "https://images.unsplash.com/photo-1558030006-450675393462?w=400"},
+        {name: "دجاج بالصلصة المكسيكية والأرز البني", category: "غداء", ingredients: "صدور دجاج 160ج + فاصوليا حمراء الذرة الحلوة 60ج + أرز بني 130ج + صوص طماطم", calories: 460, protein: 42, carbs: 48, fats: 9, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "سلطة دجاج دافئة مع الكينوا والأفوكادو", category: "غداء", ingredients: "صدور دجاج مشوية 150ج + كينوا 100ج + أفوكادو 40ج + خس وجرجير 60ج + ليمون وزيت", calories: 440, protein: 39, carbs: 30, fats: 18, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "صدور دجاج محشية سبانخ وجبن لايت", category: "غداء", ingredients: "صدور دجاج 180ج + سبانخ 40ج + جبن فتا أو ريكوتا لايت 30ج + بطاطس مسلوقة 100ج", calories: 410, protein: 48, carbs: 12, fats: 18, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "صينية كفتة بالفرن مع الطماطم والبطاطس", category: "غداء", ingredients: "لحم مفروم 150ج + بطاطس شرائح 120ج + عصير طماطم وبصل 100ج + زيت زيتون 10ج", calories: 470, protein: 37, carbs: 32, fats: 20, img: "https://images.unsplash.com/photo-1558030006-450675393462?w=400"},
+        {name: "أرز برياني دجاج صحي وخفيف", category: "غداء", ingredients: "صدور دجاج 160ج + أرز بسمتي 140ج + زبادي خفيف 40ج + بصل مكرمل بمسحة زيت 8ج", calories: 480, protein: 43, carbs: 50, fats: 10, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "سلمون مشوي بصوص الأعشاب والزبدة الخفيفة", category: "غداء", ingredients: "فيليه سلمون 160ج + هليون وبروكلي 120ج + زبدة خفيفة 15ج + أعشاب وزيت زيتون", calories: 520, protein: 39, carbs: 15, fats: 34, img: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400"},
+        {name: "دجاج بالباربيكيو المشوي مع البطاطس", category: "غداء", ingredients: "صدور دجاج 170ج + صوص باربيكيو صحي 25ج + بطاطس مكعبات بالفرن 130ج + زيت 7ج", calories: 450, protein: 42, carbs: 44, fats: 9, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "كبسة لحم بقري بدون دهون زائدة", category: "غداء", ingredients: "لحم بقري بدون دهن 150ج + أرز بسمتي 140ج + بهارات كبسة وبصل 50ج + زيت 8ج", calories: 510, protein: 40, carbs: 48, fats: 16, img: "https://images.unsplash.com/photo-1558030006-450675393462?w=400"},
+        {name: "دجاج مشوي مع الفاصوليا الخضراء والبطاطس", category: "غداء", ingredients: "صدور دجاج 170ج + فاصوليا خضراء مسلوقة 120ج + بطاطس مسلوقة 100ج + زيت زيتون 6ج", calories: 420, protein: 45, carbs: 32, fats: 8, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "متبل كوسة مشوية مع الدجاج المحمر", category: "غداء", ingredients: "صدور دجاج 160ج + كوسة مشوية ومهروسة 130ج + طحينة خفيفة 15ج + ثوم وليمون", calories: 380, protein: 38, carbs: 20, fats: 16, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "ستيك لحم بقري مع المشروم والبطاطس", category: "غداء", ingredients: "ستيك لحم 160ج + فطر طازج 90ج + بطاطس مهروسة 120ج + حليب خالي الدسم وزبدة 8ج", calories: 490, protein: 44, carbs: 28, fats: 21, img: "https://images.unsplash.com/photo-1558030006-450675393462?w=400"},
+
+        // العشاء (25 وجبة)
+        {name: "سلطة التونا البروتينية المنعشة", category: "عشاء", ingredients: "تونا معلبة بالماء 120ج (علبة) + أفوكادو 40ج + ذرة حلوة 40ج + خس وخيار 100ج + ليمون", calories: 310, protein: 34, carbs: 14, fats: 13, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "ساندويتش ديك رومي مدخن بالخبز الأسمر", category: "عشاء", ingredients: "خبز أسمر 60ج + شرائح ديك رومي مدخن 90ج + خس وطماطم + جبن شيدر لايت 15ج", calories: 320, protein: 25, carbs: 35, fats: 8, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400"},
+        {name: "شوربة عدس صحية دافئة", category: "عشاء", ingredients: "عدس أصفر 100ج + بصل وجزر وثوم 60ج + زيت زيتون 5ج + خبز أسمر محمص 20ج", calories: 260, protein: 16, carbs: 38, fats: 5, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+        {name: "جبن قريش مع طماطم وزيت زيتون", category: "عشاء", ingredients: "جبن قريش 150ج + طماطم مكعبات 100ج + زيت زيتون 10ج + زعتر ونعناع + خبز بر 30ج", calories: 240, protein: 26, carbs: 8, fats: 11, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "سلطة الدجاج المشوي بالخضار الورقية", category: "عشاء", ingredients: "صدور دجاج مسحب 120ج + جرجير وخس وطماطم شيري 120ج + زيت زيتون وخل بلسمي 8ج", calories: 340, protein: 38, carbs: 12, fats: 15, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "عشاء الخضار المشوية مع الدجاج المفروم", category: "عشاء", ingredients: "دجاج مفروم معصج خالي الدسم 100ج + كوسة وباذنجان وفلفل مشوي 150ج + زيت 6ج", calories: 330, protein: 32, carbs: 18, fats: 12, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "ساندويتش التونة بالمايونيز الخفيف والخس", category: "عشاء", ingredients: "تونا 120ج + مايونيز لايت 15ج + خس مقرمش + خبز أسمر 60ج", calories: 350, protein: 30, carbs: 32, fats: 10, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400"},
+        {name: "بيض مقلي بمسحة زيت مع خبز أسمر", category: "عشاء", ingredients: "بيض 120ج (حبتين ونصف) + زيت زيتون 8ج + خبز أسمر 50ج + خيار وطماطم", calories: 290, protein: 18, carbs: 24, fats: 14, img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400"},
+        {name: "شوربة خضار مشكلة بقطع الدجاج", category: "عشاء", ingredients: "صدور دجاج مقطعة 100ج + جزر كوسة فاصوليا وبازلاء 120ج + مرقة دجاج خفيفة وزيت 5ج", calories: 220, protein: 24, carbs: 18, fats: 5, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+        {name: "سلطة الحمص المسلوق بالخضار والليمون", category: "عشاء", ingredients: "حمص حب مسلوق 120ج + طماطم وخيار وبقدونس 100ج + زيت زيتون 7ج وعصير ليمون", calories: 280, protein: 14, carbs: 42, fats: 7, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "رول الدجاج المسلوق والخضار بالمرقوق", category: "عشاء", ingredients: "صدور دجاج مسلوقة ومنسلة 110ج + خس وجزر مبشور 60ج + خبز تورتيلا بر 50ج", calories: 310, protein: 32, carbs: 26, fats: 8, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "سلطة السلمون المدخن مع الجرجير والخيار", category: "عشاء", ingredients: "سلمون مدخن 80ج + جرجير طازج 80ج + شرائح خيار 60ج + جبن كريمي لايت 15ج", calories: 290, protein: 28, carbs: 10, fats: 15, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "فول بالحمص والكمون وزيت الزيتون الخفيف", category: "عشاء", ingredients: "فول مسلوق 100ج + حمص مسلوق 50ج + زيت زيتون 7ج + خبز أسمر 40ج", calories: 310, protein: 16, carbs: 42, fats: 9, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "شوربة الشوفان بالدجاج والبهارات", category: "عشاء", ingredients: "شوفان 30ج + صدور دجاج مفرومة أو مسلوقة 90ج + طماطم مطحونة 60ج + زيت 5ج", calories: 270, protein: 22, carbs: 30, fats: 6, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+        {name: "سندويتش اللبنة والزعتر مع الخيار", category: "عشاء", ingredients: "خبز بر 60ج + لبنة قليل الدسم 50ج + زعتر وزيت زيتون 5ج + شرائح خيار", calories: 250, protein: 13, carbs: 30, fats: 9, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400"},
+        {name: "جبن حلوم مشوي مع شرائح الطماطم والنعناع", category: "عشاء", ingredients: "جبن حلوم قليل الملح 60ج + طماطم مشوية 100ج + زيت زيتون 5ج + خبز أسمر 30ج", calories: 320, protein: 20, carbs: 8, fats: 23, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "سلطة الكينوا بالخضار المفرومة والليمون", category: "عشاء", ingredients: "كينوا مطبوخة 100ج + طماطم وبقدونس وخيار مفروم 100ج + زيت زيتون 8ج وعصير ليمون", calories: 280, protein: 10, carbs: 44, fats: 8, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "دجاج مسلوق ومتبل مع خس وطماطم", category: "عشاء", ingredients: "صدور دجاج مسلوقة 140ج + خس وطماطم خيار 100ج + مسحة زيت زيتون وليمون 5ج", calories: 290, protein: 40, carbs: 8, fats: 10, img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400"},
+        {name: "بيض مسلوق مع سلطة خضراء متكاملة", category: "عشاء", ingredients: "بيض مسلوق 120ج (حبتين ونصف) + خس جرجير خيار فجل 120ج + زيت زيتون 8ج", calories: 230, protein: 16, carbs: 10, fats: 14, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "شوربة البروكلي بالكريمة الخفيفة والدجاج", category: "عشاء", ingredients: "بروكلي مطحون 120ج + صدور دجاج مكعبات 90ج + حليب خالي الدسم 100مل + نشا 8ج", calories: 280, protein: 25, carbs: 18, fats: 11, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+        {name: "سلطة الفاصوليا البيضاء بالخضار والليمون", category: "عشاء", ingredients: "فاصوليا بيضاء مسلوقة 100ج + بصل طماطم بقدونس 80ج + زيت زيتون 6ج وخل", calories: 290, protein: 15, carbs: 45, fats: 6, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "ساندويتش جبنة الفيتا والزعتر بالخبز البر", category: "عشاء", ingredients: "خبز بر 60ج + جبن فتا 40ج + طماطم شرائح وزيت زيتون 6ج + زعتر", calories: 300, protein: 16, carbs: 32, fats: 12, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400"},
+        {name: "عشاء خفيف من الزبادي والخيار المفروم", category: "عشاء", ingredients: "زبادي طبيعي 200ج + خيار مبشور 100ج + فص ثوم مهروس ونعناع خشک وقليل ملح", calories: 180, protein: 14, carbs: 18, fats: 5, img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400"},
+        {name: "متبل الباذنجان المشوي مع خبز أسمر", category: "عشاء", ingredients: "باذنجان مشوي 150ج + زبادي خفيف 40ج + طحينة 10ج + خبز أسمر 40ج", calories: 270, protein: 8, carbs: 38, fats: 10, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "شوربة الطماطم الطبيعية مع قطع التوست المحمص", category: "عشاء", ingredients: "عصير طماطم طبيعي 250مل + ثوم وبصل 30ج + زيت زيتون 5ج + مكعبات توست أسمر 20ج", calories: 240, protein: 8, carbs: 40, fats: 6, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400"},
+
+        // السناكس والوجبات الخفيفة (15 وجبة)
+        {name: "زبادي يوناني بالتوت واللوز", category: "سناكس", ingredients: "زبادي يوناني 150ج + توت مشكل 40ج + لوز محمص مجروش 15ج", calories: 220, protein: 20, carbs: 16, fats: 9, img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400"},
+        {name: "سموذي البروتين والموز", category: "سناكس", ingredients: "موزة متوسطة 80ج + واي بروتين 25ج + حليب خالي الدسم 200مل", calories: 280, protein: 24, carbs: 40, fats: 5, img: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=400"},
+        {name: "كرات الطاقة بالشوفان والتمر", category: "سناكس", ingredients: "تمر منزع النوى 40ج + شوفان مطحون 30ج + زبدة فول سوداني 10ج", calories: 210, protein: 6, carbs: 32, fats: 7, img: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=400"},
+        {name: "شرائح التفاح بزبدة اللوز الطبيعية", category: "سناكس", ingredients: "تفاحة متوسطة 120ج + زبدة اللوز 15ج + رشة قرفة", calories: 200, protein: 5, carbs: 26, fats: 10, img: "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400"},
+        {name: "مزيج المكسرات النيئة والفواكه المجففة", category: "سناكس", ingredients: "مكسرات مشكلة نيئة 25ج + زبيب أو تين مجفف 20ج", calories: 250, protein: 8, carbs: 22, fats: 15, img: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=400"},
+        {name: "بار بروتين شوكولاتة صحي", category: "سناكس", ingredients: "بار بروتين جاهز أو منزلي الصنع 50ج (غني بالبروتين والشوكولاتة الداكنة)", calories: 210, protein: 20, carbs: 18, fats: 6, img: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400"},
+        {name: "بودنج الشيا بالفانيليا والموز", category: "سناكس", ingredients: "بذور الشيا 25ج + حليب لوز 180مل + فانيليا + شرائح موز 40ج", calories: 230, protein: 7, carbs: 28, fats: 11, img: "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=400"},
+        {name: "فشار منزلي بدون زيت بكمون خفيف", category: "سناكس", ingredients: "حبوب ذرة الفشار 40ج (تنفش بدون زيت أو بمسحة رذاذ زيت خفيف)", calories: 150, protein: 4, carbs: 30, fats: 2, img: "https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=400"},
+        {name: "شرائح الجزر والخيار مع صوص الحمص", category: "سناكس", ingredients: "جزر وخيار شرائح 150ج + صوص حمص (حمص طحينة جاهز) 40ج", calories: 180, protein: 7, carbs: 25, fats: 6, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+        {name: "مشروب شوكولاتة ساخنة بحليب اللوز والبروتين", category: "سناكس", ingredients: "حليب اللوز 250مل + كاكاو خام 10ج + واي بروتين شوكولاتة 20ج", calories: 190, protein: 22, carbs: 16, fats: 4, img: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400"},
+        {name: "براونيز البروتين الصحي بالشوفان", category: "سناكس", ingredients: "دقيق شوفان 30ج + كاكاو 15ج + واي بروتين 20ج + بياض بيض 40ج + عسل 10ج", calories: 240, protein: 18, carbs: 24, fats: 8, img: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400"},
+        {name: "موز مشوي بالقرفة وعين الجمل", category: "سناكس", ingredients: "موزة مقطعة طولياً 90ج + جوز (عين جمل) مجروش 12ج + قرفة", calories: 220, protein: 4, carbs: 36, fats: 8, img: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=400"},
+        {name: "زبادي طبيعي مع بذور الشيا والعسل", category: "سناكس", ingredients: "زبادي طبيعي 150ج + بذور الشيا 12ج + عسل 10ج", calories: 190, protein: 12, carbs: 26, fats: 5, img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400"},
+        {name: "مكسرات الكاجو المحمصة بدون ملح", category: "سناكس", ingredients: "كاجو محمص بدون ملح 35ج", calories: 260, protein: 8, carbs: 20, fats: 18, img: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=400"},
+        {name: "عصير التوت البري والبروتين الصافي", category: "سناكس", ingredients: "توت بري مجمد 80ج + واي بروتين فانيليا 25ج + ماء أو حليب لوز 200مل", calories: 170, protein: 25, carbs: 14, fats: 2, img: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=400"}
+    ];
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function renderRecipes(list) {
+        const container = document.getElementById('recipeContainer');
+        const counter = document.getElementById('recipeCounter');
+        container.innerHTML = '';
+        counter.innerText = `إجمالي الوصفات المعروضة: ${list.length} وصفة`;
+        
+        list.forEach(r => {
+            container.innerHTML += `
+                <div class="recipe-card">
+                    <img src="${r.img}" alt="${r.name}" class="recipe-img" loading="lazy">
+                    <div class="recipe-content">
+                        <div class="recipe-title">${r.name}</div>
+                        <div class="recipe-tags">التصنيف: ${r.category}</div>
+                        <div class="ingredients-box">
+                            <div class="ingredients-title">🛒 المكونات والأوزان بالجرام:</div>
+                            ${r.ingredients}
+                        </div>
+                        <div class="macros">
+                            <span>🔥 ${r.calories} كالوري</span>
+                            <span>🥩 ${r.protein}ج بروتين</span>
+                            <span>🍞 ${r.carbs}ج كارب</span>
+                            <span>🥑 ${r.fats}ج دهون</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function filterRecipes() {
+        const query = document.getElementById('searchRecipe').value.toLowerCase();
+        const filtered = recipes.filter(r => r.name.toLowerCase().includes(query) || r.category.toLowerCase().includes(query));
+        renderRecipes(filtered);
+    }
+
+    function calculate() {
+        const gender = document.getElementById('gender').value;
+        const age = parseFloat(document.getElementById('age').value) || 0;
+        const weight = parseFloat(document.getElementById('weight').value) || 0;
+        const height = parseFloat(document.getElementById('height').value) || 0;
+        const activity = parseFloat(document.getElementById('activity').value);
+        const goal = parseFloat(document.getElementById('goal').value);
+
+        let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+        bmr = gender === 'male' ? bmr + 5 : bmr - 161;
+
+        const tdee = bmr * activity;
+        const target = Math.max(1200, tdee + goal);
+
+        const proteinG = weight * 2.0;
+        const proteinC = proteinG * 4;
+        const fatC = target * 0.25;
+        const fatG = fatC / 9;
+        const carbC = Math.max(0, target - (proteinC + fatC));
+        const carbG = carbC / 4;
+
+        document.getElementById('resBmr').innerText = Math.round(bmr) + " kcal";
+        document.getElementById('resTdee').innerText = Math.round(tdee) + " kcal";
+        document.getElementById('resTarget').innerText = Math.round(target) + " kcal";
+        document.getElementById('resProtein').innerText = Math.round(proteinG) + " g (" + Math.round(proteinC) + " kcal)";
+        document.getElementById('resFat').innerText = Math.round(fatG) + " g (" + Math.round(fatC) + " kcal)";
+        document.getElementById('resCarb').innerText = Math.round(carbG) + " g (" + Math.round(carbC) + " kcal)";
+    }
+
+    // التشغيل المبدئي للوجبات والحاسبة
+    renderRecipes(recipes);
+    calculate();
+</script>
+
+</body>
+</html>

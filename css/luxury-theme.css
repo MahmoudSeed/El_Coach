@@ -1,0 +1,139 @@
+/**
+ * IronCoach Pro - Luxury Dark Gym Fitness Theme
+ * تنسيقات فاخرة داكنة مستوحاة من التطبيقات الرياضية العالمية
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+    --bg-main: #070a12;
+    --bg-card: rgba(15, 23, 42, 0.75);
+    --border-color: rgba(51, 65, 85, 0.5);
+    --primary: #10b981;
+    --primary-glow: rgba(16, 185, 129, 0.25);
+    --accent-amber: #f59e0b;
+    --accent-cyan: #06b6d4;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    direction: rtl;
+    text-align: right;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.04) 0%, transparent 40%);
+}
+
+/* التمرير المخصص */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #10b981;
+}
+
+/* Glassmorphism Cards */
+.glass-panel {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.glass-panel-glow {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(16, 185, 129, 0.1);
+}
+
+/* تأثير التوهج للعلامات النشطة */
+.neon-glow {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.neon-border {
+    border-color: rgba(16, 185, 129, 0.5) !important;
+}
+
+/* شريط التنقل السفلي للهواتف المحمولة */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 68px;
+    background: rgba(9, 13, 22, 0.92);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(51, 65, 85, 0.6);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    padding: 0 8px;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 6px 12px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+}
+
+.nav-item.active {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.nav-item.active svg {
+    filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.5));
+}
+
+/* بطاقة الوجبة */
+.meal-card {
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.meal-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* بطاقة التمرين */
+.exercise-card {
+    transition: all 0.2s ease;
+}
+.exercise-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(16, 185, 129, 0.35);
+}
