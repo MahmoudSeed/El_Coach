@@ -91,15 +91,25 @@ const IronMealsEngine = {
         return bestPlan;
     },
 
-    // البحث عن بدائل لوجبة معينة بنفس السعرات والماكروز (Meal Swap)
+    // البحث عن بدائل لوجبة معينة بنفس السعرات والماكروز (Meal Swap - BUG-4 FIX)
     findMealAlternatives(mealId) {
         const allMeals = this.getAllMeals();
         const currentMeal = allMeals.find(m => m.id === mealId);
         if (!currentMeal) return [];
 
-        // البحث في نفس التصنيف بفارق سعرات لا يتعدى ±80 سعرة
-        return allMeals
-            .filter(m => m.category === currentMeal.category && m.id !== currentMeal.id)
+        const sameCategory = allMeals.filter(m => m.category === currentMeal.category && m.id !== currentMeal.id);
+
+        // البحث في نفس التصنيف بفارق سعرات لا يتعدى ±80 سعرة أولاً
+        const withinRange = sameCategory
+            .filter(m => Math.abs(m.calories - currentMeal.calories) <= 80)
+            .sort((a, b) => Math.abs(a.calories - currentMeal.calories) - Math.abs(b.calories - currentMeal.calories));
+
+        if (withinRange.length > 0) {
+            return withinRange.slice(0, 5);
+        }
+
+        // في حال عدم توفر بديل ضمن ±80 سعرة (مثل وجبة مخصصة عالية السعرات)، نختار الأقرب في السعرات
+        return sameCategory
             .sort((a, b) => Math.abs(a.calories - currentMeal.calories) - Math.abs(b.calories - currentMeal.calories))
             .slice(0, 5);
     }

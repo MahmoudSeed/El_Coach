@@ -3,9 +3,34 @@
  * إعدادات منصة أيرون كوتش والبيانات الأولية
  */
 
+// دالة تشفير كلمات المرور محلياً لمنع تخزينها كنص صريح (WARN-4 FIX)
+function hashPassword(raw) {
+    const str = String(raw || "").trim();
+    if (str.startsWith("h$")) return str;
+    let h1 = 0xdeadbeef ^ str.length;
+    let h2 = 0x41c6ce57 ^ str.length;
+    for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return "h$" + (h2 >>> 0).toString(16).padStart(8, "0") + (h1 >>> 0).toString(16).padStart(8, "0");
+}
+
+function verifyPassword(inputPassword, storedPassword) {
+    const cleanInput = String(inputPassword || "").trim();
+    const stored = String(storedPassword || "").trim();
+    if (stored.startsWith("h$")) {
+        return hashPassword(cleanInput) === stored;
+    }
+    return cleanInput === stored || hashPassword(cleanInput) === hashPassword(stored);
+}
+
 const IronConfig = {
     appName: "أيرون كوتش",
-    appVersion: "2.0.0",
+    appVersion: "2.1.0",
     coachInfo: {
         name: "الكوتش محمود",
         title: "مدرب معتمد NASM & خبير تغذية رياضية",
@@ -16,7 +41,8 @@ const IronConfig = {
         stcPay: "0500000000",
         bankName: "البنك الأهلي / الراجحي",
         bankIban: "EG00000000000000000000000000",
-        paymentLink: "https://buy.stripe.com/demo"
+        paymentLink: "https://buy.stripe.com/demo",
+        passwordHash: hashPassword("admin")
     },
     subscriptionPrice: {
         monthly: 500, // EGP أو SAR حسب رغبة المدرب

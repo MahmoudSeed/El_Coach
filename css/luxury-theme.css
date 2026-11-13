@@ -1,20 +1,57 @@
 /**
- * IronCoach Pro - Luxury Dark Gym Fitness Theme
- * تنسيقات فاخرة داكنة مستوحاة من التطبيقات الرياضية العالمية
+ * IronCoach Pro - Dual Theme Engine (Luxury Dark & Athletic Daylight)
+ * نظام التصميم المزدوج (الداكن الفاخر والفاتح الرياضي) مع تحسينات تجربة الاستخدام
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
 
-:root {
+:root,
+html[data-theme="dark"] {
     --bg-main: #070a12;
-    --bg-card: rgba(15, 23, 42, 0.75);
-    --border-color: rgba(51, 65, 85, 0.5);
+    --bg-header: rgba(7, 10, 18, 0.90);
+    --bg-card: rgba(15, 23, 42, 0.82);
+    --bg-elevated: #0d1322;
+    --bg-input: #030712;
+    --bg-subtle: rgba(30, 41, 59, 0.75);
+    --border-color: rgba(51, 65, 85, 0.65);
+    --border-strong: rgba(71, 85, 105, 0.85);
     --primary: #10b981;
+    --primary-hover: #059669;
     --primary-glow: rgba(16, 185, 129, 0.25);
     --accent-amber: #f59e0b;
     --accent-cyan: #06b6d4;
     --text-main: #f8fafc;
+    --text-secondary: #cbd5e1;
     --text-muted: #94a3b8;
+    --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    --nav-bg: rgba(9, 13, 22, 0.94);
+    --scrollbar-track: #090d16;
+    --scrollbar-thumb: #334155;
+    color-scheme: dark;
+}
+
+html[data-theme="light"] {
+    --bg-main: #f1f5f9;
+    --bg-header: rgba(255, 255, 255, 0.92);
+    --bg-card: #ffffff;
+    --bg-elevated: #ffffff;
+    --bg-input: #f8fafc;
+    --bg-subtle: #e2e8f0;
+    --border-color: #cbd5e1;
+    --border-strong: #94a3b8;
+    --primary: #059669;
+    --primary-hover: #047857;
+    --primary-glow: rgba(5, 150, 105, 0.18);
+    --accent-amber: #d97706;
+    --accent-cyan: #0891b2;
+    --text-main: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --card-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.07), 0 4px 10px -4px rgba(15, 23, 42, 0.04);
+    --nav-bg: rgba(255, 255, 255, 0.96);
+    --scrollbar-track: #e2e8f0;
+    --scrollbar-thumb: #94a3b8;
+    color-scheme: light;
 }
 
 * {
@@ -24,48 +61,64 @@
 }
 
 body {
-    background-color: var(--bg-main);
-    color: var(--text-main);
+    background-color: var(--bg-main) !important;
+    color: var(--text-main) !important;
     margin: 0;
     padding: 0;
     direction: rtl;
     text-align: right;
     min-height: 100vh;
     overflow-x: hidden;
-    background-image: 
-        radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.04) 0%, transparent 40%);
+    transition: background-color 0.25s ease, color 0.25s ease;
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 40%);
+}
+
+body.modal-open {
+    overflow: hidden;
 }
 
 /* التمرير المخصص */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
 }
 ::-webkit-scrollbar-track {
-    background: #090d16;
+    background: var(--scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-    background: #334155;
-    border-radius: 4px;
+    background: var(--scrollbar-thumb);
+    border-radius: 6px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #10b981;
+    background: var(--primary);
+}
+
+/* تحسينات التركيز والوصول (Accessibility & Focus States) */
+input:focus,
+select:focus,
+textarea:focus,
+button:focus-visible {
+    outline: none;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 /* Glassmorphism Cards */
 .glass-panel {
-    background: rgba(15, 23, 42, 0.75);
+    background: var(--bg-card);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(51, 65, 85, 0.6);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
 }
 
 .glass-panel-glow {
-    background: rgba(15, 23, 42, 0.85);
+    background: var(--bg-card);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    box-shadow: 0 8px 32px 0 rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    box-shadow: 0 8px 32px 0 rgba(16, 185, 129, 0.12);
 }
 
 /* تأثير التوهج للعلامات النشطة */
@@ -83,15 +136,17 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 68px;
-    background: rgba(9, 13, 22, 0.92);
+    min-height: 68px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    background: var(--nav-bg);
     backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(51, 65, 85, 0.6);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: space-around;
     align-items: center;
     z-index: 1000;
-    padding: 0 8px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .nav-item {
@@ -99,41 +154,163 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-size: 11px;
     font-weight: 700;
     text-decoration: none;
     cursor: pointer;
     transition: all 0.2s ease;
-    padding: 6px 12px;
-    border-radius: 12px;
+    padding: 6px 10px;
+    border-radius: 14px;
     border: none;
     background: transparent;
+    position: relative;
+}
+
+.nav-item:hover {
+    color: var(--text-main);
 }
 
 .nav-item.active {
-    color: #10b981;
-    background: rgba(16, 185, 129, 0.1);
+    color: var(--primary);
+    background: rgba(16, 185, 129, 0.12);
+    font-weight: 800;
 }
 
-.nav-item.active svg {
-    filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.5));
+.nav-item.active::after {
+    content: "";
+    position: absolute;
+    bottom: 2px;
+    width: 18px;
+    height: 3px;
+    border-radius: 99px;
+    background: var(--primary);
 }
 
-/* بطاقة الوجبة */
-.meal-card {
-    transition: transform 0.2s ease, border-color 0.2s ease;
+/* بطاقة الوجبة والتمرين */
+.meal-card,
+.exercise-card {
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease;
+    box-shadow: var(--card-shadow);
 }
 .meal-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(16, 185, 129, 0.4);
-}
-
-/* بطاقة التمرين */
-.exercise-card {
-    transition: all 0.2s ease;
+    border-color: rgba(16, 185, 129, 0.45) !important;
 }
 .exercise-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(16, 185, 129, 0.35);
+    transform: translateY(-3px);
+    border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+/* ==========================================================================
+   تكييف النمط الفاتح الشامل (Light Theme Semantic Overrides)
+   يضمن تبايناً مثالياً (WCAG AA/AAA) لكافة عناصر Tailwind دون كسر التصميم
+   ========================================================================== */
+
+html[data-theme="light"] header {
+    background-color: var(--bg-header) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+}
+
+html[data-theme="light"] #demoAccountsBar {
+    background-color: #e2e8f0 !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* البطاقات والحاويات الرئيسية في الوضع الفاتح */
+html[data-theme="light"] .bg-slate-900,
+html[data-theme="light"] .bg-slate-900\/80,
+html[data-theme="light"] .bg-slate-900\/90,
+html[data-theme="light"] .bg-slate-900\/95,
+html[data-theme="light"] .bg-slate-900\/60 {
+    background-color: #ffffff !important;
+    box-shadow: var(--card-shadow);
+}
+
+/* الحاويات الفرعية وحقول الإدخال في الوضع الفاتح */
+html[data-theme="light"] .bg-slate-950,
+html[data-theme="light"] .bg-slate-950\/60,
+html[data-theme="light"] .bg-slate-950\/70,
+html[data-theme="light"] .bg-slate-950\/80 {
+    background-color: #f8fafc !important;
+}
+
+/* الأزرار والخلفيات الثانوية في الوضع الفاتح */
+html[data-theme="light"] .bg-slate-800,
+html[data-theme="light"] .bg-slate-800\/80 {
+    background-color: #e2e8f0 !important;
+    color: #1e293b !important;
+}
+
+html[data-theme="light"] .hover\:bg-slate-700:hover {
+    background-color: #cbd5e1 !important;
+}
+
+/* البانرات المتدرجة في الوضع الفاتح */
+html[data-theme="light"] .bg-gradient-to-r.from-slate-900,
+html[data-theme="light"] .bg-gradient-to-r.from-slate-950 {
+    background-image: linear-gradient(to left, #ffffff, #f0fdf4, #ecfeff) !important;
+    box-shadow: var(--card-shadow);
+}
+
+/* صناديق الملاحظات الملونة في الوضع الفاتح */
+html[data-theme="light"] .bg-emerald-950\/20 {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+html[data-theme="light"] .bg-rose-950\/20 {
+    background-color: rgba(244, 63, 94, 0.08) !important;
+}
+html[data-theme="light"] .bg-cyan-950\/20 {
+    background-color: rgba(6, 182, 212, 0.08) !important;
+}
+
+/* الحدود في الوضع الفاتح */
+html[data-theme="light"] .border-slate-800,
+html[data-theme="light"] .border-slate-800\/80,
+html[data-theme="light"] .border-slate-800\/60,
+html[data-theme="light"] .border-slate-700,
+html[data-theme="light"] .border-slate-700\/80,
+html[data-theme="light"] .border-slate-700\/60 {
+    border-color: #cbd5e1 !important;
+}
+
+/* النصوص في الوضع الفاتح */
+html[data-theme="light"] .text-white:not(.bg-rose-500):not(.bg-emerald-500):not(.bg-emerald-600) {
+    color: #0f172a !important;
+}
+
+html[data-theme="light"] .text-gray-200,
+html[data-theme="light"] .text-gray-300 {
+    color: #334155 !important;
+}
+
+html[data-theme="light"] .text-gray-400,
+html[data-theme="light"] .text-gray-500 {
+    color: #64748b !important;
+}
+
+/* تعزيز تباين الألوان المميزة على الخلفيات الفاتحة */
+html[data-theme="light"] .text-emerald-400 {
+    color: #059669 !important;
+}
+html[data-theme="light"] .text-amber-400 {
+    color: #d97706 !important;
+}
+html[data-theme="light"] .text-rose-400 {
+    color: #e11d48 !important;
+}
+html[data-theme="light"] .text-cyan-400 {
+    color: #0891b2 !important;
+}
+html[data-theme="light"] .text-teal-400 {
+    color: #0d9488 !important;
+}
+
+/* الحفاظ على شارات التصنيف فوق الصور واضحة في النمطين */
+html[data-theme="light"] .meal-card .absolute.bg-slate-950\/80,
+html[data-theme="light"] .exercise-card .absolute.bg-slate-950\/80 {
+    background-color: rgba(255, 255, 255, 0.92) !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
