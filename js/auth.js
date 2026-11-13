@@ -4,8 +4,10 @@
  */
 
 const IronAuth = {
+    ADMIN_USERNAME: "el_coach",
+    ADMIN_PASSWORD: "123123",
     COACH_USERNAME: "coach",
-    COACH_PASSWORD: "admin", // كلمة سر الكوتش الافتراضية (يتم التحقق عبر التشفير أو الإعدادات)
+    COACH_PASSWORD: "admin", // كلمة سر الحساب التجريبي (يتم التحقق عبر التشفير أو الإعدادات)
 
     // جلب جميع المشتركين من التخزين المحلي مع تأمين كلمات المرور المشفرة
     getAllTrainees() {
@@ -68,14 +70,19 @@ const IronAuth = {
         password = (password || "").trim();
 
         const config = getAppConfig();
+        const adminUsername = (config.coachInfo && config.coachInfo.adminUsername) || "El_Coach";
+        const adminStoredHash = (config.coachInfo && config.coachInfo.adminPasswordHash) || hashPassword(this.ADMIN_PASSWORD);
         const coachStoredHash = (config.coachInfo && config.coachInfo.passwordHash) || hashPassword(this.COACH_PASSWORD);
 
-        // 1. فحص حساب الكوتش
-        if (username === this.COACH_USERNAME && verifyPassword(password, coachStoredHash)) {
+        // 1. فحص حساب الأدمن الرئيسي (El_Coach) أو حساب الكوتش التجريبي (coach)
+        const isMainAdmin = username === adminUsername.toLowerCase() && verifyPassword(password, adminStoredHash);
+        const isDemoCoach = username === this.COACH_USERNAME && verifyPassword(password, coachStoredHash);
+
+        if (isMainAdmin || isDemoCoach) {
             const coachUser = {
                 role: "coach",
                 name: config.coachInfo.name || IronConfig.coachInfo.name,
-                username: "coach",
+                username: isMainAdmin ? adminUsername : "coach",
                 title: config.coachInfo.title || IronConfig.coachInfo.title
             };
             localStorage.setItem("iron_session", JSON.stringify(coachUser));
@@ -111,10 +118,11 @@ const IronAuth = {
     // العودة السريعة للوحة الكوتش أثناء معاينة حساب المتدرب
     returnToCoachDashboard() {
         const config = getAppConfig();
+        const current = this.getCurrentUser();
         const coachUser = {
             role: "coach",
             name: config.coachInfo.name || IronConfig.coachInfo.name,
-            username: "coach",
+            username: (current && current.impersonatedBy) || (config.coachInfo && config.coachInfo.adminUsername) || "El_Coach",
             title: config.coachInfo.title || IronConfig.coachInfo.title
         };
         localStorage.setItem("iron_session", JSON.stringify(coachUser));

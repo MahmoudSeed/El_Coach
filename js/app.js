@@ -147,9 +147,10 @@ const IronApp = {
 
     // تمييز الحساب النشط حالياً في شريط المعاينة السريعة
     highlightActiveDemoAccount(user) {
+        const activeUsername = user && user.username ? user.username.toLowerCase() : "";
         document.querySelectorAll(".demo-acc-btn").forEach(btn => {
-            const acc = btn.getAttribute("data-demo-user");
-            if (user && user.username === acc) {
+            const acc = (btn.getAttribute("data-demo-user") || "").toLowerCase();
+            if (activeUsername && (activeUsername === acc || (activeUsername === "coach" && acc === "el_coach"))) {
                 btn.classList.add("ring-2", "ring-emerald-400");
             } else {
                 btn.classList.remove("ring-2", "ring-emerald-400");

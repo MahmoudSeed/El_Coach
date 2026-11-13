@@ -42,6 +42,8 @@ const IronConfig = {
         bankName: "البنك الأهلي / الراجحي",
         bankIban: "EG00000000000000000000000000",
         paymentLink: "https://buy.stripe.com/demo",
+        adminUsername: "El_Coach",
+        adminPasswordHash: hashPassword("123123"),
         passwordHash: hashPassword("admin")
     },
     subscriptionPrice: {
@@ -123,11 +125,20 @@ const IronConfig = {
     ]
 };
 
-// حفظ واسترجاع الإعدادات من التخزين المحلي
+// حفظ واسترجاع الإعدادات من التخزين المحلي مع الترحيل التلقائي لحساب الأدمن
 function getAppConfig() {
     const saved = localStorage.getItem("iron_coach_config");
     if (saved) {
-        try { return JSON.parse(saved); } catch (e) { }
+        try {
+            const parsed = JSON.parse(saved);
+            if (!parsed.coachInfo) parsed.coachInfo = { ...IronConfig.coachInfo };
+            if (!parsed.coachInfo.adminUsername || !parsed.coachInfo.adminPasswordHash) {
+                parsed.coachInfo.adminUsername = parsed.coachInfo.adminUsername || "El_Coach";
+                parsed.coachInfo.adminPasswordHash = parsed.coachInfo.adminPasswordHash || hashPassword("123123");
+                localStorage.setItem("iron_coach_config", JSON.stringify(parsed));
+            }
+            return parsed;
+        } catch (e) { }
     }
     localStorage.setItem("iron_coach_config", JSON.stringify(IronConfig));
     return IronConfig;

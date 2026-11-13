@@ -164,6 +164,38 @@ html[data-theme="light"] .modal-overlay {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* Brand Logo Frame (LOGO.jpg 271x240 aspect ratio) */
+.brand-logo-frame {
+    aspect-ratio: 271 / 240;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1.5px solid rgba(16, 185, 129, 0.4);
+    background: #0f172a;
+    box-shadow: 0 8px 22px -6px rgba(16, 185, 129, 0.25), 0 4px 12px rgba(0, 0, 0, 0.35);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.brand-logo-frame:hover {
+    transform: scale(1.03);
+    border-color: rgba(16, 185, 129, 0.75);
+    box-shadow: 0 10px 26px -4px rgba(16, 185, 129, 0.38);
+}
+
+.brand-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.03);
+    display: block;
+}
+
+html[data-theme="light"] .brand-logo-frame {
+    background: #ffffff;
+    border-color: rgba(5, 150, 105, 0.45);
+    box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.16);
+}
+
 /* Water Cup Tracker Pill Animation */
 .water-cup-btn {
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);

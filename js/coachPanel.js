@@ -39,12 +39,17 @@ const IronCoachPanel = {
                 <!-- شريط الترحيب والإحصائيات السريعة -->
                 <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/40 border border-slate-800 rounded-3xl p-6 relative overflow-hidden">
                     <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div>
-                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-2">
-                                <span>👑 لوحة تحكم الكوتش الرسمية</span>
+                        <div class="flex items-center gap-4">
+                            <div class="brand-logo-frame w-20 sm:w-24 flex-shrink-0 flex items-center justify-center">
+                                <img src="LOGO.jpg" alt="Coach Mahmoud Logo" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='👑'">
                             </div>
-                            <h2 class="text-2xl font-black text-white">أهلاً بك، ${config.coachInfo.name} 👋</h2>
-                            <p class="text-xs text-gray-400 mt-1">${config.coachInfo.title} | إدارة المشتركين، تعديل الخطط، والنسخ الاحتياطي</p>
+                            <div>
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-2">
+                                    <span>👑 لوحة تحكم الكوتش الرسمية</span>
+                                </div>
+                                <h2 class="text-2xl font-black text-white">أهلاً بك، ${config.coachInfo.name} 👋</h2>
+                                <p class="text-xs text-gray-400 mt-1">${config.coachInfo.title} | إدارة المشتركين، تعديل الخطط، والنسخ الاحتياطي</p>
+                            </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <button onclick="openModal('addTraineeModal')" class="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5">
@@ -332,6 +337,7 @@ const IronCoachPanel = {
     impersonateTrainee(id) {
         const trainees = IronAuth.getAllTrainees();
         const trainee = trainees.find(t => t.id === id);
+        const currentCoach = IronAuth.getCurrentUser();
         if (trainee) {
             const traineeUser = {
                 role: "trainee",
@@ -341,7 +347,8 @@ const IronCoachPanel = {
                 status: trainee.status,
                 daysLeft: trainee.daysLeft,
                 traineeData: trainee,
-                isImpersonating: true
+                isImpersonating: true,
+                impersonatedBy: currentCoach ? currentCoach.username : "El_Coach"
             };
             localStorage.setItem("iron_session", JSON.stringify(traineeUser));
             window.location.reload();
@@ -388,7 +395,13 @@ const IronCoachPanel = {
             config.subscriptionPrice.currency = form.coachCurrency.value.trim();
         }
         if (form.coachNewPassword && form.coachNewPassword.value.trim()) {
-            config.coachInfo.passwordHash = hashPassword(form.coachNewPassword.value.trim());
+            const newHash = hashPassword(form.coachNewPassword.value.trim());
+            const activeUser = IronAuth.getCurrentUser();
+            if (activeUser && activeUser.username && activeUser.username.toLowerCase() === "coach") {
+                config.coachInfo.passwordHash = newHash;
+            } else {
+                config.coachInfo.adminPasswordHash = newHash;
+            }
         }
 
         saveAppConfig(config);

@@ -1,8 +1,9 @@
 /**
  * IronCoach Pro - Service Worker for Offline Caching & PWA Support
+ * استراتيجية Network-First لضمان وصول التحديثات فوراً مع دعم العمل بدون إنترنت
  */
 
-const CACHE_NAME = 'ironcoach-pro-v2.2';
+const CACHE_NAME = 'ironcoach-pro-v2.4';
 const CORE_ASSETS = [
     './',
     './index.html',
@@ -40,19 +41,24 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
 
-    event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            const fetchPromise = fetch(event.request)
+    const isSameOrigin = event.request.url.startsWith(self.location.origin);
+
+    if (isSameOrigin) {
+        event.respondWith(
+            fetch(event.request)
                 .then((networkResponse) => {
-                    if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith(self.location.origin)) {
+                    if (networkResponse && networkResponse.status === 200) {
                         const responseClone = networkResponse.clone();
                         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
                     }
                     return networkResponse;
                 })
-                .catch(() => cachedResponse);
+                .catch(() => caches.match(event.request))
+        );
+        return;
+    }
 
-            return cachedResponse || fetchPromise;
-        })
+    event.respondWith(
+        caches.match(event.request).then((cachedResponse) => cachedResponse || fetch(event.request))
     );
 });

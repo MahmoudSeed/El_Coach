@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/jpeg" href="LOGO.jpg">
+    <link rel="apple-touch-icon" href="LOGO.jpg">
 
     <!-- Early Theme Initialization to Prevent FOUC -->
     <script>
@@ -95,15 +96,15 @@
             
             <!-- الشعار والهوية التجارية -->
             <div class="flex items-center gap-2.5 sm:gap-3 cursor-pointer" onclick="IronApp.switchTab('overview')">
-                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 p-0.5 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-emerald-500/20 flex-shrink-0 overflow-hidden">
-                    <img src="LOGO.jpg" alt="Coach Mahmoud Logo" class="w-full h-full object-cover rounded-[10px]" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
+                <div class="brand-logo-frame w-14 sm:w-16 flex-shrink-0 flex items-center justify-center">
+                    <img src="LOGO.jpg" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
                 </div>
                 <div>
                     <h1 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-1.5">
                         <span>أيرون كوتش</span>
                         <span class="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">PRO</span>
                     </h1>
-                    <div class="text-[10px] text-gray-400 font-bold hidden sm:block">كوتش محمود • التدريب الرياضي المعتمد</div>
+                    <div class="text-[10px] text-gray-400 font-bold hidden sm:block">Coach Mahmoud • التدريب الرياضي المعتمد</div>
                 </div>
             </div>
 
@@ -131,23 +132,23 @@
     </header>
 
     <!-- شريط التبديل التجريبي السريع (Quick Demo Login Bar للمعاينة السلسة) -->
-    <div id="demoAccountsBar" class="bg-slate-900/90 border-b border-slate-800/60 py-1.5 px-4 text-xs">
+    <div id="demoAccountsBar" class="bg-slate-900/90 border-b border-slate-800/60 py-1.5 px-4 text-[11px]">
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 overflow-x-auto whitespace-nowrap scrollbar-none">
-            <span class="text-gray-400 font-bold flex items-center gap-1">
-                <span>⚡ تبديل الحسابات السريع للمعاينة:</span>
+            <span class="text-gray-400 font-bold flex items-center gap-1 flex-shrink-0">
+                <span>⚡ تبديل الحسابات السريع:</span>
             </span>
-            <div class="flex items-center gap-2">
-                <button data-demo-user="coach" onclick="IronApp.quickLogin('coach', 'admin')" class="demo-acc-btn px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30 transition">
-                    👑 دخول ككوتش (محمود)
+            <div class="flex items-center gap-1.5 sm:gap-2">
+                <button data-demo-user="El_Coach" onclick="IronApp.quickLogin('El_Coach', '123123')" class="demo-acc-btn px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30 transition">
+                    👑 دخول كأدمن (El_Coach)
                 </button>
                 <button data-demo-user="ahmed" onclick="IronApp.quickLogin('ahmed', '123')" class="demo-acc-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold border border-slate-700 transition">
-                    👤 مشترك نشط (أحمد - باقي 20 يوم)
+                    👤 مشترك نشط (أحمد - 20 يوم)
                 </button>
                 <button data-demo-user="sara" onclick="IronApp.quickLogin('sara', '123')" class="demo-acc-btn px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30 transition">
-                    ⚠️ ينتهي قريباً (سارة - باقي يومين)
+                    ⚠️ ينتهي قريباً (سارة - يومين)
                 </button>
                 <button data-demo-user="khaled" onclick="IronApp.quickLogin('khaled', '123')" class="demo-acc-btn px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold border border-rose-500/30 transition">
-                    🚫 منتهي (خالد - شاشة التجديد)
+                    🚫 منتهي (خالد - التجديد)
                 </button>
             </div>
         </div>
@@ -163,11 +164,14 @@
             <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
                 <div class="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl"></div>
                 <div class="text-center mb-8 relative z-10">
-                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 p-0.5 mx-auto flex items-center justify-center text-slate-950 font-black text-3xl shadow-xl shadow-emerald-500/20 mb-4 overflow-hidden">
-                        <img src="LOGO.jpg" alt="Coach Mahmoud Logo" class="w-full h-full object-cover rounded-[14px]" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
+                    <div class="brand-logo-frame w-40 sm:w-44 mx-auto flex items-center justify-center mb-4">
+                        <img src="LOGO.jpg" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
+                    </div>
+                    <div class="inline-block text-[10px] font-black tracking-wider uppercase px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 mb-2">
+                        Train Hard • Stay Focused • Be Strong
                     </div>
                     <h2 class="text-2xl font-black text-white">تسجيل الدخول للمنصة</h2>
-                    <p class="text-xs text-gray-400 mt-1">خاص بالمشتركين والكوتش للوصول للخطط والمتابعة</p>
+                    <p class="text-xs text-gray-400 mt-1">منصة الكوتش محمود للمشتركين ومتابعة الخطط والتغذية</p>
                 </div>
 
                 <form id="loginForm" onsubmit="IronApp.handleLogin(event)" class="space-y-4 relative z-10">
@@ -201,8 +205,11 @@
         <!-- ============================================================= -->
         <section id="expiredView" class="hidden min-h-[70vh] flex items-center justify-center py-10">
             <div class="bg-slate-900/90 border border-rose-500/30 rounded-3xl p-8 max-w-xl w-full shadow-2xl relative text-center">
-                <div class="w-20 h-20 rounded-full bg-rose-500/10 border border-rose-500/30 mx-auto flex items-center justify-center text-4xl mb-4 animate-bounce">
-                    ⏳
+                <div class="brand-logo-frame w-28 mx-auto mb-3 flex items-center justify-center">
+                    <img src="LOGO.jpg" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⏳'">
+                </div>
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-black mb-3">
+                    <span>⏳ انتهت مدة الاشتراك</span>
                 </div>
                 <h2 class="text-2xl font-black text-white">انتهت مدة اشتراكك (30 يوماً)</h2>
                 <p class="text-sm text-gray-300 mt-2 leading-relaxed">
@@ -259,12 +266,17 @@
                 <!-- بطاقة الترحيب والهدف اليومي -->
                 <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/30 border border-slate-800 rounded-3xl p-6 relative overflow-hidden">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-2">
-                                <span id="homeDaysLeftBadge">باقي 30 يوماً في اشتراكك 🔥</span>
+                        <div class="flex items-center gap-4">
+                            <div class="brand-logo-frame w-20 sm:w-24 flex-shrink-0 hidden sm:flex items-center justify-center">
+                                <img src="LOGO.jpg" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
                             </div>
-                            <h2 class="text-2xl font-black text-white" id="homeWelcomeName">أهلاً بك يا بطل 👋</h2>
-                            <p class="text-xs text-gray-400 mt-1">خطة اليوم مصممة للوصول لأفضل فورمة رياضية بأمان تام</p>
+                            <div>
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-2">
+                                    <span id="homeDaysLeftBadge">باقي 30 يوماً في اشتراكك 🔥</span>
+                                </div>
+                                <h2 class="text-2xl font-black text-white" id="homeWelcomeName">أهلاً بك يا بطل 👋</h2>
+                                <p class="text-xs text-gray-400 mt-1">خطة اليوم مصممة تحت إشراف الكوتش محمود للوصول لأفضل فورمة بأمان تام</p>
+                            </div>
                         </div>
                         <div class="flex items-center gap-3">
                             <button onclick="IronApp.switchTab('workouts')" class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
@@ -619,6 +631,22 @@
             </div>
 
         </div>
+
+        <!-- تذييل العلامة التجارية (Brand Footer) -->
+        <footer class="mt-10 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
+            <div class="flex items-center gap-3">
+                <div class="brand-logo-frame w-12 flex-shrink-0 flex items-center justify-center">
+                    <img src="LOGO.jpg" alt="Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
+                </div>
+                <div>
+                    <div class="font-black text-white text-xs">Coach Mahmoud • أيرون كوتش PRO</div>
+                    <div class="text-[10px] text-gray-400">Train Hard • Stay Focused • Be Strong</div>
+                </div>
+            </div>
+            <div class="text-[11px] font-bold text-gray-400">
+                منصة التدريب والتغذية الأونلاين المعتمدة • v2.3
+            </div>
+        </footer>
 
     </main>
 
