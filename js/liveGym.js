@@ -16,6 +16,7 @@ const IronLiveGym = {
             try {
                 const user = IronAuth.getCurrentUser();
                 sessionStorage.setItem("iron_active_workout", JSON.stringify({
+                    version: 2,
                     traineeId: user && user.id ? user.id : null,
                     workout: this.currentWorkout,
                     activeExerciseIndex: this.activeExerciseIndex
@@ -42,7 +43,7 @@ const IronLiveGym = {
             const savedRaw = sessionStorage.getItem("iron_active_workout");
             if (savedRaw) {
                 const parsed = JSON.parse(savedRaw);
-                if (parsed.traineeId === currentTraineeId && parsed.workout && parsed.workout.programId === programId && parsed.workout.dayId === dayId) {
+                if (parsed.version === 2 && parsed.traineeId === currentTraineeId && parsed.workout && parsed.workout.programId === programId && parsed.workout.dayId === dayId) {
                     this.currentWorkout = parsed.workout;
                     this.activeExerciseIndex = parsed.activeExerciseIndex || 0;
                     this.renderLiveGymModal();
@@ -51,10 +52,10 @@ const IronLiveGym = {
             }
         } catch (e) {}
 
-        // تجهيز بيانات الجلسة مع حفظ الجولات
+        // تجهيز بيانات الجلسة مع حفظ الجولات مطابقة للتصميم المعتمد
         this.currentWorkout = {
             programId,
-            programName: program.nameAr,
+            programName: program.nameEn || program.nameAr,
             dayId,
             dayTitle: day.title,
             targetMuscles: day.targetMuscles,
@@ -73,12 +74,12 @@ const IronLiveGym = {
                 }
                 return {
                     exerciseId: item.exerciseId,
+                    displayNameEn: item.displayNameEn || (exDetails ? exDetails.nameEn : item.exerciseId),
+                    pair: item.pair || "",
                     details: exDetails,
                     setsTarget: item.sets,
                     repsTarget: item.reps,
-                    restSec: item.restSec || 90,
-                    rpe: item.rpe || 8,
-                    note: item.note || "",
+                    restSec: item.restSec || 60,
                     sets: setsData
                 };
             })
@@ -195,12 +196,13 @@ const IronLiveGym = {
 
         const oldEx = this.currentWorkout.exercises[exerciseIdx];
         oldEx.exerciseId = newExerciseId;
+        oldEx.displayNameEn = newDetails.nameEn;
         oldEx.details = newDetails;
 
         this.saveDraftSession();
         closeModal("altExercisesModal");
         this.renderLiveGymModal();
-        showToast(`تم استبدال التمرين بـ: ${newDetails.nameAr}`, "success");
+        showToast(`Swapped to: ${newDetails.nameEn}`, "success");
     },
 
     // فتح نافذة اختيار تمرين بديل
@@ -211,15 +213,14 @@ const IronLiveGym = {
         if (!container) return;
 
         if (alternatives.length === 0) {
-            container.innerHTML = `<div class="text-center py-6 text-gray-400">لا توجد تمارين بديلة محددة لهذا التمرين حالياً. يمكنك استخدام الدمبلز كبديل عام.</div>`;
+            container.innerHTML = `<div class="text-center py-6 text-gray-400">No direct alternative listed. Use dumbbells or a cable machine targeting the same muscle.</div>`;
         } else {
             container.innerHTML = alternatives.map(alt => `
                 <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 flex items-center justify-between gap-4 hover:border-emerald-500/50 transition">
-                    <img src="${alt.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${alt.muscle}')" class="w-16 h-16 rounded-lg object-cover border border-slate-700 bg-slate-950" alt="${alt.nameAr}">
-                    <div class="flex-1">
-                        <h4 class="font-bold text-white text-sm">${alt.nameAr}</h4>
-                        <span class="text-xs text-emerald-400 font-mono">${alt.nameEn}</span>
-                        <div class="text-xs text-gray-400 mt-1">الأداة: ${alt.equipment}</div>
+                    <img src="${alt.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${alt.muscle}')" class="w-16 h-16 rounded-lg object-cover border border-slate-700 bg-slate-950" alt="${alt.nameEn}">
+                    <div class="flex-1 text-left" dir="ltr">
+                        <h4 class="font-black text-white text-sm">${alt.nameEn}</h4>
+                        <div class="text-xs text-emerald-400 mt-0.5">${alt.equipment}</div>
                     </div>
                     <button onclick="IronLiveGym.swapCurrentExercise(${exerciseIdx}, '${alt.id}')" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-lg transition shadow-lg shadow-emerald-500/20">
                         اختيار كبديل
@@ -273,19 +274,20 @@ const IronLiveGym = {
         }
     },
 
-    // رسم واجهة الجيم التفاعلية
+    // رسم واجهة الجيم التفاعلية (التمارين بالإنجليزية ومطابقة لعدد الجولات والتكرارات بالتصميم)
     renderLiveGymModal() {
         const modal = document.getElementById("liveGymModalContent");
         if (!modal || !this.currentWorkout) return;
 
         const w = this.currentWorkout;
         const ex = w.exercises[this.activeExerciseIndex];
-        const details = ex.details;
+        const details = ex.details || { nameEn: ex.displayNameEn, gif: "", muscle: "Workout", execution: "" };
+        const exerciseTitleEn = ex.displayNameEn || details.nameEn;
 
         modal.innerHTML = `
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                <div>
-                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${w.programName}</span>
+                <div dir="ltr" class="text-left">
+                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${w.programName}</span>
                     <h3 class="text-lg font-black text-white mt-1">${w.dayTitle}</h3>
                 </div>
                 <div class="flex items-center gap-2">
@@ -296,56 +298,65 @@ const IronLiveGym = {
                 </div>
             </div>
 
-            <!-- مؤشر التنقل بين تمارين اليوم -->
-            <div class="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-thin">
-                ${w.exercises.map((item, idx) => `
-                    <button onclick="IronLiveGym.activeExerciseIndex = ${idx}; IronLiveGym.saveDraftSession(); IronLiveGym.renderLiveGymModal();" 
-                        class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${idx === this.activeExerciseIndex ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : 'bg-slate-800 text-gray-300 hover:bg-slate-700'}">
-                        <span>تمرين ${idx + 1}</span>
-                        ${item.sets.every(s => s.completed) ? '<span class="text-xs">✓</span>' : ''}
-                    </button>
-                `).join('')}
+            <!-- مؤشر التنقل بين تمارين اليوم (بالإنجليزية ومطابق لترتيب التصميم) -->
+            <div class="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-thin" dir="ltr">
+                ${w.exercises.map((item, idx) => {
+                    const label = item.displayNameEn || item.details?.nameEn || `Exercise ${idx + 1}`;
+                    const prefix = item.pair ? `${item.pair}.` : `${idx + 1}.`;
+                    return `
+                        <button onclick="IronLiveGym.activeExerciseIndex = ${idx}; IronLiveGym.saveDraftSession(); IronLiveGym.renderLiveGymModal();" 
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${idx === this.activeExerciseIndex ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : 'bg-slate-800 text-gray-300 hover:bg-slate-700'}">
+                            <span>${prefix} ${label}</span>
+                            ${item.sets.every(s => s.completed) ? '<span class="text-xs">✓</span>' : ''}
+                        </button>
+                    `;
+                }).join('')}
             </div>
 
             <!-- بطاقة التمرين الحالي النشط -->
             <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 mb-4">
                 <div class="flex flex-col sm:flex-row gap-4 items-center">
                     <div class="relative w-full sm:w-44 h-44 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex-shrink-0">
-                        <img src="${details.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${details.muscle}')" class="w-full h-full object-contain" alt="${details.nameAr}">
-                        <div class="absolute top-2 right-2 bg-slate-900/80 backdrop-blur px-2 py-0.5 rounded text-[10px] text-emerald-400 font-bold border border-emerald-500/20">
-                            ${details.muscle}
-                        </div>
+                        <img src="${details.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${exerciseTitleEn}')" class="w-full h-full object-contain" alt="${exerciseTitleEn}">
+                        ${ex.pair ? `
+                            <div class="absolute top-2 left-2 bg-amber-500 text-slate-950 px-2 py-0.5 rounded text-[11px] font-black">
+                                ${ex.pair}
+                            </div>
+                        ` : ''}
                     </div>
 
-                    <div class="flex-1 w-full text-right">
+                    <div class="flex-1 w-full">
                         <div class="flex justify-between items-start gap-2">
-                            <div>
-                                <h2 class="text-lg font-black text-white">${details.nameAr}</h2>
-                                <div class="text-xs text-gray-400 font-mono mb-2">${details.nameEn}</div>
+                            <div dir="ltr" class="text-left">
+                                <div class="text-[11px] text-emerald-400 font-bold uppercase tracking-wide mb-0.5">
+                                    Exercise ${this.activeExerciseIndex + 1} of ${w.exercises.length}
+                                </div>
+                                <h2 class="text-xl font-black text-white leading-tight">${exerciseTitleEn}</h2>
+                                <div class="text-xs text-gray-400 font-mono mt-1">${details.equipment || ''}</div>
                             </div>
                             <!-- زر اقتراح بديل للجهاز المشغول -->
                             <button onclick="IronLiveGym.openAlternativesModal(${this.activeExerciseIndex})" 
-                                class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1 flex-shrink-0">
                                 <span>⚡ الجهاز مشغول؟</span>
                             </button>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-2 text-center text-xs my-3 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs my-3 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80" dir="ltr">
                             <div>
-                                <div class="text-gray-400">الجولات</div>
-                                <div class="font-black text-white text-sm">${ex.setsTarget}</div>
+                                <div class="text-gray-400 font-bold">Sets</div>
+                                <div class="font-black text-white text-base">${ex.setsTarget}</div>
                             </div>
                             <div>
-                                <div class="text-gray-400">التكرارات</div>
-                                <div class="font-black text-emerald-400 text-sm">${ex.repsTarget}</div>
+                                <div class="text-gray-400 font-bold">Reps</div>
+                                <div class="font-black text-emerald-400 text-base">${ex.repsTarget}</div>
                             </div>
                             <div>
-                                <div class="text-gray-400">الراحة</div>
-                                <div class="font-black text-amber-400 text-sm">${ex.restSec}ث</div>
+                                <div class="text-gray-400 font-bold">Rest</div>
+                                <div class="font-black text-amber-400 text-base">${ex.restSec}s</div>
                             </div>
                         </div>
 
-                        <p class="text-xs text-gray-300 leading-relaxed"><strong class="text-emerald-400">الأداء:</strong> ${details.execution.substring(0, 120)}...</p>
+                        ${details.execution ? `<p class="text-xs text-gray-300 leading-relaxed"><strong class="text-emerald-400">التكنيك:</strong> ${details.execution}</p>` : ''}
                     </div>
                 </div>
             </div>
@@ -354,26 +365,26 @@ const IronLiveGym = {
             <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
                 <div class="flex justify-between items-center mb-3">
                     <h4 class="font-black text-sm text-white flex items-center gap-2">
-                        <span>📝 تسجيل الجولات والأوزان</span>
+                        <span>📝 تسجيل الجولات والأوزان (${ex.setsTarget} × ${ex.repsTarget})</span>
                     </h4>
                     <span class="text-xs text-gray-400">اضغط علامة (✓) لبدء مؤقت الراحة</span>
                 </div>
 
                 <div class="space-y-2 max-h-[38vh] overflow-y-auto pr-1">
-                    <div class="grid grid-cols-12 gap-2 text-center text-[11px] font-bold text-gray-400 px-2">
-                        <div class="col-span-2">الجولة</div>
-                        <div class="col-span-3">الوزن (كجم)</div>
-                        <div class="col-span-3">العدّات</div>
-                        <div class="col-span-4">إتمام الجولة</div>
+                    <div class="grid grid-cols-12 gap-2 text-center text-[11px] font-bold text-gray-400 px-2" dir="ltr">
+                        <div class="col-span-2">Set</div>
+                        <div class="col-span-3">Weight (kg)</div>
+                        <div class="col-span-3">Reps (${ex.repsTarget})</div>
+                        <div class="col-span-4">Done</div>
                     </div>
 
                     ${ex.sets.map((s, sIdx) => `
                         <div class="grid grid-cols-12 gap-2 items-center p-2 rounded-xl border transition ${s.completed ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-slate-950/60 border-slate-800'}">
-                            <div class="col-span-2 text-center font-black ${s.completed ? 'text-emerald-400' : 'text-gray-300'} text-xs">
-                                #${s.setNumber}
+                            <div class="col-span-2 text-center font-black ${s.completed ? 'text-emerald-400' : 'text-gray-300'} text-xs" dir="ltr">
+                                Set ${s.setNumber}
                             </div>
                             <div class="col-span-3">
-                                <input type="number" placeholder="مثال: 60" value="${s.weight}" 
+                                <input type="number" placeholder="kg" value="${s.weight}" 
                                     oninput="IronLiveGym.currentWorkout.exercises[${this.activeExerciseIndex}].sets[${sIdx}].weight = this.value; IronLiveGym.saveDraftSession();"
                                     class="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-1.5 text-center text-xs text-white font-bold focus:border-emerald-500 outline-none">
                             </div>
@@ -385,7 +396,7 @@ const IronLiveGym = {
                             <div class="col-span-4 flex items-center justify-center">
                                 <button onclick="IronLiveGym.toggleSetComplete(${this.activeExerciseIndex}, ${sIdx})"
                                     class="w-full py-1.5 rounded-lg font-bold text-xs transition flex items-center justify-center gap-1 ${s.completed ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : 'bg-slate-800 hover:bg-slate-700 text-gray-300'}">
-                                    <span>${s.completed ? 'مكتملة ✓' : 'تمت الجولة'}</span>
+                                    <span>${s.completed ? 'Completed ✓' : 'Complete'}</span>
                                 </button>
                             </div>
                         </div>

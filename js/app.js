@@ -137,11 +137,12 @@ const IronApp = {
 
     resolveProgramIdFromName(programName = "") {
         const p = String(programName).toLowerCase();
+        if (p.includes("ppl") && (p.includes("upper") || p.includes("علوي"))) return "prog_ppl_upper_lower";
         if (p.includes("upper") || p.includes("علوي")) return "prog_upper_lower";
         if (p.includes("arnold") || p.includes("آرنولد")) return "prog_arnold";
         if (p.includes("bro") || p.includes("برو")) return "prog_bro";
         if (p.includes("anterior") || p.includes("أمامية")) return "prog_anterior_posterior";
-        if (p.includes("full") || p.includes("كامل")) return "prog_full_body";
+        if (p.includes("full") || p.includes("كامل")) return "prog_ppl_upper_lower";
         return "prog_ppl";
     },
 
@@ -943,50 +944,54 @@ const IronApp = {
         container.innerHTML = `
             <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 relative overflow-hidden">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-1">
+                    <div class="flex-1" dir="ltr">
+                        <div class="flex items-center gap-2 mb-1 flex-wrap">
                             <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">${program.frequency}</span>
                             <span class="px-2.5 py-0.5 rounded-full bg-slate-800 text-gray-300 text-[11px] font-bold">${program.level}</span>
                         </div>
-                        <h2 class="text-xl font-black text-white">${program.nameAr}</h2>
-                        <div class="text-xs text-gray-400 font-mono mb-3">${program.nameEn}</div>
-                        <p class="text-xs text-gray-300 leading-relaxed max-w-3xl">${program.description}</p>
+                        <h2 class="text-xl font-black text-white">${program.nameEn}</h2>
+                        <p class="text-xs text-gray-300 leading-relaxed max-w-3xl mt-1.5">${program.description}</p>
                     </div>
                     ${program.image ? `
-                        <div class="w-full md:w-48 h-28 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 flex-shrink-0">
-                            <img src="${program.image}" onerror="this.parentElement.style.display='none'" class="w-full h-full object-cover opacity-90" alt="${program.nameAr}">
-                        </div>
+                        <a href="${program.image}" target="_blank" title="عرض تصميم الجدول بالحجم الكامل" class="block w-full md:w-52 h-32 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 flex-shrink-0 hover:border-emerald-500/50 transition">
+                            <img src="${program.image}" onerror="this.parentElement.style.display='none'" class="w-full h-full object-cover opacity-95 hover:scale-105 transition duration-300" alt="${program.nameEn}">
+                        </a>
                     ` : ''}
                 </div>
             </div>
 
-            <!-- قائمة الأيام التدريبية داخل البرنامج -->
+            <!-- قائمة الأيام التدريبية داخل البرنامج (التمارين بالإنجليزية ومطابقة لصور التصميم) -->
             <div class="space-y-4">
                 ${program.days.map((day) => `
                     <div class="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-5">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3 mb-4">
-                            <div>
+                            <div dir="ltr" class="text-left">
                                 <h4 class="font-black text-white text-base">${day.title}</h4>
-                                <div class="text-xs text-emerald-400 font-bold mt-0.5">العضلات المستهدفة: ${day.targetMuscles}</div>
+                                <div class="text-xs text-emerald-400 font-bold mt-0.5">${day.targetMuscles} • ${day.exercises.length} Exercises</div>
                             </div>
                             <button onclick="IronApp.startLiveWorkout('${program.id}', '${day.dayId}')" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition flex items-center justify-center gap-1.5">
                                 <span>🏋️‍♂️ ابدأ التمرين الآن (وضع الجيم)</span>
                             </button>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            ${day.exercises.map(item => {
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" dir="ltr">
+                            ${day.exercises.map((item, idx) => {
                                 const ex = getExerciseById(item.exerciseId);
                                 if (!ex) return '';
+                                const exLabel = item.displayNameEn || ex.nameEn;
+                                const safeExLabel = exLabel.replace(/'/g, "\\'");
+                                const badgeNum = item.pair || `${idx + 1}`;
                                 return `
-                                    <div onclick="IronApp.openExerciseDetail('${ex.id}')" class="bg-slate-900/80 border border-slate-800/80 rounded-xl p-3 flex items-center gap-3 hover:border-emerald-500/40 cursor-pointer transition">
-                                        <img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${ex.muscle}')" class="w-16 h-16 rounded-lg object-contain bg-slate-950 border border-slate-800 flex-shrink-0" alt="${ex.nameAr}" loading="lazy">
+                                    <div onclick="IronApp.openExerciseDetail('${ex.id}', '${safeExLabel}')" class="bg-slate-900/80 border border-slate-800/80 rounded-xl p-3 flex items-center gap-3 hover:border-emerald-500/40 cursor-pointer transition text-left">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 font-black text-xs flex-shrink-0">
+                                            ${badgeNum}
+                                        </div>
+                                        <img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${exLabel}')" class="w-14 h-14 rounded-lg object-contain bg-slate-950 border border-slate-800 flex-shrink-0" alt="${exLabel}" loading="lazy">
                                         <div class="flex-1 min-w-0">
-                                            <h5 class="font-bold text-white text-xs truncate">${ex.nameAr}</h5>
-                                            <div class="text-[10px] text-gray-400 font-mono truncate mb-1">${ex.nameEn}</div>
-                                            <div class="flex items-center gap-2 text-[10px] font-bold">
-                                                <span class="text-emerald-400">${item.sets} جولات × ${item.reps}</span>
-                                                <span class="text-gray-400">راحة: ${item.restSec}ث</span>
+                                            <h5 class="font-black text-white text-xs truncate">${exLabel}</h5>
+                                            <div class="flex items-center gap-2 text-[11px] font-bold mt-1">
+                                                <span class="text-emerald-400">${item.sets} × ${item.reps}</span>
+                                                <span class="text-gray-400">• Rest ${item.restSec}s</span>
                                             </div>
                                         </div>
                                         <div class="text-gray-400 hover:text-white text-xs">ℹ️</div>
@@ -1066,19 +1071,20 @@ const IronApp = {
     },
 
     // فتح تفاصيل التمرين الكاملة
-    openExerciseDetail(exId) {
+    openExerciseDetail(exId, customNameEn = null) {
         const ex = getExerciseById(exId);
         const container = document.getElementById("exerciseDetailModalContent");
         if (!container || !ex) return;
 
         const alternatives = getAlternativeExercises(exId);
+        const titleEn = customNameEn || ex.nameEn;
 
         container.innerHTML = `
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                <div>
+                <div dir="ltr" class="text-left">
                     <span class="text-xs font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">${ex.muscle}</span>
-                    <h3 class="text-lg font-black text-white mt-1">${ex.nameAr}</h3>
-                    <div class="text-xs text-gray-400 font-mono">${ex.nameEn}</div>
+                    <h3 class="text-lg font-black text-white mt-1">${titleEn}</h3>
+                    <div class="text-xs text-gray-400 font-bold">${ex.nameAr}</div>
                 </div>
                 <button onclick="closeModal('exerciseDetailModal')" class="text-gray-400 hover:text-white text-xl">✕</button>
             </div>

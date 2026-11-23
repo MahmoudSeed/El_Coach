@@ -3,7 +3,7 @@
  * استراتيجية Network-First لضمان وصول التحديثات فوراً مع دعم العمل بدون إنترنت
  */
 
-const CACHE_NAME = 'ironcoach-pro-v2.5';
+const CACHE_NAME = 'ironcoach-pro-v2.6';
 const CORE_ASSETS = [
     './',
     './index.html',

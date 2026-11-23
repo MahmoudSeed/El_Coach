@@ -1,336 +1,375 @@
 /**
- * IronCoach Pro - 6 Structured Scientific Workout Programs
- * البرامج التدريبية المعتمدة مع تقسيم الأيام والجولات والتكرارات وفترات الراحة
+ * IronCoach Pro - 6 Official Training Programs Matching Design Templates
+ * البرامج التدريبية الـ 6 مطابقة حرفياً لصور التصميم المعتمدة (التمارين بالإنجليزية + عدد الجولات والتكرارات)
  */
 
 const workoutProgramsDatabase = [
     // ==========================================================
-    // 1. برنامج Push / Pull / Legs (PPL) - 3 إلى 6 أيام
+    // 1. Push / Pull / Legs (Training Programs/Push_pull_legs.png)
     // ==========================================================
     {
         id: "prog_ppl",
-        nameAr: "نظام الدفع والسحب والأرجل (PPL)",
-        nameEn: "Push - Pull - Legs Split",
-        frequency: "3 - 6 أيام / أسبوع",
-        level: "متوسط إلى متقدم",
-        description: "النظام الأكثر شعبية وشهرة عالمياً لبناء الكتلة العضلية؛ يفصل عضلات الدفع (صدر، أكتاف، تراي) عن عضلات السحب (ظهر، باي، كتف خلفي) والأرجل.",
+        nameAr: "Push / Pull / Legs",
+        nameEn: "Push / Pull / Legs (PPL)",
+        frequency: "8-Day Training Cycle (3 Days On • 1 Day Off)",
+        level: "Standard Template",
+        description: "Day 1: Push | Day 2: Pull | Day 3: Legs | Day 4: Rest | Day 5: Push | Day 6: Pull | Day 7: Legs | Day 8: Rest — Rest Between Sets: 60 sec.",
         image: "Training Programs/Push_pull_legs.png",
         days: [
             {
                 dayId: "ppl_d1",
-                title: "اليوم الأول: تمارين الدفع (Push Day)",
-                targetMuscles: "صدر، أكتاف أمامية وجانبية، ترايسبس",
+                title: "PUSH (Days 1 & 5)",
+                targetMuscles: "Chest, Shoulders, Triceps",
                 exercises: [
-                    { exerciseId: "ex_ch_1", sets: 4, reps: "6 - 8", restSec: 120, rpe: 8, note: "تركيز على زيادة الوزن تدريجياً" },
-                    { exerciseId: "ex_ch_3", sets: 3, reps: "8 - 10", restSec: 90, rpe: 8, note: "زاوية البنش 30 درجة لقمة الصدر" },
-                    { exerciseId: "ex_sh_1", sets: 3, reps: "10 - 12", restSec: 90, rpe: 8, note: "ضغط الكتف مع التحكم في النزول" },
-                    { exerciseId: "ex_sh_3", sets: 4, reps: "12 - 15", restSec: 60, rpe: 9, note: "رفرفة جانبية لعرض الكتف" },
-                    { exerciseId: "ex_arm_4", sets: 3, reps: "10 - 12", restSec: 60, rpe: 9, note: "عصر الترايسبس في الأسفل" },
-                    { exerciseId: "ex_arm_5", sets: 3, reps: "10 - 12", restSec: 60, rpe: 8, note: "تثبيت الكوعين جيداً" }
+                    { exerciseId: "ex_ch_5", displayNameEn: "Chest Press", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_ch_7", displayNameEn: "Incline Chest Press", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_sh_3", displayNameEn: "Lateral Raise", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_sh_8", displayNameEn: "Front Raise", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_arm_15", displayNameEn: "Triceps Machine", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_arm_14", displayNameEn: "Overhead Triceps Extension", sets: 4, reps: "20", restSec: 60 }
                 ]
             },
             {
                 dayId: "ppl_d2",
-                title: "اليوم الثاني: تمارين السحب (Pull Day)",
-                targetMuscles: "عضلات الظهر كاملة، كتف خلفي، بايسبس",
+                title: "PULL (Days 2 & 6)",
+                targetMuscles: "Back, Rear Delts, Biceps",
                 exercises: [
-                    { exerciseId: "ex_bk_1", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "سحب عريض لتعريض عضلات الظهر" },
-                    { exerciseId: "ex_bk_3", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "استقامة الظهر التامة وضغط اللوحين" },
-                    { exerciseId: "ex_bk_4", sets: 3, reps: "10 - 12", restSec: 75, rpe: 8, note: "سحب أرضي لسمك الظهر" },
-                    { exerciseId: "ex_sh_5", sets: 4, reps: "12 - 15", restSec: 60, rpe: 9, note: "حماية مفصل الكتف وتدوير خارجي" },
-                    { exerciseId: "ex_arm_1", sets: 3, reps: "10 - 12", restSec: 60, rpe: 9, note: "إطالة كاملة للبايسبس" },
-                    { exerciseId: "ex_arm_3", sets: 3, reps: "10 - 12", restSec: 60, rpe: 8, note: "ضخامة الساعد والبراكياليس" }
+                    { exerciseId: "ex_bk_1", displayNameEn: "Lat Pulldown", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_bk_4", displayNameEn: "Seated Row", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_bk_8", displayNameEn: "Low Row", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_sh_6", displayNameEn: "Reverse Pec Deck", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_arm_7", displayNameEn: "Dumbbell Curl", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_arm_8", displayNameEn: "Cable Curl", sets: 4, reps: "20", restSec: 60 }
                 ]
             },
             {
                 dayId: "ppl_d3",
-                title: "اليوم الثالث: تمارين الأرجل والكور (Legs & Core)",
-                targetMuscles: "أفخاذ أمامية، خلفية، سمانة، بطن",
+                title: "LEGS (Days 3 & 7)",
+                targetMuscles: "Quads, Hamstrings, Glutes, Calves",
                 exercises: [
-                    { exerciseId: "ex_lg_1", sets: 4, reps: "6 - 8", restSec: 150, rpe: 8, note: "العمود الفقري مشدود والنزول موازي" },
-                    { exerciseId: "ex_lg_2", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "إطالة أوتار الركبة الخلفية والمؤخرة" },
-                    { exerciseId: "ex_lg_3", sets: 3, reps: "10 - 12", restSec: 90, rpe: 8, note: "دفع الأرجل دون قفل الركبة" },
-                    { exerciseId: "ex_lg_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "عزل وضخ الدم في الفخذ الأمامي" },
-                    { exerciseId: "ex_lg_5", sets: 3, reps: "10 - 12", restSec: 60, rpe: 9, note: "ثني أرجل خلفي" },
-                    { exerciseId: "ex_ab_1", sets: 3, reps: "12 - 15", restSec: 60, rpe: 8, note: "رفع أرجل معلق لعضلات البطن" }
+                    { exerciseId: "ex_lg_4", displayNameEn: "Leg Extension", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_5", displayNameEn: "Lying Leg Curl", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_3", displayNameEn: "Leg Press", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_7", displayNameEn: "Seated Leg Curl", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_9", displayNameEn: "Hip Thrust", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_1", displayNameEn: "Squat", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_11", displayNameEn: "Calf Raise", sets: 4, reps: "20", restSec: 60 }
                 ]
             }
         ]
     },
 
     // ==========================================================
-    // 2. برنامج Upper / Lower Split - 4 أيام
+    // 2. Upper / Lower Split (Training Programs/Upper_Lower.jpeg)
     // ==========================================================
     {
         id: "prog_upper_lower",
-        nameAr: "نظام الجزء العلوي والسفلي (Upper / Lower)",
+        nameAr: "Upper / Lower Split",
         nameEn: "Upper / Lower Split",
-        frequency: "4 أيام / أسبوع",
-        level: "مناسب لجميع المستويات (أفضل استشفاء)",
-        description: "يقسم الجسم إلى يومين علوي ويومين سفلي أسبوعياً، موفراً راحة 3 أيام أسبوعياً مع استهداف كل عضلة مرتين لبناء عضلي مثالي.",
+        frequency: "8-Day Training Cycle (Upper, Lower, Cardio 60 Min, Rest)",
+        level: "Standard Template (Supersets)",
+        description: "Supersets: Perform exercise 1 then exercise 2 with no rest. Rest 30 sec after each pair. Repeat for 4 rounds. Warm-up 10 min + Post-workout Cardio 30 min LISS.",
         image: "Training Programs/Upper_Lower.jpeg",
         days: [
             {
                 dayId: "ul_d1",
-                title: "اليوم الأول: الجزء العلوي (قوة - Upper Power)",
-                targetMuscles: "صدر، ظهر، أكتاف، ذراعين",
+                title: "UPPER (Days 1 & 5)",
+                targetMuscles: "Chest, Back, Shoulders, Arms (Supersets A-D)",
                 exercises: [
-                    { exerciseId: "ex_ch_1", sets: 4, reps: "5 - 7", restSec: 120, rpe: 8, note: "ضغط بنش ثقيل" },
-                    { exerciseId: "ex_bk_3", sets: 4, reps: "6 - 8", restSec: 120, rpe: 8, note: "تجديف بار منحني" },
-                    { exerciseId: "ex_sh_2", sets: 3, reps: "6 - 8", restSec: 90, rpe: 8, note: "ضغط عسكري واقفاً" },
-                    { exerciseId: "ex_bk_1", sets: 3, reps: "8 - 10", restSec: 90, rpe: 8, note: "سحب ظهر عالي" },
-                    { exerciseId: "ex_arm_2", sets: 3, reps: "8 - 10", restSec: 60, rpe: 8, note: "بايسبس بار زجزاج" },
-                    { exerciseId: "ex_arm_5", sets: 3, reps: "8 - 10", restSec: 60, rpe: 8, note: "سكال كراشر للتراي" }
+                    { exerciseId: "ex_ch_5", pair: "A1", displayNameEn: "Chest Press Machine", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_ch_8", pair: "A2", displayNameEn: "Fly Machine", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_bk_1", pair: "B1", displayNameEn: "Lat Pulldown", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_bk_4", pair: "B2", displayNameEn: "Seated Row Machine", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_sh_7", pair: "C1", displayNameEn: "Shoulder Press Machine", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_sh_3", pair: "C2", displayNameEn: "Dumbbell Lateral Raise", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_arm_10", pair: "D1", displayNameEn: "Biceps Curl Machine", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_arm_15", pair: "D2", displayNameEn: "Triceps Extension Machine", sets: 4, reps: "15", restSec: 30 }
                 ]
             },
             {
                 dayId: "ul_d2",
-                title: "اليوم الثاني: الجزء السفلي (قوة - Lower Power)",
-                targetMuscles: "أفخاذ، سمانة، بطن وكور",
+                title: "LOWER (Days 2 & 6)",
+                targetMuscles: "Quads, Hamstrings, Glutes, Calves (Supersets A-C)",
                 exercises: [
-                    { exerciseId: "ex_lg_1", sets: 4, reps: "6 - 8", restSec: 150, rpe: 8, note: "سكوات حر بالبار" },
-                    { exerciseId: "ex_lg_2", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "ديدليفت روماني للأفخاذ الخلفية" },
-                    { exerciseId: "ex_lg_3", sets: 3, reps: "8 - 10", restSec: 90, rpe: 8, note: "لج برس ثقيل" },
-                    { exerciseId: "ex_lg_5", sets: 3, reps: "10 - 12", restSec: 60, rpe: 8, note: "ثني خلفي بالجهاز" },
-                    { exerciseId: "ex_ab_3", sets: 3, reps: "45 ثانية", restSec: 60, rpe: 8, note: "بلانك ثبات الكور" }
-                ]
-            },
-            {
-                dayId: "ul_d3",
-                title: "اليوم الثالث: الجزء العلوي (ضخامة - Upper Hypertrophy)",
-                targetMuscles: "صدر، ظهر، أكتاف جانبية وخلفية، ذراعين",
-                exercises: [
-                    { exerciseId: "ex_ch_3", sets: 4, reps: "8 - 12", restSec: 90, rpe: 8, note: "بنش مائل دمبل" },
-                    { exerciseId: "ex_bk_2", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "عقلة أو سحب عالي" },
-                    { exerciseId: "ex_ch_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "تفتيح كيبل لضخ الدم بالصدر" },
-                    { exerciseId: "ex_sh_3", sets: 4, reps: "12 - 15", restSec: 60, rpe: 9, note: "رفرفة جانبية" },
-                    { exerciseId: "ex_sh_5", sets: 3, reps: "15", restSec: 60, rpe: 9, note: "فيس بول للكتف الخلفي" },
-                    { exerciseId: "ex_arm_1", sets: 3, reps: "10 - 12", restSec: 60, rpe: 8, note: "إنكلاين كيرل للباي" },
-                    { exerciseId: "ex_arm_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "تراي بالحبل" }
-                ]
-            },
-            {
-                dayId: "ul_d4",
-                title: "اليوم الرابع: الجزء السفلي (ضخامة - Lower Hypertrophy)",
-                targetMuscles: "أفخاذ أمامية وخلفية ومؤخرة وكور",
-                exercises: [
-                    { exerciseId: "ex_bk_6", sets: 3, reps: "5", restSec: 150, rpe: 8, note: "ديدليفت تقليدي" },
-                    { exerciseId: "ex_lg_6", sets: 3, reps: "10 لكل رجل", restSec: 90, rpe: 8, note: "سكوات بلغاري" },
-                    { exerciseId: "ex_lg_4", sets: 4, reps: "12 - 15", restSec: 60, rpe: 9, note: "فرد أرجل أمامي" },
-                    { exerciseId: "ex_lg_5", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "ثني أرجل خلفي" },
-                    { exerciseId: "ex_ab_2", sets: 3, reps: "15", restSec: 60, rpe: 8, note: "طحن بطن بالكيبل" }
+                    { exerciseId: "ex_lg_4", pair: "A1", displayNameEn: "Leg Extension", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_lg_7", pair: "A2", displayNameEn: "Seated Leg Curl", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_lg_3", pair: "B1", displayNameEn: "Leg Press Machine", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_lg_9", pair: "B2", displayNameEn: "Hip Thrust Machine", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_lg_11", pair: "C1", displayNameEn: "Standing Calf Machine", sets: 4, reps: "15", restSec: 30 },
+                    { exerciseId: "ex_lg_12", pair: "C2", displayNameEn: "Seated Calf Machine", sets: 4, reps: "15", restSec: 30 }
                 ]
             }
         ]
     },
 
     // ==========================================================
-    // 3. برنامج Arnold Split - 6 أيام
+    // 3. Arnold Split (Training Programs/Arnold_Split.png)
     // ==========================================================
     {
         id: "prog_arnold",
-        nameAr: "نظام آرنولد شوارزنيجر (Arnold Split)",
-        nameEn: "Arnold Schwarzenegger Split",
-        frequency: "6 أيام / أسبوع",
-        level: "متقدم (ضخامة عضلية أسطورية)",
-        description: "البرنامج الأسطوري الذي بنى به آرنولد جسمه: يوم (صدر وظهر سوبر سيت لضخ دم خرافي)، يوم (أكتاف وذراعين لتناسق هائل)، ويوم (أرجل وبطن).",
+        nameAr: "Arnold Split",
+        nameEn: "Arnold Split",
+        frequency: "8-Day Training Cycle (3 Days On / 1 Day Off)",
+        level: "Upper Body: 3 × 10 • Legs: 4 × 20",
+        description: "Days 1 & 5: Chest & Back | Days 2 & 6: Shoulders & Arms | Days 3 & 7: Legs | Days 4 & 8: Rest — Repeat the Cycle.",
         image: "Training Programs/Arnold_Split.png",
         days: [
             {
                 dayId: "arn_d1",
-                title: "اليوم الأول والرابع: عضلات الصدر والظهر (Chest & Back)",
-                targetMuscles: "الصدر والظهر معاً (عضلات مضادة Antagonist)",
+                title: "CHEST & BACK (Days 1 & 5)",
+                targetMuscles: "Chest & Back",
                 exercises: [
-                    { exerciseId: "ex_ch_1", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "ضغط بنش مستوي بالبار" },
-                    { exerciseId: "ex_bk_2", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "عقلة بوزن الجسم" },
-                    { exerciseId: "ex_ch_3", sets: 4, reps: "10 - 12", restSec: 75, rpe: 8, note: "بنش مائل دمبل" },
-                    { exerciseId: "ex_bk_3", sets: 4, reps: "8 - 10", restSec: 75, rpe: 8, note: "تجديف بار منحني" },
-                    { exerciseId: "ex_ch_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "تفتيح كيبل" },
-                    { exerciseId: "ex_bk_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "سحب أرضي بالكيبل" }
+                    { exerciseId: "ex_ch_5", displayNameEn: "Chest Press Machine", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_ch_7", displayNameEn: "Incline Chest Press Machine", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_ch_8", displayNameEn: "Fly", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_1", displayNameEn: "Lat Pulldown", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_4", displayNameEn: "Seated Row", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_8", displayNameEn: "Low Row", sets: 3, reps: "10", restSec: 60 }
                 ]
             },
             {
                 dayId: "arn_d2",
-                title: "اليوم الثاني والخامس: الأكتاف والذراعين (Shoulders & Arms)",
-                targetMuscles: "أكتاف كاملة، بايسبس، وترايسبس",
+                title: "SHOULDERS & ARMS (Days 2 & 6)",
+                targetMuscles: "Shoulders, Biceps, Triceps",
                 exercises: [
-                    { exerciseId: "ex_sh_1", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "ضغط كتف بالدمبل" },
-                    { exerciseId: "ex_sh_3", sets: 4, reps: "12 - 15", restSec: 60, rpe: 9, note: "رفرفة جانبية" },
-                    { exerciseId: "ex_sh_6", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "كتف خلفي بالجهاز" },
-                    { exerciseId: "ex_arm_2", sets: 4, reps: "8 - 10", restSec: 60, rpe: 8, note: "بايسبس بار زجزاج" },
-                    { exerciseId: "ex_arm_4", sets: 4, reps: "10 - 12", restSec: 60, rpe: 8, note: "تراي بالحبل" },
-                    { exerciseId: "ex_arm_1", sets: 3, reps: "10 - 12", restSec: 60, rpe: 9, note: "إنكلاين كيرل باي" },
-                    { exerciseId: "ex_arm_6", sets: 3, reps: "10 - 12", restSec: 60, rpe: 8, note: "تراي دمبل فوق الرأس" }
+                    { exerciseId: "ex_sh_4", displayNameEn: "Cable Lateral Raise", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_9", displayNameEn: "Cable Front Raise", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_6", displayNameEn: "Reverse Fly", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_7", displayNameEn: "Dumbbell Curl", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_11", displayNameEn: "Machine Preacher Curl", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_4", displayNameEn: "Rope Triceps Pushdown", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_14", displayNameEn: "Overhead Rope Triceps Extension", sets: 3, reps: "10", restSec: 60 }
                 ]
             },
             {
                 dayId: "arn_d3",
-                title: "اليوم الثالث والسادس: الأرجل والكور (Legs & Core)",
-                targetMuscles: "أرجل أمامية وخلفية، سمانة، عضلات البطن",
+                title: "LEGS (Days 3 & 7)",
+                targetMuscles: "Quads, Hamstrings, Glutes, Calves",
                 exercises: [
-                    { exerciseId: "ex_lg_1", sets: 4, reps: "8 - 10", restSec: 120, rpe: 8, note: "سكوات بالبار" },
-                    { exerciseId: "ex_lg_2", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "ديدليفت روماني" },
-                    { exerciseId: "ex_lg_3", sets: 3, reps: "10 - 12", restSec: 90, rpe: 8, note: "دفع أرجل بالماكينة" },
-                    { exerciseId: "ex_lg_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "فرد أرجل أمامي" },
-                    { exerciseId: "ex_lg_5", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "ثني أرجل خلفي" },
-                    { exerciseId: "ex_ab_1", sets: 3, reps: "15", restSec: 60, rpe: 8, note: "رفع أرجل على العقلة" }
+                    { exerciseId: "ex_lg_8", displayNameEn: "Lunges", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_4", displayNameEn: "Leg Extension", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_3", displayNameEn: "Leg Press", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_5", displayNameEn: "Leg Curl", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_10", displayNameEn: "Glute Kickback", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_11", displayNameEn: "Calf Raise", sets: 4, reps: "20", restSec: 60 }
                 ]
             }
         ]
     },
 
     // ==========================================================
-    // 4. برنامج Bro Split (عضلة واحدة يومياً) - 5 أيام
+    // 4. Bro Split (Training Programs/Bro_Split.png)
     // ==========================================================
     {
         id: "prog_bro",
-        nameAr: "نظام التقسيم الكلاسيكي (Bro Split)",
-        nameEn: "Classic Bodybuilding 5-Day Split",
-        frequency: "5 أيام / أسبوع",
-        level: "جميع المستويات (تركيز فائق على كل عضلة)",
-        description: "النظام المفضل في صالات الجيم الكلاسيكية؛ تخصيص يوم كامل لكل مجموعة عضلية لضخ الدم والإنهاك العضلي التام.",
+        nameAr: "Bro Split",
+        nameEn: "Bro Split",
+        frequency: "8-Day Training Cycle (3 Days On / 1 Day Off)",
+        level: "Upper: 3 × 10 • Legs: 4 × 20",
+        description: "Day 1: Chest & Triceps | Day 2: Back & Biceps | Day 3: Quads & Calves | Day 4: Rest | Day 5: Shoulders | Day 6: Biceps & Triceps | Day 7: Hamstrings & Glutes | Day 8: Rest.",
         image: "Training Programs/Bro_Split.png",
         days: [
             {
                 dayId: "bro_d1",
-                title: "اليوم الأول: يوم الصدر (Chest Day)",
-                targetMuscles: "عضلات الصدر كاملة",
+                title: "DAY 1 — CHEST & TRICEPS",
+                targetMuscles: "Chest & Triceps",
                 exercises: [
-                    { exerciseId: "ex_ch_1", sets: 4, reps: "6 - 8", restSec: 120, rpe: 8, note: "بنش بار مستوي" },
-                    { exerciseId: "ex_ch_3", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "بنش دمبل مائل" },
-                    { exerciseId: "ex_ch_5", sets: 3, reps: "10 - 12", restSec: 75, rpe: 8, note: "ضغط الصدر بالجهاز" },
-                    { exerciseId: "ex_ch_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "تفتيح كيبل كروس أوفر" },
-                    { exerciseId: "ex_ch_6", sets: 3, reps: "فشل عضلي", restSec: 75, rpe: 9, note: "متوازي لأسفل الصدر" }
+                    { exerciseId: "ex_ch_3", displayNameEn: "Incline Dumbbell Press", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_ch_2", displayNameEn: "Flat Dumbbell Press", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_ch_8", displayNameEn: "Fly", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_ch_7", displayNameEn: "Incline Chest Press Machine", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_ch_5", displayNameEn: "Chest Press Machine", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_4", displayNameEn: "Rope Triceps Pushdown", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_14", displayNameEn: "Overhead Rope Triceps Extension", sets: 3, reps: "10", restSec: 60 }
                 ]
             },
             {
                 dayId: "bro_d2",
-                title: "اليوم الثاني: يوم الظهر (Back Day)",
-                targetMuscles: "عضلات الظهر كاملة والمجانس",
+                title: "DAY 2 — BACK & BICEPS",
+                targetMuscles: "Back & Biceps",
                 exercises: [
-                    { exerciseId: "ex_bk_6", sets: 3, reps: "5 - 6", restSec: 150, rpe: 8, note: "ديدليفت ثقيل" },
-                    { exerciseId: "ex_bk_1", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "سحب عالي بالكيبل" },
-                    { exerciseId: "ex_bk_3", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "سحب بار منحني" },
-                    { exerciseId: "ex_bk_5", sets: 3, reps: "10 - 12", restSec: 75, rpe: 8, note: "سحب دمبل فردي" },
-                    { exerciseId: "ex_bk_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "سحب أرضي بالكيبل" }
+                    { exerciseId: "ex_bk_1", displayNameEn: "Lat Pulldown", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_4", displayNameEn: "Seated Row", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_7", displayNameEn: "Close-Grip Lat Pulldown", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_8", displayNameEn: "Low Row", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_9", displayNameEn: "T-Bar Row", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_10", displayNameEn: "Back Extension", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_7", displayNameEn: "Dumbbell Curl", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_11", displayNameEn: "Machine Preacher Curl", sets: 3, reps: "10", restSec: 60 }
                 ]
             },
             {
                 dayId: "bro_d3",
-                title: "اليوم الثالث: يوم الأكتاف (Shoulder Day)",
-                targetMuscles: "كتف أمامي، جانبي، خلفي وترابيس",
+                title: "DAY 3 — QUADS & CALVES",
+                targetMuscles: "Quads & Calves",
                 exercises: [
-                    { exerciseId: "ex_sh_1", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "ضغط دمبل جالس" },
-                    { exerciseId: "ex_sh_3", sets: 4, reps: "12 - 15", restSec: 60, rpe: 9, note: "رفرفة جانبية بالدمبل" },
-                    { exerciseId: "ex_sh_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "رفرفة كيبل مفرد" },
-                    { exerciseId: "ex_sh_6", sets: 4, reps: "12 - 15", restSec: 60, rpe: 9, note: "كتف خلفي بالجهاز" },
-                    { exerciseId: "ex_sh_5", sets: 3, reps: "15", restSec: 60, rpe: 9, note: "فيس بول بالحبل" }
-                ]
-            },
-            {
-                dayId: "bro_d4",
-                title: "اليوم الرابع: يوم الأرجل (Leg Day)",
-                targetMuscles: "أفخاذ كاملة، سمانة، بطن",
-                exercises: [
-                    { exerciseId: "ex_lg_1", sets: 4, reps: "6 - 8", restSec: 150, rpe: 8, note: "سكوات بالبار" },
-                    { exerciseId: "ex_lg_3", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "دفع أرجل بالماكينة" },
-                    { exerciseId: "ex_lg_2", sets: 3, reps: "8 - 10", restSec: 90, rpe: 8, note: "ديدليفت روماني بالدمبل" },
-                    { exerciseId: "ex_lg_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "فرد أرجل أمامي" },
-                    { exerciseId: "ex_lg_5", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "ثني أرجل خلفي" },
-                    { exerciseId: "ex_ab_1", sets: 3, reps: "15", restSec: 60, rpe: 8, note: "رفع أرجل معلق" }
+                    { exerciseId: "ex_lg_8", displayNameEn: "Lunges", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_4", displayNameEn: "Leg Extension", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_3", displayNameEn: "Leg Press", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_11", displayNameEn: "Calf Raise", sets: 4, reps: "20", restSec: 60 }
                 ]
             },
             {
                 dayId: "bro_d5",
-                title: "اليوم الخامس: يوم الذراعين الكامل (Arms Day)",
-                targetMuscles: "بايسبس، ترايسبس، وساعدين",
+                title: "DAY 5 — SHOULDERS",
+                targetMuscles: "Front, Lateral & Rear Shoulders",
                 exercises: [
-                    { exerciseId: "ex_arm_2", sets: 4, reps: "8 - 10", restSec: 60, rpe: 8, note: "بار زجزاج للباي" },
-                    { exerciseId: "ex_arm_5", sets: 4, reps: "8 - 10", restSec: 60, rpe: 8, note: "سكال كراشر للتراي" },
-                    { exerciseId: "ex_arm_1", sets: 3, reps: "10 - 12", restSec: 60, rpe: 8, note: "إنكلاين كيرل للباي" },
-                    { exerciseId: "ex_arm_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "تراي بالحبل" },
-                    { exerciseId: "ex_arm_3", sets: 3, reps: "10 - 12", restSec: 60, rpe: 8, note: "هامر كيرل للساعد والبراكياليس" },
-                    { exerciseId: "ex_arm_6", sets: 3, reps: "10 - 12", restSec: 60, rpe: 8, note: "تراي فوق الرأس" }
+                    { exerciseId: "ex_sh_4", displayNameEn: "Cable Lateral Raise", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_9", displayNameEn: "Cable Front Raise", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_10", displayNameEn: "Rear Delt Row", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_3", displayNameEn: "Dumbbell Lateral Raise", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_8", displayNameEn: "Dumbbell Front Raise", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_6", displayNameEn: "Reverse Fly", sets: 3, reps: "10", restSec: 60 }
+                ]
+            },
+            {
+                dayId: "bro_d6",
+                title: "DAY 6 — BICEPS & TRICEPS",
+                targetMuscles: "Biceps & Triceps",
+                exercises: [
+                    { exerciseId: "ex_arm_8", displayNameEn: "Straight Bar Cable Curl", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_13", displayNameEn: "Straight Bar Triceps Pushdown", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_12", displayNameEn: "Cable Rope Hammer Curl", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_4", displayNameEn: "Rope Triceps Pushdown", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_10", displayNameEn: "Machine Biceps Curl", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_15", displayNameEn: "Machine Triceps Extension", sets: 3, reps: "10", restSec: 60 }
+                ]
+            },
+            {
+                dayId: "bro_d7",
+                title: "DAY 7 — HAMSTRINGS & GLUTES",
+                targetMuscles: "Hamstrings, Glutes, Calves",
+                exercises: [
+                    { exerciseId: "ex_lg_5", displayNameEn: "Leg Curl", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_10", displayNameEn: "Glute Kickback", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_3", displayNameEn: "Leg Press", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_11", displayNameEn: "Calf Raise", sets: 4, reps: "20", restSec: 60 }
                 ]
             }
         ]
     },
 
     // ==========================================================
-    // 5. برنامج Anterior / Posterior Split - 4 أيام
+    // 5. Anterior / Posterior (Training Programs/Anterior_Posterior.png)
     // ==========================================================
     {
         id: "prog_anterior_posterior",
-        nameAr: "نظام السلسلة الأمامية والخلفية (Anterior / Posterior)",
-        nameEn: "Anterior & Posterior Chain Split",
-        frequency: "4 أيام / أسبوع",
-        level: "متقدم (توازن عضلي ميكانيكي)",
-        description: "تقسيم الجسم وفق السلاسل الحركية الميكانيكية: يوم لعضلات السلسلة الأمامية (صدر، فخذ أمامي، كتف أمامي، بطن) ويوم لعضلات السلسلة الخلفية (ظهر، فخذ خلفي، مؤخرة، كتف خلفي).",
+        nameAr: "Anterior / Posterior",
+        nameEn: "Anterior / Posterior",
+        frequency: "8-Day Training Cycle (Anterior, Posterior, Cardio 60 Min, Rest)",
+        level: "Standard Template • 4 × 15",
+        description: "Days 1 & 5: Anterior | Days 2 & 6: Posterior | Days 3 & 7: Cardio 60 Min | Days 4 & 8: Rest. Warm-up 10 min + Post-workout Cardio 30 min LISS.",
         image: "Training Programs/Anterior_Posterior.png",
         days: [
             {
                 dayId: "ap_d1",
-                title: "اليوم الأول: السلسلة الأمامية (Anterior Chain)",
-                targetMuscles: "صدر، أفخاذ أمامية، أكتاف أمامية وجانبية، بطن",
+                title: "ANTERIOR (Days 1 & 5)",
+                targetMuscles: "Chest, Shoulders, Biceps, Quads",
                 exercises: [
-                    { exerciseId: "ex_lg_1", sets: 4, reps: "6 - 8", restSec: 120, rpe: 8, note: "سكوات" },
-                    { exerciseId: "ex_ch_1", sets: 4, reps: "6 - 8", restSec: 120, rpe: 8, note: "ضغط بنش مستوي" },
-                    { exerciseId: "ex_lg_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "فرد أرجل أمامي" },
-                    { exerciseId: "ex_sh_3", sets: 4, reps: "12 - 15", restSec: 60, rpe: 9, note: "رفرفة جانبية" },
-                    { exerciseId: "ex_ab_2", sets: 3, reps: "15", restSec: 60, rpe: 8, note: "طحن بطن بالكيبل" }
+                    { exerciseId: "ex_ch_5", displayNameEn: "Chest Press Machine", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_ch_8", displayNameEn: "Fly Machine", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_sh_7", displayNameEn: "Shoulder Press Machine", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_sh_3", displayNameEn: "Dumbbell Lateral Raise", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_arm_10", displayNameEn: "Biceps Curl Machine", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_arm_9", displayNameEn: "Barbell Curl", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_lg_3", displayNameEn: "Leg Press Machine", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_lg_4", displayNameEn: "Leg Extension", sets: 4, reps: "15", restSec: 60 }
                 ]
             },
             {
                 dayId: "ap_d2",
-                title: "اليوم الثاني: السلسلة الخلفية (Posterior Chain)",
-                targetMuscles: "ظهر، أفخاذ خلفية، مؤخرة، كتف خلفي",
+                title: "POSTERIOR (Days 2 & 6)",
+                targetMuscles: "Back, Rear Delts, Triceps, Hamstrings, Glutes, Calves",
                 exercises: [
-                    { exerciseId: "ex_bk_6", sets: 3, reps: "5", restSec: 150, rpe: 8, note: "ديدليفت تقليدي" },
-                    { exerciseId: "ex_bk_1", sets: 4, reps: "8 - 10", restSec: 90, rpe: 8, note: "سحب عالي بالكيبل" },
-                    { exerciseId: "ex_lg_2", sets: 3, reps: "8 - 10", restSec: 90, rpe: 8, note: "ديدليفت روماني" },
-                    { exerciseId: "ex_bk_3", sets: 3, reps: "8 - 10", restSec: 90, rpe: 8, note: "سحب بار منحني" },
-                    { exerciseId: "ex_sh_5", sets: 4, reps: "15", restSec: 60, rpe: 9, note: "فيس بول للكتف الخلفي" }
+                    { exerciseId: "ex_bk_1", displayNameEn: "Lat Pulldown", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_bk_4", displayNameEn: "Seated Row Machine", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_sh_6", displayNameEn: "Reverse Pec Deck", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_arm_15", displayNameEn: "Triceps Extension Machine", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_arm_4", displayNameEn: "Rope Triceps Pushdown", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_lg_7", displayNameEn: "Seated Leg Curl", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_lg_9", displayNameEn: "Hip Thrust Machine", sets: 4, reps: "15", restSec: 60 },
+                    { exerciseId: "ex_lg_11", displayNameEn: "Standing Calf Machine", sets: 4, reps: "15", restSec: 60 }
                 ]
             }
         ]
     },
 
     // ==========================================================
-    // 6. برنامج Full Body (جسم كامل 3 أيام)
+    // 6. PPL × Upper / Lower (Training Programs/PPL×Upper_ Lower.png)
     // ==========================================================
     {
-        id: "prog_full_body",
-        nameAr: "برنامج الجسم الكامل (Full Body 3-Day)",
-        nameEn: "Full Body 3-Day Workout",
-        frequency: "3 أيام / أسبوع",
-        level: "مثالي للمبتدئين ولضيق الوقت",
-        description: "تدريب الجسم بالكامل 3 مرات أسبوعياً بالتركيز على التمارين المركبة الأساسية، مما يمنح أسرع استجابة عضلية وحرقاً عالياً للسعرات مع 4 أيام راحة.",
+        id: "prog_ppl_upper_lower",
+        nameAr: "PPL × Upper / Lower",
+        nameEn: "PPL × Upper / Lower",
+        frequency: "5 Training Days • 7-Day Cycle",
+        level: "Upper Body: 3 × 10 • Legs: 4 × 20",
+        description: "Day 1: Push | Day 2: Pull | Day 3: Legs | Day 4: Rest | Day 5: Upper | Day 6: Lower | Day 7: Rest — Repeat Weekly.",
         image: "Training Programs/PPL×Upper_ Lower.png",
         days: [
             {
-                dayId: "fb_d1",
-                title: "يوم الجسم الكامل (أ)",
-                targetMuscles: "صدر، ظهر، أرجل، أكتاف، كور",
+                dayId: "pplul_d1",
+                title: "DAY 1 — PUSH",
+                targetMuscles: "Chest, Lateral Delts, Triceps",
                 exercises: [
-                    { exerciseId: "ex_lg_1", sets: 3, reps: "8 - 10", restSec: 120, rpe: 8, note: "سكوات بالبار" },
-                    { exerciseId: "ex_ch_1", sets: 3, reps: "8 - 10", restSec: 90, rpe: 8, note: "بنش بار مستوي" },
-                    { exerciseId: "ex_bk_1", sets: 3, reps: "8 - 10", restSec: 90, rpe: 8, note: "سحب ظهر عالي" },
-                    { exerciseId: "ex_sh_1", sets: 3, reps: "10 - 12", restSec: 75, rpe: 8, note: "ضغط كتف بالدمبل" },
-                    { exerciseId: "ex_arm_4", sets: 3, reps: "12 - 15", restSec: 60, rpe: 9, note: "تراي بالحبل" },
-                    { exerciseId: "ex_ab_3", sets: 3, reps: "45 ثانية", restSec: 60, rpe: 8, note: "بلانك" }
+                    { exerciseId: "ex_ch_5", displayNameEn: "Chest Press Machine", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_ch_7", displayNameEn: "Incline Chest Press Machine", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_ch_8", displayNameEn: "Fly", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_3", displayNameEn: "Dumbbell Lateral Raise", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_4", displayNameEn: "Rope Triceps Pushdown", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_14", displayNameEn: "Overhead Rope Triceps Extension", sets: 3, reps: "10", restSec: 60 }
                 ]
             },
             {
-                dayId: "fb_d2",
-                title: "يوم الجسم الكامل (ب)",
-                targetMuscles: "أفخاذ خلفية، ظهر، صدر علوي، أكتاف جانبية، باي",
+                dayId: "pplul_d2",
+                title: "DAY 2 — PULL",
+                targetMuscles: "Back, Rear Delts, Biceps",
                 exercises: [
-                    { exerciseId: "ex_lg_2", sets: 3, reps: "8 - 10", restSec: 90, rpe: 8, note: "ديدليفت روماني" },
-                    { exerciseId: "ex_ch_3", sets: 3, reps: "8 - 10", restSec: 90, rpe: 8, note: "بنش دمبل مائل" },
-                    { exerciseId: "ex_bk_3", sets: 3, reps: "8 - 10", restSec: 90, rpe: 8, note: "سحب بار منحني" },
-                    { exerciseId: "ex_sh_3", sets: 4, reps: "12 - 15", restSec: 60, rpe: 9, note: "رفرفة جانبية" },
-                    { exerciseId: "ex_arm_2", sets: 3, reps: "10 - 12", restSec: 60, rpe: 8, note: "بايسبس بالبار" },
-                    { exerciseId: "ex_ab_1", sets: 3, reps: "12 - 15", restSec: 60, rpe: 8, note: "رفع أرجل معلق" }
+                    { exerciseId: "ex_bk_1", displayNameEn: "Lat Pulldown", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_4", displayNameEn: "Seated Row", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_8", displayNameEn: "Low Row", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_6", displayNameEn: "Reverse Pec Deck", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_7", displayNameEn: "Dumbbell Curl", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_8", displayNameEn: "Cable Curl", sets: 3, reps: "10", restSec: 60 }
+                ]
+            },
+            {
+                dayId: "pplul_d3",
+                title: "DAY 3 — LEGS",
+                targetMuscles: "Quads, Hamstrings, Glutes, Calves",
+                exercises: [
+                    { exerciseId: "ex_lg_8", displayNameEn: "Lunges", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_4", displayNameEn: "Leg Extension", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_3", displayNameEn: "Leg Press", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_7", displayNameEn: "Seated Leg Curl", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_9", displayNameEn: "Hip Thrust Machine", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_11", displayNameEn: "Calf Raise", sets: 4, reps: "20", restSec: 60 }
+                ]
+            },
+            {
+                dayId: "pplul_d5",
+                title: "DAY 5 — UPPER",
+                targetMuscles: "Chest, Back, Shoulders, Arms",
+                exercises: [
+                    { exerciseId: "ex_ch_5", displayNameEn: "Chest Press Machine", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_1", displayNameEn: "Lat Pulldown", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_4", displayNameEn: "Seated Row", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_7", displayNameEn: "Shoulder Press Machine", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_3", displayNameEn: "Dumbbell Lateral Raise", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_10", displayNameEn: "Biceps Curl Machine", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_4", displayNameEn: "Rope Triceps Pushdown", sets: 3, reps: "10", restSec: 60 }
+                ]
+            },
+            {
+                dayId: "pplul_d6",
+                title: "DAY 6 — LOWER",
+                targetMuscles: "Quads, Hamstrings, Glutes, Calves",
+                exercises: [
+                    { exerciseId: "ex_lg_3", displayNameEn: "Leg Press", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_4", displayNameEn: "Leg Extension", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_5", displayNameEn: "Leg Curl", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_9", displayNameEn: "Hip Thrust Machine", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_10", displayNameEn: "Glute Kickback", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_lg_11", displayNameEn: "Calf Raise", sets: 4, reps: "20", restSec: 60 }
                 ]
             }
         ]

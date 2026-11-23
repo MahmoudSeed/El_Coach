@@ -500,27 +500,27 @@
                     <div id="programSelectorWrapper" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-6">
                         <button onclick="IronApp.selectProgram('prog_ppl')" class="prog-select-btn p-3 rounded-2xl border text-center transition bg-emerald-500/10 border-emerald-500 text-emerald-400 font-bold text-xs" data-prog="prog_ppl">
                             <div class="text-base mb-1">🏋️‍♂️</div>
-                            <div>PPL (دفع سحب أرجل)</div>
+                            <div>Push / Pull / Legs</div>
                         </button>
                         <button onclick="IronApp.selectProgram('prog_upper_lower')" class="prog-select-btn p-3 rounded-2xl border text-center transition bg-slate-950 border-slate-800 text-gray-300 font-bold text-xs hover:border-slate-700" data-prog="prog_upper_lower">
                             <div class="text-base mb-1">⚖️</div>
-                            <div>علوي / سفلي (4 أيام)</div>
+                            <div>Upper / Lower Split</div>
                         </button>
                         <button onclick="IronApp.selectProgram('prog_arnold')" class="prog-select-btn p-3 rounded-2xl border text-center transition bg-slate-950 border-slate-800 text-gray-300 font-bold text-xs hover:border-slate-700" data-prog="prog_arnold">
                             <div class="text-base mb-1">👑</div>
-                            <div>آرنولد سبليت (6 أيام)</div>
+                            <div>Arnold Split</div>
                         </button>
                         <button onclick="IronApp.selectProgram('prog_bro')" class="prog-select-btn p-3 rounded-2xl border text-center transition bg-slate-950 border-slate-800 text-gray-300 font-bold text-xs hover:border-slate-700" data-prog="prog_bro">
                             <div class="text-base mb-1">🎯</div>
-                            <div>برو سبليت (5 أيام)</div>
+                            <div>Bro Split</div>
                         </button>
                         <button onclick="IronApp.selectProgram('prog_anterior_posterior')" class="prog-select-btn p-3 rounded-2xl border text-center transition bg-slate-950 border-slate-800 text-gray-300 font-bold text-xs hover:border-slate-700" data-prog="prog_anterior_posterior">
                             <div class="text-base mb-1">⛓️</div>
-                            <div>سلسلة أمامية / خلفية</div>
+                            <div>Anterior / Posterior</div>
                         </button>
-                        <button onclick="IronApp.selectProgram('prog_full_body')" class="prog-select-btn p-3 rounded-2xl border text-center transition bg-slate-950 border-slate-800 text-gray-300 font-bold text-xs hover:border-slate-700" data-prog="prog_full_body">
+                        <button onclick="IronApp.selectProgram('prog_ppl_upper_lower')" class="prog-select-btn p-3 rounded-2xl border text-center transition bg-slate-950 border-slate-800 text-gray-300 font-bold text-xs hover:border-slate-700" data-prog="prog_ppl_upper_lower">
                             <div class="text-base mb-1">⚡</div>
-                            <div>فول بودي (3 أيام)</div>
+                            <div>PPL × Upper / Lower</div>
                         </button>
                     </div>
 
@@ -845,12 +845,12 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-300 mb-1">البرنامج التدريبي المقترح</label>
                     <select name="tProgram" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
-                        <option value="PPL (Push Pull Legs)">PPL (Push Pull Legs)</option>
-                        <option value="Upper / Lower Split">Upper / Lower Split (4 أيام)</option>
-                        <option value="Arnold Split">Arnold Split (6 أيام)</option>
-                        <option value="Bro Split">Bro Split (5 أيام)</option>
-                        <option value="Anterior / Posterior">Anterior / Posterior (4 أيام)</option>
-                        <option value="Full Body">Full Body (3 أيام)</option>
+                        <option value="PPL (Push Pull Legs)">Push / Pull / Legs (PPL)</option>
+                        <option value="Upper / Lower Split">Upper / Lower Split</option>
+                        <option value="Arnold Split">Arnold Split</option>
+                        <option value="Bro Split">Bro Split</option>
+                        <option value="Anterior / Posterior">Anterior / Posterior</option>
+                        <option value="PPL × Upper / Lower">PPL × Upper / Lower</option>
                     </select>
                 </div>
                 <div>
@@ -936,12 +936,12 @@
                     <div>
                         <label class="block text-[10px] text-gray-400 font-bold mb-1">البرنامج التدريبي</label>
                         <select id="editTProgram" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white font-bold outline-none">
-                            <option value="PPL (Push Pull Legs)">PPL (Push Pull Legs)</option>
-                            <option value="Upper / Lower Split">Upper / Lower Split (4 أيام)</option>
-                            <option value="Arnold Split">Arnold Split (6 أيام)</option>
-                            <option value="Bro Split">Bro Split (5 أيام)</option>
-                            <option value="Anterior / Posterior">Anterior / Posterior (4 أيام)</option>
-                            <option value="Full Body">Full Body (3 أيام)</option>
+                            <option value="PPL (Push Pull Legs)">Push / Pull / Legs (PPL)</option>
+                            <option value="Upper / Lower Split">Upper / Lower Split</option>
+                            <option value="Arnold Split">Arnold Split</option>
+                            <option value="Bro Split">Bro Split</option>
+                            <option value="Anterior / Posterior">Anterior / Posterior</option>
+                            <option value="PPL × Upper / Lower">PPL × Upper / Lower</option>
                         </select>
                     </div>
                 </div>
