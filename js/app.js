@@ -47,9 +47,14 @@ const IronApp = {
     currentMealCategory: "all",
     currentExerciseMuscle: "all",
 
+    t(key, vars = {}) {
+        return typeof IronI18n !== "undefined" ? IronI18n.t(key, vars) : key;
+    },
+
     init() {
-        // 1. تهيئة النمط (الداكن / الفاتح)
+        // 1. تهيئة النمط (الداكن / الفاتح) واللغة (العربية / الإنجليزية)
         this.initTheme();
+        this.initLanguage();
 
         // 2. تهيئة المشتركين الافتراضيين
         IronAuth.getAllTrainees();
@@ -72,6 +77,52 @@ const IronApp = {
                 }
             }
         });
+    },
+
+    // =========================================================================
+    // إدارة اللغة (العربية RTL / الإنجليزية LTR)
+    // =========================================================================
+    initLanguage() {
+        const savedLang = localStorage.getItem("iron_lang") === "en" ? "en" : "ar";
+        this.applyLanguage(savedLang, false);
+    },
+
+    toggleLanguage() {
+        const current = typeof IronI18n !== "undefined" ? IronI18n.getLang() : "ar";
+        const next = current === "ar" ? "en" : "ar";
+        this.applyLanguage(next, true);
+    },
+
+    applyLanguage(lang, notify = false) {
+        const cleanLang = lang === "en" ? "en" : "ar";
+        localStorage.setItem("iron_lang", cleanLang);
+
+        if (typeof IronI18n !== "undefined") {
+            IronI18n.applyStaticTranslations();
+        }
+
+        // تحديث زر الثيم حسب اللغة الحالية
+        this.applyTheme(this.getCurrentTheme(), false);
+
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        if (user !== undefined) {
+            this.renderUserHeader(user);
+            this.updateImpersonationBanner(user);
+            if (user && user.role === "coach" && typeof IronCoachPanel !== "undefined") {
+                IronCoachPanel.renderCoachDashboard();
+            } else if (user && user.role === "trainee" && user.status !== "expired" && user.traineeData) {
+                this.renderTraineeData(user.traineeData);
+            }
+        }
+
+        const gymModal = document.getElementById("liveGymModal");
+        if (gymModal && gymModal.classList.contains("active") && typeof IronLiveGym !== "undefined" && IronLiveGym.activeSession) {
+            IronLiveGym.renderLiveGymModal();
+        }
+
+        if (notify) {
+            showToast(this.t("lang_switched"), "success");
+        }
     },
 
     // =========================================================================
@@ -110,11 +161,15 @@ const IronApp = {
             iconEl.innerText = cleanTheme === "light" ? "🌙" : "☀️";
         }
         if (labelEl) {
-            labelEl.innerText = cleanTheme === "light" ? "الداكن" : "الفاتح";
+            labelEl.innerText = cleanTheme === "light" ? this.t("theme_to_dark") : this.t("theme_to_light");
         }
 
         if (notify) {
-            showToast(cleanTheme === "light" ? "تم التبديل إلى النمط الفاتح ☀️" : "تم التبديل إلى النمط الداكن الفاخر 🌙", "success");
+            const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+            const msg = cleanTheme === "light"
+                ? (isEn ? "Switched to Light Mode ☀️" : "تم التبديل إلى النمط الفاتح ☀️")
+                : (isEn ? "Switched to Luxury Dark Mode 🌙" : "تم التبديل إلى النمط الداكن الفاخر 🌙");
+            showToast(msg, "success");
         }
     },
 
@@ -159,7 +214,7 @@ const IronApp = {
         }
     },
 
-    // رسم شريط المستخدم العلوي (متجاوب يظهر حالة الاشتراك على الهواتف والحواسيب)
+    // رسم شريط المستخدم العلوي (متجاوب يظهر حالة الاشتراك على الهواتف والحواسيب مع الصورة الشخصية للمشترك)
     renderUserHeader(user) {
         const area = document.getElementById("userHeaderArea");
         if (!area) return;
@@ -167,7 +222,7 @@ const IronApp = {
         if (!user) {
             area.innerHTML = `
                 <button onclick="IronApp.showAuthScreen()" class="px-4 py-2 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition">
-                    تسجيل الدخول 🔑
+                    ${this.t("btn_login")}
                 </button>
             `;
             return;
@@ -176,15 +231,15 @@ const IronApp = {
         if (user.role === "coach") {
             area.innerHTML = `
                 <div class="flex items-center gap-2 sm:gap-3">
-                    <div class="text-left">
+                    <div class="text-end">
                         <div class="text-xs font-black text-white flex items-center gap-1 justify-end">
                             <span class="truncate max-w-[110px] sm:max-w-none">${user.name}</span>
                             <span class="text-amber-400">👑</span>
                         </div>
-                        <div class="text-[10px] text-emerald-400 font-bold hidden sm:block">لوحة الكوتش الإدارية</div>
+                        <div class="text-[10px] text-emerald-400 font-bold hidden sm:block">${this.t("coach_admin_sub")}</div>
                     </div>
-                    <button onclick="IronAuth.logout()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-xs rounded-xl border border-slate-700 transition" title="تسجيل الخروج">
-                        خروج 🚪
+                    <button onclick="IronAuth.logout()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-xs rounded-xl border border-slate-700 transition">
+                        ${this.t("btn_logout")} 🚪
                     </button>
                 </div>
             `;
@@ -193,18 +248,25 @@ const IronApp = {
                 : user.status === "expiring" ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
                 : "text-rose-400 border-rose-500/30 bg-rose-500/10";
 
-            const statusText = user.status === "active" ? `باقي ${user.daysLeft} يوم 🔥`
-                : user.status === "expiring" ? `باقي ${user.daysLeft} يوم ⚠️`
-                : `منتهي 🚫`;
+            const statusText = user.status === "active" ? this.t("status_active", { days: user.daysLeft })
+                : user.status === "expiring" ? this.t("status_expiring", { days: user.daysLeft })
+                : this.t("status_expired");
+
+            const avatarData = user.traineeData?.avatar;
+            const initial = (user.name || "U").trim().charAt(0).toUpperCase();
+            const headerAvatar = avatarData
+                ? `<img src="${avatarData}" alt="${user.name}" class="w-8 h-8 rounded-full object-cover border-2 border-emerald-500/50 cursor-pointer flex-shrink-0" onclick="document.getElementById('traineeAvatarInput')?.click()" title="${this.t("avatar_change")}">`
+                : `<button type="button" onclick="document.getElementById('traineeAvatarInput')?.click()" class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black text-xs flex-shrink-0 hover:bg-emerald-500/25 transition" title="${this.t("avatar_add")}">${initial}</button>`;
 
             area.innerHTML = `
-                <div class="flex items-center gap-1.5 sm:gap-3">
+                <div class="flex items-center gap-1.5 sm:gap-2.5">
                     ${user.isImpersonating ? `
-                        <button onclick="IronAuth.returnToCoachDashboard()" class="px-2.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 font-black text-[11px] rounded-xl transition flex items-center gap-1" title="العودة للوحة الكوتش">
-                            <span>👑 الكوتش</span>
+                        <button onclick="IronAuth.returnToCoachDashboard()" class="px-2.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 font-black text-[11px] rounded-xl transition flex items-center gap-1">
+                            <span>${this.t("back_to_coach")}</span>
                         </button>
                     ` : ''}
-                    <div class="text-left">
+                    ${headerAvatar}
+                    <div class="text-end">
                         <div class="text-[11px] sm:text-xs font-black text-white truncate max-w-[95px] sm:max-w-none">${user.name}</div>
                         <div class="text-[9px] sm:text-[10px] ${statusColor} px-2 py-0.5 rounded-full border inline-block font-bold">
                             ${statusText}
@@ -212,11 +274,11 @@ const IronApp = {
                     </div>
                     ${user.status === "expired" ? `
                         <button onclick="IronApp.openRenewPaymentModal()" class="px-2.5 py-1.5 bg-rose-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition animate-pulse">
-                            تجديد 💳
+                            ${this.t("status_renew_short")}
                         </button>
                     ` : ''}
-                    <button onclick="IronAuth.logout()" class="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-xs rounded-xl border border-slate-700 transition" title="تسجيل الخروج">
-                        <span class="hidden sm:inline">خروج</span> 🚪
+                    <button onclick="IronAuth.logout()" class="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-xs rounded-xl border border-slate-700 transition">
+                        <span class="hidden sm:inline">${this.t("btn_logout")}</span> 🚪
                     </button>
                 </div>
             `;
@@ -273,6 +335,97 @@ const IronApp = {
         this.switchTab(this.currentTab || "overview");
     },
 
+    // =========================================================================
+    // إدارة الصورة الشخصية الخاصة بالمشترك (Trainee Personal Avatar Upload)
+    // =========================================================================
+    renderTraineeAvatar(trainee) {
+        const box = document.getElementById("traineeAvatarBox");
+        if (!box || !trainee) return;
+
+        const initial = (trainee.name || "U").trim().charAt(0).toUpperCase();
+        const hasAvatar = Boolean(trainee.avatar);
+
+        box.innerHTML = `
+            <div class="flex flex-col items-center gap-1.5">
+                <div onclick="document.getElementById('traineeAvatarInput')?.click()" class="trainee-avatar-ring cursor-pointer group relative flex items-center justify-center" title="${hasAvatar ? this.t('avatar_change') : this.t('avatar_add')}">
+                    ${hasAvatar ? `
+                        <img src="${trainee.avatar}" alt="${trainee.name}" class="trainee-avatar-img">
+                    ` : `
+                        <div class="w-full h-full flex flex-col items-center justify-center bg-slate-950/80 text-emerald-400">
+                            <span class="text-2xl font-black leading-none">${initial}</span>
+                            <span class="text-[11px] mt-0.5 opacity-80">📷</span>
+                        </div>
+                    `}
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="document.getElementById('traineeAvatarInput')?.click()" class="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 transition">
+                        ${hasAvatar ? this.t("avatar_change") : this.t("avatar_add")}
+                    </button>
+                    ${hasAvatar ? `
+                        <button type="button" onclick="IronApp.removeTraineeAvatar()" class="text-[10px] font-bold text-rose-400 hover:text-rose-300 px-1.5 py-0.5 rounded-lg bg-rose-500/10 border border-rose-500/20 transition">
+                            ${this.t("avatar_remove")}
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    },
+
+    handleTraineeAvatarUpload(input) {
+        if (!input || !input.files || !input.files[0]) return;
+        const file = input.files[0];
+        if (!file.type || !file.type.startsWith("image/")) {
+            input.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                const maxDim = 256;
+                const canvas = document.createElement("canvas");
+                canvas.width = maxDim;
+                canvas.height = maxDim;
+                const ctx = canvas.getContext("2d");
+
+                // قص مركزي مربع للصورة للحفاظ على نسبة الأبعاد وجودة العرض الدائري
+                const size = Math.min(img.width, img.height);
+                const sx = Math.max(0, (img.width - size) / 2);
+                const sy = Math.max(0, (img.height - size) / 2);
+                ctx.drawImage(img, sx, sy, size, size, 0, 0, maxDim, maxDim);
+
+                const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+                const user = IronAuth.getCurrentUser();
+                if (user && user.role === "trainee") {
+                    const updated = IronAuth.updateTrainee(user.id, { avatar: dataUrl });
+                    if (updated) {
+                        this.renderTraineeAvatar(updated);
+                        this.renderUserHeader(IronAuth.getCurrentUser());
+                        showToast(this.t("avatar_saved"), "success");
+                    }
+                }
+                input.value = "";
+            };
+            img.onerror = () => {
+                input.value = "";
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    },
+
+    removeTraineeAvatar() {
+        const user = IronAuth.getCurrentUser();
+        if (!user || user.role !== "trainee") return;
+        const updated = IronAuth.updateTrainee(user.id, { avatar: "" });
+        if (updated) {
+            this.renderTraineeAvatar(updated);
+            this.renderUserHeader(IronAuth.getCurrentUser());
+            showToast(this.t("avatar_removed"), "success");
+        }
+    },
+
     // تعبئة بيانات شاشات المتدرب (بياناته وجداوله ومتابعته فقط)
     renderTraineeData(trainee) {
         if (!trainee) return;
@@ -285,13 +438,14 @@ const IronApp = {
         const carbGrams = trainee.macros?.carbs !== undefined ? trainee.macros.carbs : computedCarbs;
         const waterTargetLiters = (weight * 0.035).toFixed(1);
 
-        // الرئيسية
-        document.getElementById("homeWelcomeName").innerText = `أهلاً بك يا ${trainee.name} 👋`;
-        document.getElementById("homeDaysLeftBadge").innerText = `باقي ${trainee.daysLeft} يوماً في اشتراكك 🔥`;
+        // الصورة الشخصية للمشترك + بيانات الترحيب الرئيسية
+        this.renderTraineeAvatar(trainee);
+        document.getElementById("homeWelcomeName").innerText = this.t("home_welcome", { name: trainee.name });
+        document.getElementById("homeDaysLeftBadge").innerText = this.t("home_days_left", { days: trainee.daysLeft });
         document.getElementById("homeTargetCal").innerText = `${targetCal} kcal`;
         document.getElementById("homeTargetProtein").innerText = `${proteinGrams}g`;
         document.getElementById("homeTargetCarbs").innerText = `${carbGrams}g`;
-        document.getElementById("homeTargetWater").innerText = `${waterTargetLiters} لتر`;
+        document.getElementById("homeTargetWater").innerText = `${waterTargetLiters} ${this.t("liter")}`;
 
         // بطاقة ملخص خطة العميل وتوجيهات الكوتش الخاصة به فقط
         this.renderHomePlanSummary(trainee);
@@ -334,32 +488,33 @@ const IronApp = {
         if (!card || !trainee) return;
         const assignedProg = trainee.program || "PPL (Push Pull Legs)";
         const checkinsCount = Array.isArray(trainee.history) ? trainee.history.length : 0;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
 
         card.innerHTML = `
             <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <span class="text-xs font-black text-emerald-400 flex items-center gap-1.5">
-                        <span>📋 ملخص خطتك الخاصة وجدولك المعتمد</span>
+                        <span>${this.t("plan_summary_title")}</span>
                     </span>
-                    <span class="text-[11px] text-gray-400 font-mono">تاريخ الاشتراك: ${trainee.joinedDate || '-'}</span>
+                    <span class="text-[11px] text-gray-400 font-mono">${this.t("plan_joined", { date: trainee.joinedDate || '-' })}</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                     <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
-                        <div class="text-[10px] text-gray-400 font-bold">هدفك التدريبي</div>
-                        <div class="font-black text-white mt-0.5">${trainee.goal || 'تنشيف وخسارة دهون'}</div>
+                        <div class="text-[10px] text-gray-400 font-bold">${this.t("plan_goal")}</div>
+                        <div class="font-black text-white mt-0.5">${trainee.goal || (isEn ? 'Fat Loss' : 'تنشيف وخسارة دهون')}</div>
                     </div>
                     <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
-                        <div class="text-[10px] text-gray-400 font-bold">جدول التمرين المخصص لك</div>
+                        <div class="text-[10px] text-gray-400 font-bold">${this.t("plan_program")}</div>
                         <div class="font-black text-emerald-400 mt-0.5">${assignedProg}</div>
                     </div>
                     <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
-                        <div class="text-[10px] text-gray-400 font-bold">الوزن الحالي / المتابعات المسجلة</div>
-                        <div class="font-black text-cyan-400 mt-0.5">${trainee.weight} كجم • ${checkinsCount} قراءات</div>
+                        <div class="text-[10px] text-gray-400 font-bold">${this.t("plan_weight_checkins")}</div>
+                        <div class="font-black text-cyan-400 mt-0.5">${this.t("plan_checkins_count", { weight: trainee.weight, count: checkinsCount })}</div>
                     </div>
                 </div>
                 ${trainee.coachNote ? `
                     <div class="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3 text-xs">
-                        <div class="text-[10px] font-black text-emerald-400 mb-1">💬 توجيهات الكوتش الخاصة لك:</div>
+                        <div class="text-[10px] font-black text-emerald-400 mb-1">${this.t("plan_coach_note")}</div>
                         <p class="text-gray-200 leading-relaxed">${trainee.coachNote}</p>
                     </div>
                 ` : ''}
@@ -391,10 +546,10 @@ const IronApp = {
                 <div class="flex-1">
                     <div class="flex items-center justify-between mb-1.5">
                         <span class="text-xs font-black text-white flex items-center gap-1.5">
-                            <span>💧 متابعة شرب الماء اليومي</span>
-                            <span class="text-[11px] text-cyan-400 font-mono">(${consumedLiters} / ${targetLiters} لتر)</span>
+                            <span>${this.t("water_title")}</span>
+                            <span class="text-[11px] text-cyan-400 font-mono">(${consumedLiters} / ${targetLiters} ${this.t("liter")})</span>
                         </span>
-                        <span class="text-xs font-black text-cyan-400">${cups} من ${targetCups} أكواب (${pct}%)</span>
+                        <span class="text-xs font-black text-cyan-400">${this.t("water_cups", { cups, target: targetCups, pct })}</span>
                     </div>
                     <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
                         <div class="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-300" style="width: ${pct}%"></div>
@@ -402,10 +557,10 @@ const IronApp = {
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="IronApp.addWaterCup(1)" class="water-cup-btn px-3.5 py-2 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 rounded-xl text-xs font-black flex items-center gap-1">
-                        <span>+ كوب ماء (250 مل) 🥤</span>
+                        <span>${this.t("water_add_btn")}</span>
                     </button>
                     ${cups > 0 ? `
-                        <button onclick="IronApp.addWaterCup(-1)" class="px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-xl text-xs font-bold" title="إنقاص كوب">
+                        <button onclick="IronApp.addWaterCup(-1)" class="px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-xl text-xs font-bold">
                             -
                         </button>
                     ` : ''}
@@ -427,7 +582,7 @@ const IronApp = {
         const targetLiters = parseFloat(((parseFloat(trainee.weight) || 75) * 0.035).toFixed(1));
         this.renderWaterTracker(trainee, targetLiters);
         if (delta > 0) {
-            showToast(`عاش! شربت ${(nextCups * 0.25).toFixed(2)} لتر ماء اليوم 💧`, "success");
+            showToast(this.t("water_toast", { liters: (nextCups * 0.25).toFixed(2) }), "success");
         }
     },
 
@@ -445,11 +600,13 @@ const IronApp = {
             ? allLogs.filter(l => l.traineeId === traineeId)
             : [];
 
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+
         const renderHtml = (limit = 5) => {
             if (myLogs.length === 0) {
                 return `
                     <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 text-center text-xs text-gray-400">
-                        لم تسجل جلسات تمرين مكتملة بعد. افتح تبويب <strong>البرامج التدريبية</strong> واضغط "ابدأ التمرين الآن (وضع الجيم)" لتسجيل أول تمرين! 🏋️‍♂️
+                        ${this.t("logs_empty")}
                     </div>
                 `;
             }
@@ -458,24 +615,24 @@ const IronApp = {
                 <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
                     <div class="flex items-center justify-between mb-3">
                         <h4 class="text-sm font-black text-white flex items-center gap-2">
-                            <span>🏆 سجل تمارينك المكتملة في الجيم (${myLogs.length} جلسة)</span>
+                            <span>${this.t("logs_title", { count: myLogs.length })}</span>
                         </h4>
-                        <span class="text-[11px] text-emerald-400 font-bold">آخر ${Math.min(limit, myLogs.length)} تمارين</span>
+                        <span class="text-[11px] text-emerald-400 font-bold">${this.t("logs_recent", { count: Math.min(limit, myLogs.length) })}</span>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                         ${myLogs.slice(0, limit).map(log => {
-                            const dateFormatted = new Date(log.date).toLocaleDateString("ar-EG", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+                            const dateFormatted = new Date(log.date).toLocaleDateString(isEn ? "en-US" : "ar-EG", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
                             return `
                                 <div class="flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs">
                                     <div>
                                         <div class="font-black text-white">${log.dayTitle}</div>
                                         <div class="text-[10px] text-gray-400">${log.programName} • ${dateFormatted}</div>
                                     </div>
-                                    <div class="text-left">
+                                    <div class="text-end">
                                         <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px]">
-                                            ${log.completedSets} جولة ✓
+                                            ${this.t("logs_sets", { sets: log.completedSets })}
                                         </span>
-                                        ${log.totalVolumeKg > 0 ? `<div class="text-[10px] text-amber-400 font-mono mt-0.5">حجم: ${log.totalVolumeKg} كجم</div>` : ''}
+                                        ${log.totalVolumeKg > 0 ? `<div class="text-[10px] text-amber-400 font-mono mt-0.5">${this.t("logs_volume", { vol: log.totalVolumeKg })}</div>` : ''}
                                     </div>
                                 </div>
                             `;
@@ -520,8 +677,8 @@ const IronApp = {
         return `
             <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 mb-4">
                 <div class="text-[11px] font-bold text-gray-400 mb-2 flex justify-between items-center">
-                    <span>📈 منحنى تطور الوزن عبر الأسابيع</span>
-                    <span class="font-mono text-emerald-400">من ${points[0].weight} كجم إلى ${points[points.length - 1].weight} كجم</span>
+                    <span>${this.t("chk_chart_title")}</span>
+                    <span class="font-mono text-emerald-400">${this.t("chk_chart_range", { from: points[0].weight, to: points[points.length - 1].weight })}</span>
                 </div>
                 <svg viewBox="0 0 ${width} ${height}" class="w-full h-32 overflow-visible">
                     <defs>
@@ -547,10 +704,12 @@ const IronApp = {
     renderCheckinHistory(trainee) {
         const container = document.getElementById("checkinHistoryContainer");
         if (!container || !trainee) return;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const unitKg = isEn ? "kg" : "كجم";
 
         const history = trainee.history || [];
         if (history.length === 0) {
-            container.innerHTML = `<div class="text-xs text-gray-400 text-center py-4">لا توجد قراءات مسجلة بعد. أرسل أول متابعة أسبوعية لك!</div>`;
+            container.innerHTML = `<div class="text-xs text-gray-400 text-center py-4">${this.t("chk_hist_empty")}</div>`;
             return;
         }
 
@@ -558,29 +717,29 @@ const IronApp = {
 
         const rows = [...history].reverse().map((item, idx, arr) => {
             const prev = arr[idx + 1];
-            let badge = `<span class="text-gray-400">قياس مبدئي</span>`;
+            let badge = `<span class="text-gray-400">${this.t("chk_initial")}</span>`;
             if (prev && typeof prev.weight === "number") {
                 const diff = parseFloat((item.weight - prev.weight).toFixed(1));
                 badge = diff < 0
-                    ? `<span class="text-emerald-400 font-bold">${diff} كجم 📉</span>`
+                    ? `<span class="text-emerald-400 font-bold">${diff} ${unitKg} 📉</span>`
                     : diff > 0
-                    ? `<span class="text-amber-400 font-bold">+${diff} كجم 📈</span>`
-                    : `<span class="text-cyan-400 font-bold">ثبات 🎯</span>`;
+                    ? `<span class="text-amber-400 font-bold">+${diff} ${unitKg} 📈</span>`
+                    : `<span class="text-cyan-400 font-bold">${this.t("chk_stable")}</span>`;
             }
             return `
                 <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl px-4 py-2.5 text-xs space-y-1">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <span class="font-mono text-gray-400">${item.date}</span>
-                            <strong class="text-white font-black">${item.weight} كجم</strong>
-                            ${item.waist ? `<span class="text-gray-400">• الخصر: ${item.waist} سم</span>` : ''}
+                            <strong class="text-white font-black">${item.weight} ${unitKg}</strong>
+                            ${item.waist ? `<span class="text-gray-400">${this.t("chk_waist_item", { waist: item.waist })}</span>` : ''}
                         </div>
                         <div>${badge}</div>
                     </div>
                     ${(item.adherence || item.energy || item.notes) ? `
                         <div class="flex flex-wrap items-center gap-2 text-[10px] text-gray-400 pt-1 border-t border-slate-800/60">
-                            ${item.adherence ? `<span>🥗 الالتزام: <strong class="text-emerald-400">${item.adherence}/10</strong></span>` : ''}
-                            ${item.energy ? `<span>⚡ الطاقة: <strong class="text-cyan-400">${item.energy}/10</strong></span>` : ''}
+                            ${item.adherence ? `<span>${this.t("chk_adh_item")} <strong class="text-emerald-400">${item.adherence}/10</strong></span>` : ''}
+                            ${item.energy ? `<span>${this.t("chk_eng_item")} <strong class="text-cyan-400">${item.energy}/10</strong></span>` : ''}
                             ${item.notes ? `<span class="text-gray-300 truncate max-w-xs">📝 ${item.notes}</span>` : ''}
                         </div>
                     ` : ''}
@@ -591,7 +750,7 @@ const IronApp = {
         container.innerHTML = `
             <div class="mt-6 pt-5 border-t border-slate-800">
                 <h4 class="text-xs font-black text-emerald-400 mb-3 flex items-center gap-1.5">
-                    <span>📊 سجل تطور الوزن والقياسات (${history.length} قراءات)</span>
+                    <span>${this.t("chk_hist_title", { count: history.length })}</span>
                 </h4>
                 ${chartHtml}
                 <div class="space-y-2 max-h-48 overflow-y-auto pr-1">${rows}</div>
@@ -643,7 +802,7 @@ const IronApp = {
         if (document.getElementById("resProtein")) document.getElementById("resProtein").innerText = `${results.proteinGrams}g (${results.proteinCalories} kcal)`;
         if (document.getElementById("resCarbs")) document.getElementById("resCarbs").innerText = `${results.carbGrams}g (${results.carbCalories} kcal)`;
         if (document.getElementById("resFats")) document.getElementById("resFats").innerText = `${results.fatGrams}g (${results.fatCalories} kcal)`;
-        if (document.getElementById("resWater")) document.getElementById("resWater").innerText = `${results.waterLiters} لتر`;
+        if (document.getElementById("resWater")) document.getElementById("resWater").innerText = `${results.waterLiters} ${this.t("liter")}`;
 
         this.latestCalcResults = results;
     },
@@ -651,6 +810,7 @@ const IronApp = {
     // حفظ السعرات ومزامنتها مع ملف المتدرب الحالي فقط
     saveTargetCalories() {
         if (!this.latestCalcResults) this.runCalculator();
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const goalSelect = document.getElementById("calcGoal");
         const goalLabel = goalSelect && goalSelect.selectedIndex >= 0 ? goalSelect.options[goalSelect.selectedIndex].text.split("(")[0].trim() : undefined;
         const inputs = {
@@ -663,14 +823,14 @@ const IronApp = {
         };
         const applied = IronCalculator.applyTargetToCurrentUser(this.latestCalcResults, inputs);
         if (applied) {
-            showToast("تم حفظ السعرات والماكروز في ملفك ومزامنتها بنجاح! 🎯", "success");
+            showToast(isEn ? "Target calories & macros saved and synced! 🎯" : "تم حفظ السعرات والماكروز في ملفك ومزامنتها بنجاح! 🎯", "success");
             const user = IronAuth.getCurrentUser();
             if (user) {
                 this.generateDayDiet(true);
                 this.renderTraineeData(user.traineeData);
             }
         } else {
-            showToast("تم احتساب السعرات بنجاح", "success");
+            showToast(isEn ? "Calories calculated successfully" : "تم احتساب السعرات بنجاح", "success");
         }
     },
 
@@ -711,7 +871,8 @@ const IronApp = {
 
         this.generateDayDietWithPlan(plan);
         if (forceNew) {
-            showToast("تم توليد وحفظ جدول دايت يومي جديد يطابق سعراتك! 🥗", "success");
+            const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+            showToast(isEn ? "New full-day meal plan generated and saved! 🥗" : "تم توليد وحفظ جدول دايت يومي جديد يطابق سعراتك! 🥗", "success");
         }
     },
 
@@ -739,6 +900,9 @@ const IronApp = {
     },
 
     renderDayDietSlotCard(slotTitle, meal, slotKey) {
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const calUnit = isEn ? "kcal" : "ك";
+        const gramUnit = isEn ? "g" : "ج";
         return `
             <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition">
                 <div class="relative h-28 w-full overflow-hidden bg-slate-950">
@@ -755,13 +919,13 @@ const IronApp = {
 
                     <div>
                         <div class="flex justify-between items-center text-[10px] font-bold text-gray-300 bg-slate-950 p-2 rounded-lg mb-2">
-                            <span class="text-emerald-400">🔥 ${meal.calories} ك</span>
-                            <span>🥩 ${meal.protein}ج</span>
-                            <span>🍞 ${meal.carbs}ج</span>
-                            <span>🥑 ${meal.fats}ج</span>
+                            <span class="text-emerald-400">🔥 ${meal.calories} ${calUnit}</span>
+                            <span>🥩 ${meal.protein}${gramUnit}</span>
+                            <span>🍞 ${meal.carbs}${gramUnit}</span>
+                            <span>🥑 ${meal.fats}${gramUnit}</span>
                         </div>
                         <button onclick="IronApp.swapDayMeal('${slotKey}', '${meal.id}')" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-[11px] rounded-lg transition border border-slate-700 flex items-center justify-center gap-1">
-                            <span>🔄 استبدال الوجبة</span>
+                            <span>${this.t("diet_swap")}</span>
                         </button>
                     </div>
                 </div>
@@ -771,9 +935,10 @@ const IronApp = {
 
     // استبدال وجبة محددة بوجبة مكافئة وحفظ الخطة
     swapDayMeal(slotKey, currentMealId) {
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const alts = IronMealsEngine.findMealAlternatives(currentMealId);
         if (alts.length === 0) {
-            showToast("لا توجد بدائل إضافية بنفس السعرات حالياً", "error");
+            showToast(isEn ? "No additional calorie-matched alternatives available" : "لا توجد بدائل إضافية بنفس السعرات حالياً", "error");
             return;
         }
 
@@ -792,43 +957,47 @@ const IronApp = {
 
         this.saveDietPlanForCurrentUser(d);
         this.generateDayDietWithPlan(d);
-        showToast(`تم استبدال الوجبة بـ: ${randomAlt.name}`, "success");
+        showToast(isEn ? `Meal swapped to: ${randomAlt.name}` : `تم استبدال الوجبة بـ: ${randomAlt.name}`, "success");
     },
 
     generateDayDietWithPlan(plan) {
         this.currentDayDiet = plan;
         const container = document.getElementById("generatedDayPlanContainer");
         if (!container) return;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const calWord = isEn ? "kcal" : "سعرة";
         const user = IronAuth.getCurrentUser();
         const targetCal = user && user.traineeData && user.traineeData.calories ? user.traineeData.calories : 2000;
         const diffVal = typeof plan.difference === "number" ? plan.difference : Math.round(plan.totalCalories - targetCal);
-        const diffText = diffVal === 0 ? "مطابق تماماً 🎯"
-            : diffVal > 0 ? `+${diffVal} سعرة`
-            : `${diffVal} سعرة`;
+        const diffText = diffVal === 0 ? this.t("diet_exact")
+            : diffVal > 0 ? `+${diffVal} ${calWord}`
+            : `${diffVal} ${calWord}`;
+
+        const trCat = (arCat) => typeof IronI18n !== "undefined" ? IronI18n.translateMealCategory(arCat) : arCat;
 
         container.innerHTML = `
             <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
                     <div class="flex items-center gap-3 flex-wrap">
-                        <span class="text-xs text-gray-400">إجمالي سعرات الدايت:</span>
+                        <span class="text-xs text-gray-400">${this.t("diet_total")}</span>
                         <strong class="text-emerald-400 font-black text-lg">${plan.totalCalories} kcal</strong>
-                        <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-gray-300 font-mono">الهدف: ${targetCal} (${diffText})</span>
+                        <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-gray-300 font-mono">${this.t("diet_target", { target: targetCal, diff: diffText })}</span>
                     </div>
                     <div class="flex items-center gap-3 text-xs font-bold flex-wrap">
-                        <span class="text-white">🥩 بروتين: ${plan.totalProtein}g</span>
-                        <span class="text-amber-400">🍞 كارب: ${plan.totalCarbs}g</span>
-                        <span class="text-teal-400">🥑 دهون: ${plan.totalFats}g</span>
+                        <span class="text-white">${this.t("diet_prot")} ${plan.totalProtein}g</span>
+                        <span class="text-amber-400">${this.t("diet_carb")} ${plan.totalCarbs}g</span>
+                        <span class="text-teal-400">${this.t("diet_fat")} ${plan.totalFats}g</span>
                         <button onclick="IronApp.shareDietPlanWhatsapp()" class="px-2.5 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 rounded-lg text-[11px] font-bold transition">
-                            📲 مشاركة واتساب
+                            ${this.t("diet_share_wa")}
                         </button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    ${this.renderDayDietSlotCard("إفطار", plan.breakfast, "breakfast")}
-                    ${this.renderDayDietSlotCard("غداء", plan.lunch, "lunch")}
-                    ${this.renderDayDietSlotCard("عشاء", plan.dinner, "dinner")}
-                    ${this.renderDayDietSlotCard("سناك", plan.snack, "snack")}
+                    ${this.renderDayDietSlotCard(trCat("إفطار"), plan.breakfast, "breakfast")}
+                    ${this.renderDayDietSlotCard(trCat("غداء"), plan.lunch, "lunch")}
+                    ${this.renderDayDietSlotCard(trCat("عشاء"), plan.dinner, "dinner")}
+                    ${this.renderDayDietSlotCard(trCat("سناكس"), plan.snack, "snack")}
                 </div>
             </div>
         `;
@@ -843,19 +1012,21 @@ const IronApp = {
         const query = document.getElementById("mealsSearchInput")?.value || "";
         const meals = IronMealsEngine.filterMeals({ category: this.currentMealCategory, query });
 
-        if (counter) counter.innerText = `إجمالي الوجبات المعروضة: ${meals.length} وجبة`;
+        if (counter) counter.innerText = this.t("meals_count", { count: meals.length });
 
         if (meals.length === 0) {
-            grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">لا توجد وجبات تطابق بحثك حالياً.</div>`;
+            grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">${this.t("meals_empty")}</div>`;
             return;
         }
+
+        const trCat = (arCat) => typeof IronI18n !== "undefined" ? IronI18n.translateMealCategory(arCat) : arCat;
 
         grid.innerHTML = meals.map(m => `
             <div class="meal-card bg-slate-950/60 border border-slate-800/80 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition flex flex-col justify-between">
                 <div class="relative h-44 w-full bg-slate-950 overflow-hidden">
                     <img src="${m.img}" onerror="this.onerror=null;this.src=IronApp.getMealFallbackSvg('${m.category}')" class="w-full h-full object-cover transition duration-300 hover:scale-105" alt="${m.name}" loading="lazy">
                     <div class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-slate-950/80 backdrop-blur text-xs font-bold text-white border border-slate-700">
-                        ${m.category}
+                        ${trCat(m.category)}
                     </div>
                 </div>
 
@@ -863,26 +1034,26 @@ const IronApp = {
                     <div>
                         <h4 class="font-black text-white text-sm mb-1.5">${m.name}</h4>
                         <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-2.5 text-xs text-gray-300 leading-relaxed mb-3">
-                            <div class="text-[10px] font-bold text-emerald-400 mb-1">🛒 المكونات والأوزان بالجرام:</div>
+                            <div class="text-[10px] font-bold text-emerald-400 mb-1">${this.t("meal_ing_title")}</div>
                             ${m.ingredients}
                         </div>
                     </div>
 
                     <div class="grid grid-cols-4 gap-1.5 text-center text-[10px] font-bold bg-slate-900 p-2 rounded-xl border border-slate-800 text-gray-300">
                         <div>
-                            <span class="text-gray-400 block text-[9px]">كالوري</span>
+                            <span class="text-gray-400 block text-[9px]">${this.t("m_cal")}</span>
                             <span class="text-emerald-400 font-black">${m.calories}</span>
                         </div>
                         <div>
-                            <span class="text-gray-400 block text-[9px]">بروتين</span>
+                            <span class="text-gray-400 block text-[9px]">${this.t("m_prot")}</span>
                             <span class="text-white">${m.protein}g</span>
                         </div>
                         <div>
-                            <span class="text-gray-400 block text-[9px]">كارب</span>
+                            <span class="text-gray-400 block text-[9px]">${this.t("m_carb")}</span>
                             <span class="text-amber-400">${m.carbs}g</span>
                         </div>
                         <div>
-                            <span class="text-gray-400 block text-[9px]">دهون</span>
+                            <span class="text-gray-400 block text-[9px]">${this.t("m_fat")}</span>
                             <span class="text-teal-400">${m.fats}g</span>
                         </div>
                     </div>
@@ -929,8 +1100,9 @@ const IronApp = {
                 selectorWrapper.classList.remove("hidden");
             }
         }
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         if (assignedBadge) {
-            assignedBadge.innerText = `الجدول المعتمد: ${program.nameAr}`;
+            assignedBadge.innerText = this.t("wo_assigned", { name: isEn ? program.nameEn : program.nameAr });
         }
 
         document.querySelectorAll(".prog-select-btn").forEach(btn => {
@@ -970,7 +1142,7 @@ const IronApp = {
                                 <div class="text-xs text-emerald-400 font-bold mt-0.5">${day.targetMuscles} • ${day.exercises.length} Exercises</div>
                             </div>
                             <button onclick="IronApp.startLiveWorkout('${program.id}', '${day.dayId}')" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition flex items-center justify-center gap-1.5">
-                                <span>🏋️‍♂️ ابدأ التمرين الآن (وضع الجيم)</span>
+                                <span>${this.t("wo_start_btn")}</span>
                             </button>
                         </div>
 
@@ -1029,25 +1201,28 @@ const IronApp = {
             list = list.filter(e => e.nameAr.toLowerCase().includes(query) || e.nameEn.toLowerCase().includes(query));
         }
 
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const trMuscle = (m) => typeof IronI18n !== "undefined" ? IronI18n.translateMuscle(m) : m;
+
         grid.innerHTML = list.map(e => `
             <div onclick="IronApp.openExerciseDetail('${e.id}')" class="exercise-card bg-slate-950/60 border border-slate-800/80 rounded-2xl overflow-hidden cursor-pointer flex flex-col justify-between">
                 <div class="relative h-48 w-full bg-slate-950 overflow-hidden flex items-center justify-center p-2">
-                    <img src="${e.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${e.muscle}')" class="w-full h-full object-contain" alt="${e.nameAr}" loading="lazy">
+                    <img src="${e.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${trMuscle(e.muscle)}')" class="w-full h-full object-contain" alt="${e.nameEn}" loading="lazy">
                     <div class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-slate-950/80 backdrop-blur text-[11px] font-bold text-emerald-400 border border-emerald-500/20">
-                        ${e.muscle}
+                        ${trMuscle(e.muscle)}
                     </div>
                 </div>
 
                 <div class="p-4 flex-1 flex flex-col justify-between">
                     <div>
-                        <h4 class="font-black text-white text-sm">${e.nameAr}</h4>
-                        <div class="text-xs text-gray-400 font-mono mb-2">${e.nameEn}</div>
+                        <h4 class="font-black text-white text-sm">${isEn ? e.nameEn : e.nameAr}</h4>
+                        <div class="text-xs text-gray-400 font-mono mb-2">${isEn ? e.nameAr : e.nameEn}</div>
                         <p class="text-xs text-gray-300 line-clamp-2 leading-relaxed mb-3">${e.setup}</p>
                     </div>
 
                     <div class="flex items-center justify-between border-t border-slate-800/80 pt-3">
-                        <span class="text-[11px] text-gray-400">الأداة: ${e.equipment}</span>
-                        <span class="text-xs font-bold text-emerald-400">التفاصيل والتكنيك ←</span>
+                        <span class="text-[11px] text-gray-400">${this.t("ex_tool", { tool: e.equipment })}</span>
+                        <span class="text-xs font-bold text-emerald-400">${this.t("ex_details_link")}</span>
                     </div>
                 </div>
             </div>
@@ -1076,13 +1251,15 @@ const IronApp = {
         const container = document.getElementById("exerciseDetailModalContent");
         if (!container || !ex) return;
 
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const trMuscle = (m) => typeof IronI18n !== "undefined" ? IronI18n.translateMuscle(m) : m;
         const alternatives = getAlternativeExercises(exId);
         const titleEn = customNameEn || ex.nameEn;
 
         container.innerHTML = `
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
                 <div dir="ltr" class="text-left">
-                    <span class="text-xs font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">${ex.muscle}</span>
+                    <span class="text-xs font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">${trMuscle(ex.muscle)}</span>
                     <h3 class="text-lg font-black text-white mt-1">${titleEn}</h3>
                     <div class="text-xs text-gray-400 font-bold">${ex.nameAr}</div>
                 </div>
@@ -1090,41 +1267,41 @@ const IronApp = {
             </div>
 
             <div class="w-full h-56 bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 mb-4 flex items-center justify-center p-2">
-                <img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${ex.muscle}')" class="w-full h-full object-contain" alt="${ex.nameAr}">
+                <img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${trMuscle(ex.muscle)}')" class="w-full h-full object-contain" alt="${titleEn}">
             </div>
 
             <div class="space-y-4 text-xs leading-relaxed">
                 <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
-                    <strong class="text-emerald-400 block mb-1">🏁 وضعية الاستعداد والتثبيت (Setup):</strong>
+                    <strong class="text-emerald-400 block mb-1">${isEn ? '🏁 Setup & Positioning:' : '🏁 وضعية الاستعداد والتثبيت (Setup):'}</strong>
                     <p class="text-gray-300">${ex.setup}</p>
                 </div>
 
                 <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
-                    <strong class="text-emerald-400 block mb-1">🚀 طريقة الأداء الصحيح خطوة بخطوة:</strong>
+                    <strong class="text-emerald-400 block mb-1">${isEn ? '🚀 Execution (Step-by-Step):' : '🚀 طريقة الأداء الصحيح خطوة بخطوة:'}</strong>
                     <p class="text-gray-300">${ex.execution}</p>
                 </div>
 
                 <div class="bg-rose-950/20 p-3.5 rounded-xl border border-rose-500/30">
-                    <strong class="text-rose-400 block mb-1">⚠️ أبرز الأخطاء الشائعة لتجنب الإصابة:</strong>
+                    <strong class="text-rose-400 block mb-1">${isEn ? '⚠️ Common Mistakes to Avoid:' : '⚠️ أبرز الأخطاء الشائعة لتجنب الإصابة:'}</strong>
                     <ul class="list-disc list-inside text-gray-300 space-y-1">
                         ${ex.mistakes.map(m => `<li>${m}</li>`).join('')}
                     </ul>
                 </div>
 
                 <div class="bg-cyan-950/20 p-3.5 rounded-xl border border-cyan-500/30">
-                    <strong class="text-cyan-400 block mb-1">💨 تكنيك التنفس الصحيح:</strong>
+                    <strong class="text-cyan-400 block mb-1">${isEn ? '💨 Proper Breathing Technique:' : '💨 تكنيك التنفس الصحيح:'}</strong>
                     <p class="text-gray-300">${ex.breathing}</p>
                 </div>
 
                 ${alternatives.length > 0 ? `
                     <div class="border-t border-slate-800 pt-3">
-                        <strong class="text-amber-400 block mb-2">⚡ التمارين البديلة (إذا كان الجهاز مشغولاً):</strong>
+                        <strong class="text-amber-400 block mb-2">${isEn ? '⚡ Alternative Exercises:' : '⚡ التمارين البديلة (إذا كان الجهاز مشغولاً):'}</strong>
                         <div class="grid grid-cols-2 gap-2">
                             ${alternatives.map(alt => `
                                 <div onclick="IronApp.openExerciseDetail('${alt.id}')" class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 hover:border-amber-500/40 cursor-pointer flex items-center gap-2">
-                                    <img src="${alt.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${alt.muscle}')" class="w-10 h-10 rounded-lg object-contain bg-slate-950" alt="${alt.nameAr}">
+                                    <img src="${alt.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${trMuscle(alt.muscle)}')" class="w-10 h-10 rounded-lg object-contain bg-slate-950" alt="${alt.nameEn}">
                                     <div class="min-w-0">
-                                        <div class="font-bold text-white text-[11px] truncate">${alt.nameAr}</div>
+                                        <div class="font-bold text-white text-[11px] truncate">${isEn ? alt.nameEn : alt.nameAr}</div>
                                         <div class="text-[9px] text-gray-400 truncate">${alt.equipment}</div>
                                     </div>
                                 </div>
@@ -1167,7 +1344,7 @@ const IronApp = {
         if (res.success) {
             window.location.reload();
         } else {
-            err.innerText = res.message || "بيانات الدخول غير صحيحة";
+            err.innerText = res.message || this.t("login_invalid");
             err.classList.remove("hidden");
         }
     },

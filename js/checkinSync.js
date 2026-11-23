@@ -10,14 +10,16 @@ const IronCheckinSync = {
         const config = getAppConfig();
         const coachPhone = (config.coachInfo.whatsapp || "").replace(/\D/g, '');
 
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+
         if (!currentUser || currentUser.role !== "trainee") {
-            showToast("يجب تسجيل الدخول كمتدرب لتسجيل التقرير", "error");
+            showToast(isEn ? "Please sign in as a trainee to submit a check-in" : "يجب تسجيل الدخول كمتدرب لتسجيل التقرير", "error");
             return;
         }
 
         const parsedWeight = parseFloat(currentWeight);
         if (isNaN(parsedWeight) || parsedWeight <= 0) {
-            showToast("يرجى إدخال وزن صحيح", "error");
+            showToast(isEn ? "Please enter a valid weight" : "يرجى إدخال وزن صحيح", "error");
             return;
         }
 
@@ -82,6 +84,6 @@ _تم إرسال هذا التقرير تلقائياً عبر تطبيق أير
 
         // فتح الواتساب في نافذة جديدة
         window.open(whatsappUrl, '_blank');
-        showToast("تم حفظ التقييم في سجلك وفتح واتساب الكوتش بنجاح!", "success");
+        showToast(isEn ? "Check-in saved and Coach WhatsApp opened!" : "تم حفظ التقييم في سجلك وفتح واتساب الكوتش بنجاح!", "success");
     }
 };

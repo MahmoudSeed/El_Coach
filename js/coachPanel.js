@@ -34,6 +34,9 @@ const IronCoachPanel = {
             );
         }
 
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const txt = (key, vars) => typeof IronI18n !== "undefined" ? IronI18n.t(key, vars) : key;
+
         container.innerHTML = `
             <div class="space-y-6">
                 <!-- شريط الترحيب والإحصائيات السريعة -->
@@ -41,28 +44,28 @@ const IronCoachPanel = {
                     <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div class="flex items-center gap-4">
                             <div class="brand-logo-frame w-20 sm:w-24 flex-shrink-0 flex items-center justify-center">
-                                <img src="LOGO.jpg" alt="Coach Mahmoud Logo" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='👑'">
+                                <img src="LOGO.png" alt="Coach Mahmoud Logo" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='👑'">
                             </div>
                             <div>
                                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-2">
-                                    <span>👑 لوحة تحكم الكوتش الرسمية</span>
+                                    <span>${txt("coach_badge")}</span>
                                 </div>
-                                <h2 class="text-2xl font-black text-white">أهلاً بك، ${config.coachInfo.name} 👋</h2>
-                                <p class="text-xs text-gray-400 mt-1">${config.coachInfo.title} | إدارة المشتركين، تعديل الخطط، والنسخ الاحتياطي</p>
+                                <h2 class="text-2xl font-black text-white">${txt("coach_welcome", { name: config.coachInfo.name })}</h2>
+                                <p class="text-xs text-gray-400 mt-1">${txt("coach_sub", { title: config.coachInfo.title })}</p>
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <button onclick="openModal('addTraineeModal')" class="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5">
-                                <span>+ إضافة مشترك جديد</span>
+                                <span>${txt("coach_add_btn")}</span>
                             </button>
                             <button onclick="IronCoachPanel.openSettingsModal()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5">
-                                <span>⚙️ إعدادات الدفع</span>
+                                <span>${txt("coach_settings_btn")}</span>
                             </button>
-                            <button onclick="IronCoachPanel.exportBackup()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5" title="تحميل نسخة احتياطية لكافة المشتركين والبيانات">
-                                <span>📥 نسخ احتياطي</span>
+                            <button onclick="IronCoachPanel.exportBackup()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+                                <span>${txt("coach_backup_btn")}</span>
                             </button>
-                            <label class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer" title="استعادة بيانات من ملف JSON">
-                                <span>📤 استعادة</span>
+                            <label class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer">
+                                <span>${txt("coach_restore_btn")}</span>
                                 <input type="file" accept=".json,application/json" onchange="IronCoachPanel.importBackup(this)" class="hidden">
                             </label>
                         </div>
@@ -71,19 +74,19 @@ const IronCoachPanel = {
                     <!-- شبكة الإحصائيات -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                         <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 text-center">
-                            <div class="text-xs text-gray-400 font-bold mb-1">إجمالي المتدربين</div>
+                            <div class="text-xs text-gray-400 font-bold mb-1">${txt("coach_stat_total")}</div>
                             <div class="text-2xl font-black text-white">${trainees.length}</div>
                         </div>
                         <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 text-center">
-                            <div class="text-xs text-emerald-400 font-bold mb-1">اشتراكات سارية</div>
+                            <div class="text-xs text-emerald-400 font-bold mb-1">${txt("coach_stat_active")}</div>
                             <div class="text-2xl font-black text-emerald-400">${activeCount}</div>
                         </div>
                         <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 text-center">
-                            <div class="text-xs text-amber-400 font-bold mb-1">تنتهي قريباً (≤3 أيام)</div>
+                            <div class="text-xs text-amber-400 font-bold mb-1">${txt("coach_stat_expiring")}</div>
                             <div class="text-2xl font-black text-amber-400">${expiringCount}</div>
                         </div>
                         <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 text-center">
-                            <div class="text-xs text-rose-400 font-bold mb-1">اشتراكات منتهية</div>
+                            <div class="text-xs text-rose-400 font-bold mb-1">${txt("coach_stat_expired")}</div>
                             <div class="text-2xl font-black text-rose-400">${expiredCount}</div>
                         </div>
                     </div>
@@ -93,63 +96,70 @@ const IronCoachPanel = {
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
                     <div class="flex items-center gap-3 flex-1">
                         <h3 class="text-base font-black text-white whitespace-nowrap">
-                            <span>المشتركين (${filteredTrainees.length})</span>
+                            <span>${txt("coach_list_title", { count: filteredTrainees.length })}</span>
                         </h3>
                         <input type="text" id="coachTraineeSearchInput" value="${this.searchQuery}"
                             oninput="IronCoachPanel.handleSearch(this.value)"
-                            placeholder="🔍 ابحث بالاسم، اسم المستخدم، أو رقم الهاتف..."
+                            placeholder="${txt("coach_search_ph")}"
                             class="w-full max-w-sm bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-bold placeholder-gray-500 outline-none">
                     </div>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <button onclick="IronCoachPanel.setFilter('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'all' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-gray-300'}">الكل (${trainees.length})</button>
-                        <button onclick="IronCoachPanel.setFilter('active')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'active' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-gray-300'}">السارية (${activeCount})</button>
-                        <button onclick="IronCoachPanel.setFilter('expiring')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'expiring' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-gray-300'}">تنتهي قريباً (${expiringCount})</button>
-                        <button onclick="IronCoachPanel.setFilter('expired')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'expired' ? 'bg-rose-500 text-white shadow-sm' : 'bg-slate-800 text-gray-300'}">منتهية (${expiredCount})</button>
+                        <button onclick="IronCoachPanel.setFilter('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'all' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-gray-300'}">${txt("coach_filter_all", { count: trainees.length })}</button>
+                        <button onclick="IronCoachPanel.setFilter('active')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'active' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-gray-300'}">${txt("coach_filter_active", { count: activeCount })}</button>
+                        <button onclick="IronCoachPanel.setFilter('expiring')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'expiring' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-gray-300'}">${txt("coach_filter_expiring", { count: expiringCount })}</button>
+                        <button onclick="IronCoachPanel.setFilter('expired')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'expired' ? 'bg-rose-500 text-white shadow-sm' : 'bg-slate-800 text-gray-300'}">${txt("coach_filter_expired", { count: expiredCount })}</button>
                     </div>
                 </div>
 
                 <!-- بطاقات المشتركين -->
                 ${filteredTrainees.length === 0 ? `
                     <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-10 text-center text-gray-400 text-sm font-bold">
-                        لا يوجد مشتركين يطابقون البحث أو الفلتر المحدد حالياً.
+                        ${txt("coach_empty")}
                     </div>
                 ` : `
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         ${filteredTrainees.map(t => {
                             const statusBadge = t.status === 'active'
-                                ? `<span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">نشط (باقي ${t.daysLeft} يوم)</span>`
+                                ? `<span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">${txt("status_active", { days: t.daysLeft })}</span>`
                                 : t.status === 'expiring'
-                                ? `<span class="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px] font-bold">ينتهي قريباً (${t.daysLeft} يوم)</span>`
-                                : `<span class="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[11px] font-bold">منتهي الاشتراك ⚠️</span>`;
+                                ? `<span class="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px] font-bold">${txt("status_expiring", { days: t.daysLeft })}</span>`
+                                : `<span class="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[11px] font-bold">${txt("status_expired")}</span>`;
 
                             const checkinsCount = Array.isArray(t.history) ? t.history.length : 0;
+                            const initial = (t.name || "U").trim().charAt(0).toUpperCase();
+                            const avatarBadge = t.avatar
+                                ? `<img src="${t.avatar}" alt="${t.name}" class="w-10 h-10 rounded-full object-cover border-2 border-emerald-500/40 flex-shrink-0">`
+                                : `<div class="w-10 h-10 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-sm flex-shrink-0">${initial}</div>`;
 
                             return `
                                 <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-emerald-500/40 transition flex flex-col justify-between">
                                     <div>
                                         <div class="flex justify-between items-start gap-2 mb-3">
-                                            <div>
-                                                <h4 class="font-black text-white text-base">${t.name}</h4>
-                                                <span class="text-xs text-gray-400 font-mono">@${t.username} • ${t.phone || 'بدون هاتف'}</span>
+                                            <div class="flex items-center gap-2.5 min-w-0">
+                                                ${avatarBadge}
+                                                <div class="min-w-0">
+                                                    <h4 class="font-black text-white text-base truncate">${t.name}</h4>
+                                                    <span class="text-xs text-gray-400 font-mono truncate block">@${t.username} • ${t.phone || (isEn ? 'No phone' : 'بدون هاتف')}</span>
+                                                </div>
                                             </div>
                                             ${statusBadge}
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-2 text-xs bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 my-3">
                                             <div>
-                                                <span class="text-gray-400">الهدف:</span>
-                                                <div class="font-bold text-white truncate">${t.goal || 'تنشيف'}</div>
+                                                <span class="text-gray-400">${isEn ? 'Goal:' : 'الهدف:'}</span>
+                                                <div class="font-bold text-white truncate">${t.goal || (isEn ? 'Fat Loss' : 'تنشيف')}</div>
                                             </div>
                                             <div>
-                                                <span class="text-gray-400">السعرات:</span>
+                                                <span class="text-gray-400">${isEn ? 'Calories:' : 'السعرات:'}</span>
                                                 <div class="font-bold text-emerald-400">${t.calories || 2000} kcal</div>
                                             </div>
                                             <div>
-                                                <span class="text-gray-400">الوزن / المتابعات:</span>
-                                                <div class="font-bold text-white">${t.weight} كجم (${checkinsCount} قراءات)</div>
+                                                <span class="text-gray-400">${isEn ? 'Weight / Logs:' : 'الوزن / المتابعات:'}</span>
+                                                <div class="font-bold text-white">${t.weight} ${isEn ? 'kg' : 'كجم'} (${checkinsCount})</div>
                                             </div>
                                             <div>
-                                                <span class="text-gray-400">البرنامج:</span>
+                                                <span class="text-gray-400">${isEn ? 'Program:' : 'البرنامج:'}</span>
                                                 <div class="font-bold text-cyan-400 truncate">${t.program || 'PPL'}</div>
                                             </div>
                                         </div>
@@ -158,20 +168,20 @@ const IronCoachPanel = {
                                     <div class="space-y-2 pt-3 border-t border-slate-800 mt-2">
                                         <div class="flex items-center gap-2">
                                             <button onclick="IronCoachPanel.renewTrainee('${t.id}')" class="flex-1 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
-                                                <span>🔄 تجديد +30 يوم</span>
+                                                <span>${txt("coach_renew_btn")}</span>
                                             </button>
-                                            <button onclick="IronCoachPanel.impersonateTrainee('${t.id}')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-gray-200 rounded-xl text-xs font-bold transition flex items-center gap-1" title="معاينة حساب المتدرب">
-                                                <span>👁️ حسابه</span>
+                                            <button onclick="IronCoachPanel.impersonateTrainee('${t.id}')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-gray-200 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                                                <span>${txt("coach_view_btn")}</span>
                                             </button>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <button onclick="IronCoachPanel.openEditTraineeModal('${t.id}')" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-200 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1">
-                                                <span>✏️ تعديل البيانات</span>
+                                                <span>${txt("coach_edit_btn")}</span>
                                             </button>
-                                            <button onclick="IronCoachPanel.messageTraineeWhatsapp('${t.id}')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 rounded-xl text-[11px] font-bold transition" title="مراسلة المتدرب عبر واتساب">
-                                                <span>💬 واتساب</span>
+                                            <button onclick="IronCoachPanel.messageTraineeWhatsapp('${t.id}')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 rounded-xl text-[11px] font-bold transition">
+                                                <span>${txt("coach_wa_btn")}</span>
                                             </button>
-                                            <button onclick="IronCoachPanel.deleteTrainee('${t.id}')" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 rounded-xl text-[11px] font-bold transition" title="حذف المشترك">
+                                            <button onclick="IronCoachPanel.deleteTrainee('${t.id}')" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 rounded-xl text-[11px] font-bold transition">
                                                 <span>🗑️</span>
                                             </button>
                                         </div>

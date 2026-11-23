@@ -149,7 +149,8 @@ const IronLiveGym = {
             if (this.timerSecondsRemaining <= 0) {
                 clearInterval(this.timerInterval);
                 this.playTimerBeep();
-                if (timerText) timerText.innerText = "انتهت الراحة! ابدأ 🔥";
+                const doneTxt = typeof IronI18n !== "undefined" ? IronI18n.t("timer_done") : "انتهت الراحة! ابدأ 🔥";
+                if (timerText) timerText.innerText = doneTxt;
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
                 return;
             }
@@ -223,7 +224,7 @@ const IronLiveGym = {
                         <div class="text-xs text-emerald-400 mt-0.5">${alt.equipment}</div>
                     </div>
                     <button onclick="IronLiveGym.swapCurrentExercise(${exerciseIdx}, '${alt.id}')" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-lg transition shadow-lg shadow-emerald-500/20">
-                        اختيار كبديل
+                        ${typeof IronI18n !== "undefined" ? IronI18n.t("gym_alt_pick") : "اختيار كبديل"}
                     </button>
                 </div>
             `).join("");
@@ -266,7 +267,8 @@ const IronLiveGym = {
 
         sessionStorage.removeItem("iron_active_workout");
         closeModal("liveGymModal");
-        showToast("عاش يا وحش! 🔥 تم إنهاء التمرين وحفظ الجلسة في سجلك بنجاح", "success");
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        showToast(isEn ? "Great workout! 🔥 Session saved to your history" : "عاش يا وحش! 🔥 تم إنهاء التمرين وحفظ الجلسة في سجلك بنجاح", "success");
         this.currentWorkout = null;
 
         if (typeof IronApp !== "undefined" && IronApp.renderWorkoutLogs) {
@@ -284,6 +286,8 @@ const IronLiveGym = {
         const details = ex.details || { nameEn: ex.displayNameEn, gif: "", muscle: "Workout", execution: "" };
         const exerciseTitleEn = ex.displayNameEn || details.nameEn;
 
+        const txt = (k, v) => typeof IronI18n !== "undefined" ? IronI18n.t(k, v) : k;
+
         modal.innerHTML = `
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
                 <div dir="ltr" class="text-left">
@@ -292,7 +296,7 @@ const IronLiveGym = {
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="IronLiveGym.finishWorkout()" class="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-lg shadow-lg shadow-emerald-500/20 hover:opacity-90">
-                        إنهاء وحفظ التمرين ✅
+                        ${txt("gym_finish")}
                     </button>
                     <button onclick="closeModal('liveGymModal')" class="text-gray-400 hover:text-white text-xl p-1">✕</button>
                 </div>
@@ -329,7 +333,7 @@ const IronLiveGym = {
                         <div class="flex justify-between items-start gap-2">
                             <div dir="ltr" class="text-left">
                                 <div class="text-[11px] text-emerald-400 font-bold uppercase tracking-wide mb-0.5">
-                                    Exercise ${this.activeExerciseIndex + 1} of ${w.exercises.length}
+                                    ${txt("gym_ex_of", { idx: this.activeExerciseIndex + 1, total: w.exercises.length })}
                                 </div>
                                 <h2 class="text-xl font-black text-white leading-tight">${exerciseTitleEn}</h2>
                                 <div class="text-xs text-gray-400 font-mono mt-1">${details.equipment || ''}</div>
@@ -337,7 +341,7 @@ const IronLiveGym = {
                             <!-- زر اقتراح بديل للجهاز المشغول -->
                             <button onclick="IronLiveGym.openAlternativesModal(${this.activeExerciseIndex})" 
                                 class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1 flex-shrink-0">
-                                <span>⚡ الجهاز مشغول؟</span>
+                                <span>${txt("gym_busy")}</span>
                             </button>
                         </div>
 
@@ -356,7 +360,7 @@ const IronLiveGym = {
                             </div>
                         </div>
 
-                        ${details.execution ? `<p class="text-xs text-gray-300 leading-relaxed"><strong class="text-emerald-400">التكنيك:</strong> ${details.execution}</p>` : ''}
+                        ${details.execution ? `<p class="text-xs text-gray-300 leading-relaxed"><strong class="text-emerald-400">${txt("gym_tech")}</strong> ${details.execution}</p>` : ''}
                     </div>
                 </div>
             </div>
@@ -365,9 +369,9 @@ const IronLiveGym = {
             <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
                 <div class="flex justify-between items-center mb-3">
                     <h4 class="font-black text-sm text-white flex items-center gap-2">
-                        <span>📝 تسجيل الجولات والأوزان (${ex.setsTarget} × ${ex.repsTarget})</span>
+                        <span>${txt("gym_log_title")} (${ex.setsTarget} × ${ex.repsTarget})</span>
                     </h4>
-                    <span class="text-xs text-gray-400">اضغط علامة (✓) لبدء مؤقت الراحة</span>
+                    <span class="text-xs text-gray-400">${txt("gym_log_hint")}</span>
                 </div>
 
                 <div class="space-y-2 max-h-[38vh] overflow-y-auto pr-1">

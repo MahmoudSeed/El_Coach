@@ -10,15 +10,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/jpeg" href="LOGO.jpg">
-    <link rel="apple-touch-icon" href="LOGO.jpg">
+    <link rel="icon" type="image/png" href="LOGO.png">
+    <link rel="apple-touch-icon" href="LOGO.png">
 
-    <!-- Early Theme Initialization to Prevent FOUC -->
+    <!-- Early Theme & Language Initialization to Prevent FOUC -->
     <script>
         (function() {
             try {
                 var savedTheme = localStorage.getItem('iron_theme') || 'dark';
                 document.documentElement.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'dark');
+                var savedLang = localStorage.getItem('iron_lang') === 'en' ? 'en' : 'ar';
+                document.documentElement.lang = savedLang;
+                document.documentElement.dir = savedLang === 'en' ? 'ltr' : 'rtl';
             } catch (e) {}
         })();
     </script>
@@ -68,18 +71,18 @@
                         ⏱️
                     </div>
                     <div>
-                        <div class="text-[10px] text-gray-400 font-bold">مؤقت الراحة النشط</div>
+                        <div class="text-[10px] text-gray-400 font-bold" data-i18n="timer_title">مؤقت الراحة النشط</div>
                         <div id="gymTimerCountdown" class="text-xl font-black text-emerald-400 font-mono">01:30</div>
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
                     <button onclick="IronLiveGym.adjustRestTimer(-15)" class="text-gray-300 hover:text-white text-[11px] font-bold px-2 py-1 rounded-lg bg-slate-800 border border-slate-700" title="إنقاص 15 ثانية">
-                        -15ث
+                        -15s
                     </button>
                     <button onclick="IronLiveGym.adjustRestTimer(15)" class="text-emerald-400 hover:text-white text-[11px] font-bold px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30" title="إضافة 15 ثانية">
-                        +15ث
+                        +15s
                     </button>
-                    <button onclick="IronLiveGym.stopRestTimer()" class="text-rose-400 hover:text-white text-[11px] font-bold px-2 py-1 rounded-lg bg-rose-500/10 border border-rose-500/30">
+                    <button onclick="IronLiveGym.stopRestTimer()" class="text-rose-400 hover:text-white text-[11px] font-bold px-2 py-1 rounded-lg bg-rose-500/10 border border-rose-500/30" data-i18n="timer_skip">
                         تخطي
                     </button>
                 </div>
@@ -97,29 +100,33 @@
             <!-- الشعار والهوية التجارية -->
             <div class="flex items-center gap-2.5 sm:gap-3 cursor-pointer" onclick="IronApp.switchTab('overview')">
                 <div class="brand-logo-frame w-14 sm:w-16 flex-shrink-0 flex items-center justify-center">
-                    <img src="LOGO.jpg" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
+                    <img src="LOGO.png" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
                 </div>
                 <div>
                     <h1 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-1.5">
-                        <span>أيرون كوتش</span>
+                        <span data-i18n="brand_name">أيرون كوتش</span>
                         <span class="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">PRO</span>
                     </h1>
-                    <div class="text-[10px] text-gray-400 font-bold hidden sm:block">Coach Mahmoud • التدريب الرياضي المعتمد</div>
+                    <div class="text-[10px] text-gray-400 font-bold hidden sm:block" data-i18n="brand_subtitle">Coach Mahmoud • التدريب الرياضي المعتمد</div>
                 </div>
             </div>
 
             <!-- أزرار التبويبات للشاشات الكبيرة (Desktop Menu) -->
             <nav id="desktopNav" class="hidden lg:flex items-center gap-1 bg-slate-900/80 p-1 rounded-2xl border border-slate-800">
-                <button onclick="IronApp.switchTab('overview')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="overview">الرئيسية</button>
-                <button onclick="IronApp.switchTab('calculator')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="calculator">حاسبة السعرات</button>
-                <button onclick="IronApp.switchTab('meals')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="meals">الوجبات ومولد الدايت</button>
-                <button onclick="IronApp.switchTab('workouts')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="workouts">البرامج التدريبية</button>
-                <button onclick="IronApp.switchTab('exercises')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="exercises">مكتبة التمارين</button>
-                <button onclick="IronApp.switchTab('checkin')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="checkin">المتابعة والواتساب</button>
+                <button onclick="IronApp.switchTab('overview')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="overview" data-i18n="nav_overview">الرئيسية</button>
+                <button onclick="IronApp.switchTab('calculator')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="calculator" data-i18n="nav_calculator">حاسبة السعرات</button>
+                <button onclick="IronApp.switchTab('meals')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="meals" data-i18n="nav_meals">الوجبات ومولد الدايت</button>
+                <button onclick="IronApp.switchTab('workouts')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="workouts" data-i18n="nav_workouts">البرامج التدريبية</button>
+                <button onclick="IronApp.switchTab('exercises')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="exercises" data-i18n="nav_exercises">مكتبة التمارين</button>
+                <button onclick="IronApp.switchTab('checkin')" class="tab-btn-desktop px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-tab="checkin" data-i18n="nav_checkin">المتابعة والواتساب</button>
             </nav>
 
-            <!-- زر تبديل النمط (داكن / فاتح) + معلومات المستخدم -->
+            <!-- زر تبديل اللغة + تبديل النمط (داكن / فاتح) + معلومات المستخدم -->
             <div class="flex items-center gap-2 sm:gap-3">
+                <button id="langToggleBtn" onclick="IronApp.toggleLanguage()" class="theme-toggle-btn" title="Switch Language / تغيير اللغة" aria-label="Switch Language">
+                    <span class="theme-icon">🌐</span>
+                    <span id="langToggleLabel">EN</span>
+                </button>
                 <button id="themeToggleBtn" onclick="IronApp.toggleTheme()" class="theme-toggle-btn" title="تبديل النمط الداكن / الفاتح" aria-label="تبديل النمط">
                     <span id="themeToggleIcon" class="theme-icon">☀️</span>
                     <span id="themeToggleLabel" class="hidden md:inline">الفاتح</span>
@@ -135,10 +142,10 @@
     <div id="impersonatingBanner" class="hidden bg-amber-500/15 border-b border-amber-500/30 py-2 px-4 text-xs">
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
             <div class="font-bold text-amber-400 flex items-center gap-2">
-                <span>👁️ وضع معاينة الكوتش — أنت تشاهد الآن حساب المتدرب فقط:</span>
+                <span data-i18n="impersonating_notice">👁️ وضع معاينة الكوتش — أنت تشاهد الآن حساب المتدرب فقط:</span>
                 <strong id="impersonatingTraineeName" class="text-white font-black"></strong>
             </div>
-            <button onclick="IronAuth.returnToCoachDashboard()" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400 transition">
+            <button onclick="IronAuth.returnToCoachDashboard()" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400 transition" data-i18n="impersonating_return">
                 العودة للوحة الكوتش 👑
             </button>
         </div>
@@ -155,37 +162,37 @@
                 <div class="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl"></div>
                 <div class="text-center mb-8 relative z-10">
                     <div class="brand-logo-frame w-40 sm:w-44 mx-auto flex items-center justify-center mb-4">
-                        <img src="LOGO.jpg" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
+                        <img src="LOGO.png" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
                     </div>
                     <div class="inline-block text-[10px] font-black tracking-wider uppercase px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 mb-2">
                         Train Hard • Stay Focused • Be Strong
                     </div>
-                    <h2 class="text-2xl font-black text-white">تسجيل الدخول للمنصة</h2>
-                    <p class="text-xs text-gray-400 mt-1">منصة الكوتش محمود للمشتركين ومتابعة الخطط والتغذية</p>
+                    <h2 class="text-2xl font-black text-white" data-i18n="login_title">تسجيل الدخول للمنصة</h2>
+                    <p class="text-xs text-gray-400 mt-1" data-i18n="login_subtitle">منصة الكوتش محمود للمشتركين ومتابعة الخطط والتغذية</p>
                 </div>
 
                 <form id="loginForm" onsubmit="IronApp.handleLogin(event)" class="space-y-4 relative z-10">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1.5">اسم المستخدم (Username)</label>
-                        <input type="text" id="loginUsername" required placeholder="أدخل اسم المستخدم..." 
+                        <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="login_username">اسم المستخدم (Username)</label>
+                        <input type="text" id="loginUsername" required placeholder="أدخل اسم المستخدم..." data-i18n-placeholder="login_username_ph"
                             class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white font-bold placeholder-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1.5">كلمة المرور (Password)</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="login_password">كلمة المرور (Password)</label>
                         <input type="password" id="loginPassword" required placeholder="••••••••" 
                             class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white font-bold placeholder-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                     </div>
 
                     <div id="loginError" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold text-center"></div>
 
-                    <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition">
+                    <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition" data-i18n="login_submit">
                         دخول إلى حسابي 🚀
                     </button>
                 </form>
 
                 <div class="mt-6 pt-6 border-t border-slate-800 text-center text-xs text-gray-400">
-                    <span>للاشتراك والحصول على حساب، تواصل مع الكوتش عبر واتساب.</span>
+                    <span data-i18n="login_footer">للاشتراك والحصول على حساب، تواصل مع الكوتش عبر واتساب.</span>
                 </div>
             </div>
         </section>
@@ -196,33 +203,33 @@
         <section id="expiredView" class="hidden min-h-[70vh] flex items-center justify-center py-10">
             <div class="bg-slate-900/90 border border-rose-500/30 rounded-3xl p-8 max-w-xl w-full shadow-2xl relative text-center">
                 <div class="brand-logo-frame w-28 mx-auto mb-3 flex items-center justify-center">
-                    <img src="LOGO.jpg" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⏳'">
+                    <img src="LOGO.png" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⏳'">
                 </div>
                 <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-black mb-3">
-                    <span>⏳ انتهت مدة الاشتراك</span>
+                    <span data-i18n="expired_badge">⏳ انتهت مدة الاشتراك</span>
                 </div>
-                <h2 class="text-2xl font-black text-white">انتهت مدة اشتراكك (30 يوماً)</h2>
-                <p class="text-sm text-gray-300 mt-2 leading-relaxed">
+                <h2 class="text-2xl font-black text-white" data-i18n="expired_title">انتهت مدة اشتراكك (30 يوماً)</h2>
+                <p class="text-sm text-gray-300 mt-2 leading-relaxed" data-i18n="expired_desc">
                     شكراً لالتزامك يا بطل! لتجديد خطتك التدريبية والغذائية ومواصلة المتابعة مع الكوتش، يرجى تجديد الاشتراك عبر إحدى وسائل الدفع المعتمدة أدناه.
                 </p>
 
-                <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 my-6 text-right space-y-3">
+                <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 my-6 text-start space-y-3">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                        <span class="text-xs text-gray-400">قيمة التجديد الشهري (30 يوماً):</span>
+                        <span class="text-xs text-gray-400" data-i18n="expired_price_label">قيمة التجديد الشهري (30 يوماً):</span>
                         <strong class="text-emerald-400 font-black text-base" id="expiredPriceDisplay">500 ج.م / ر.س</strong>
                     </div>
 
                     <div class="space-y-2 text-xs">
                         <div class="flex justify-between">
-                            <span class="text-gray-400">📱 فودافون كاش / محفظة الهاتف:</span>
+                            <span class="text-gray-400" data-i18n="expired_vodafone">📱 فودافون كاش / محفظة الهاتف:</span>
                             <strong class="text-white font-mono" id="expiredVodafoneDisplay">01000000000</strong>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-400">⚡ تطبيق انستاباي (InstaPay):</span>
+                            <span class="text-gray-400" data-i18n="expired_instapay">⚡ تطبيق انستاباي (InstaPay):</span>
                             <strong class="text-white font-mono" id="expiredInstapayDisplay">coach@instapay</strong>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-400">🇸🇦 STC Pay / تحويل بنكي:</span>
+                            <span class="text-gray-400" data-i18n="expired_stc">🇸🇦 STC Pay / تحويل بنكي:</span>
                             <strong class="text-white font-mono" id="expiredStcDisplay">0500000000</strong>
                         </div>
                     </div>
@@ -230,9 +237,9 @@
 
                 <div class="space-y-3">
                     <button onclick="IronApp.openRenewPaymentModal()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
-                        <span>💳 تجديد الآن ورفع إيصال التحويل</span>
+                        <span data-i18n="expired_renew_btn">💳 تجديد الآن ورفع إيصال التحويل</span>
                     </button>
-                    <button onclick="IronApp.contactCoachWhatsapp()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition">
+                    <button onclick="IronApp.contactCoachWhatsapp()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition" data-i18n="expired_wa_btn">
                         محادثة الكوتش مباشرة عبر واتساب 💬
                     </button>
                 </div>
@@ -257,20 +264,20 @@
                 <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/30 border border-slate-800 rounded-3xl p-6 relative overflow-hidden">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div class="flex items-center gap-4">
-                            <div class="brand-logo-frame w-20 sm:w-24 flex-shrink-0 hidden sm:flex items-center justify-center">
-                                <img src="LOGO.jpg" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
-                            </div>
+                            <!-- الصورة الشخصية للمشترك (بدلاً من شعار الكوتش) -->
+                            <div id="traineeAvatarBox" class="flex-shrink-0"></div>
+                            <input type="file" id="traineeAvatarInput" accept="image/*" class="hidden" onchange="IronApp.handleTraineeAvatarUpload(this)">
                             <div>
                                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-2">
                                     <span id="homeDaysLeftBadge">باقي 30 يوماً في اشتراكك 🔥</span>
                                 </div>
                                 <h2 class="text-2xl font-black text-white" id="homeWelcomeName">أهلاً بك يا بطل 👋</h2>
-                                <p class="text-xs text-gray-400 mt-1">خطة اليوم مصممة تحت إشراف الكوتش محمود للوصول لأفضل فورمة بأمان تام</p>
+                                <p class="text-xs text-gray-400 mt-1" data-i18n="home_sub">خطة اليوم مصممة تحت إشراف الكوتش محمود للوصول لأفضل فورمة بأمان تام</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-3">
                             <button onclick="IronApp.switchTab('workouts')" class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
-                                <span>ابدأ تمرين اليوم في الجيم 🏋️‍♂️</span>
+                                <span data-i18n="home_start_btn">ابدأ تمرين اليوم في الجيم 🏋️‍♂️</span>
                             </button>
                         </div>
                     </div>
@@ -278,19 +285,19 @@
                     <!-- إحصائيات السعرات والماكروز في الرئيسية -->
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
                         <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-3.5 text-center">
-                            <span class="text-xs text-gray-400 font-bold">السعرات المستهدفة</span>
+                            <span class="text-xs text-gray-400 font-bold" data-i18n="home_cal_label">السعرات المستهدفة</span>
                             <div class="text-xl font-black text-white mt-1" id="homeTargetCal">2000 kcal</div>
                         </div>
                         <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-3.5 text-center">
-                            <span class="text-xs text-emerald-400 font-bold">البروتين اليومي</span>
+                            <span class="text-xs text-emerald-400 font-bold" data-i18n="home_prot_label">البروتين اليومي</span>
                             <div class="text-xl font-black text-emerald-400 mt-1" id="homeTargetProtein">150g</div>
                         </div>
                         <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-3.5 text-center">
-                            <span class="text-xs text-amber-400 font-bold">الكربوهيدرات</span>
+                            <span class="text-xs text-amber-400 font-bold" data-i18n="home_carb_label">الكربوهيدرات</span>
                             <div class="text-xl font-black text-amber-400 mt-1" id="homeTargetCarbs">200g</div>
                         </div>
                         <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-3.5 text-center">
-                            <span class="text-xs text-cyan-400 font-bold">هدف الماء اليومي</span>
+                            <span class="text-xs text-cyan-400 font-bold" data-i18n="home_water_label">هدف الماء اليومي</span>
                             <div class="text-xl font-black text-cyan-400 mt-1" id="homeTargetWater">3.0 لتر</div>
                         </div>
                     </div>
@@ -308,24 +315,24 @@
                         <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-2xl mb-3">
                             🥗
                         </div>
-                        <h4 class="font-black text-white text-base">مولد الدايت الذكي</h4>
-                        <p class="text-xs text-gray-400 mt-1">توليد وحفظ يوم كامل من الـ 100 وجبة يطابق سعراتك تماماً بنقرة زر.</p>
+                        <h4 class="font-black text-white text-base" data-i18n="qa_diet_title">مولد الدايت الذكي</h4>
+                        <p class="text-xs text-gray-400 mt-1" data-i18n="qa_diet_desc">توليد وحفظ يوم كامل من الـ 100 وجبة يطابق سعراتك تماماً بنقرة زر.</p>
                     </div>
 
                     <div onclick="IronApp.switchTab('workouts')" class="bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 rounded-2xl p-5 cursor-pointer transition">
                         <div class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-2xl mb-3">
                             💪
                         </div>
-                        <h4 class="font-black text-white text-base">البرامج والتمارين البديلة</h4>
-                        <p class="text-xs text-gray-400 mt-1">جدول التمارين والشروحات المتحركة مع اقتراح بديل للجهاز المشغول.</p>
+                        <h4 class="font-black text-white text-base" data-i18n="qa_workout_title">البرامج والتمارين البديلة</h4>
+                        <p class="text-xs text-gray-400 mt-1" data-i18n="qa_workout_desc">جدول التمارين والشروحات المتحركة مع اقتراح بديل للجهاز المشغول.</p>
                     </div>
 
                     <div onclick="IronApp.switchTab('checkin')" class="bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 rounded-2xl p-5 cursor-pointer transition">
                         <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-2xl mb-3">
                             📲
                         </div>
-                        <h4 class="font-black text-white text-base">تقرير الواتساب الأسبوعي</h4>
-                        <p class="text-xs text-gray-400 mt-1">إرسال تقرير قياساتك ووزنك مباشرة إلى واتساب الكوتش للمتابعة.</p>
+                        <h4 class="font-black text-white text-base" data-i18n="qa_checkin_title">تقرير الواتساب الأسبوعي</h4>
+                        <p class="text-xs text-gray-400 mt-1" data-i18n="qa_checkin_desc">إرسال تقرير قياساتك ووزنك مباشرة إلى واتساب الكوتش للمتابعة.</p>
                     </div>
                 </div>
 
@@ -337,47 +344,47 @@
             <div id="tab-calculator" class="tab-content space-y-6">
                 <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6">
                     <div class="max-w-2xl mb-6">
-                        <h3 class="text-xl font-black text-white">حاسبة السعرات والماكروز العلمية (NASM)</h3>
-                        <p class="text-xs text-gray-400 mt-1">معادلة Mifflin-St Jeor المعتمدة لحساب BMR و TDEE بدقة مع توزيع المغذيات.</p>
+                        <h3 class="text-xl font-black text-white" data-i18n="calc_title">حاسبة السعرات والماكروز العلمية (NASM)</h3>
+                        <p class="text-xs text-gray-400 mt-1" data-i18n="calc_sub">معادلة Mifflin-St Jeor المعتمدة لحساب BMR و TDEE بدقة مع توزيع المغذيات.</p>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-gray-300 mb-1.5">الجنس</label>
+                            <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_gender">الجنس</label>
                             <select id="calcGender" onchange="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
-                                <option value="male">ذكر</option>
-                                <option value="female">أنثى</option>
+                                <option value="male" data-i18n="calc_male">ذكر</option>
+                                <option value="female" data-i18n="calc_female">أنثى</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-300 mb-1.5">العمر (سنة)</label>
+                            <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_age">العمر (سنة)</label>
                             <input type="number" id="calcAge" value="26" oninput="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-300 mb-1.5">الوزن الحالي (كجم)</label>
+                            <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_weight">الوزن الحالي (كجم)</label>
                             <input type="number" id="calcWeight" value="75" oninput="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-300 mb-1.5">الطول (سم)</label>
+                            <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_height">الطول (سم)</label>
                             <input type="number" id="calcHeight" value="175" oninput="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-300 mb-1.5">مستوى النشاط اليومي</label>
+                            <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_activity">مستوى النشاط اليومي</label>
                             <select id="calcActivity" onchange="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
-                                <option value="1.2">خامل (قليل الحركة أو مكتبي)</option>
-                                <option value="1.375">نشاط خفيف (تمرين 1-3 أيام)</option>
-                                <option value="1.55" selected>نشاط متوسط (تمرين 3-5 أيام)</option>
-                                <option value="1.725">نشاط عالي (تمرين 6-7 أيام)</option>
+                                <option value="1.2" data-i18n="calc_act_12">خامل (قليل الحركة أو مكتبي)</option>
+                                <option value="1.375" data-i18n="calc_act_1375">نشاط خفيف (تمرين 1-3 أيام)</option>
+                                <option value="1.55" selected data-i18n="calc_act_155">نشاط متوسط (تمرين 3-5 أيام)</option>
+                                <option value="1.725" data-i18n="calc_act_1725">نشاط عالي (تمرين 6-7 أيام)</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-300 mb-1.5">الهدف البدني</label>
+                            <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_goal">الهدف البدني</label>
                             <select id="calcGoal" onchange="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
-                                <option value="-500" selected>تنشيف وخسارة دهون حادة (-500 سعرة)</option>
-                                <option value="-300">خسارة دهون معتدلة (-300 سعرة)</option>
-                                <option value="0">تثبيت وزن وإعادة تكوين الجسم (0 سعرة)</option>
-                                <option value="250">بناء عضلات نظيف Lean Bulk (+250 سعرة)</option>
-                                <option value="450">تضخيم مكثف (+450 سعرة)</option>
+                                <option value="-500" selected data-i18n="calc_goal_cut2">تنشيف وخسارة دهون حادة (-500 سعرة)</option>
+                                <option value="-300" data-i18n="calc_goal_cut1">خسارة دهون معتدلة (-300 سعرة)</option>
+                                <option value="0" data-i18n="calc_goal_maint">تثبيت وزن وإعادة تكوين الجسم (0 سعرة)</option>
+                                <option value="250" data-i18n="calc_goal_lean">بناء عضلات نظيف Lean Bulk (+250 سعرة)</option>
+                                <option value="450" data-i18n="calc_goal_bulk">تضخيم مكثف (+450 سعرة)</option>
                             </select>
                         </div>
                     </div>
@@ -386,40 +393,40 @@
                     <div class="mt-6 p-6 rounded-2xl bg-slate-950/80 border border-slate-800">
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                             <div>
-                                <span class="text-xs text-gray-400">معدل الأيض الأساسي (BMR)</span>
+                                <span class="text-xs text-gray-400" data-i18n="calc_bmr">معدل الأيض الأساسي (BMR)</span>
                                 <div class="text-lg font-black text-white mt-1" id="resBmr">0 kcal</div>
                             </div>
                             <div>
-                                <span class="text-xs text-gray-400">احتياج المحافظة (TDEE)</span>
+                                <span class="text-xs text-gray-400" data-i18n="calc_tdee">احتياج المحافظة (TDEE)</span>
                                 <div class="text-lg font-black text-cyan-400 mt-1" id="resTdee">0 kcal</div>
                             </div>
                             <div>
-                                <span class="text-xs text-emerald-400 font-bold">السعرات المستهدفة</span>
+                                <span class="text-xs text-emerald-400 font-bold" data-i18n="calc_target">السعرات المستهدفة</span>
                                 <div class="text-2xl font-black text-emerald-400 mt-1" id="resTarget">0 kcal</div>
                             </div>
                             <div>
-                                <span class="text-xs text-cyan-400 font-bold">الماء اليومي</span>
+                                <span class="text-xs text-cyan-400 font-bold" data-i18n="calc_water">الماء اليومي</span>
                                 <div class="text-lg font-black text-cyan-400 mt-1" id="resWater">0 L</div>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-3 gap-3 mt-6 pt-6 border-t border-slate-800 text-center">
                             <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                                <span class="text-xs text-gray-400">🥩 البروتين المطلوب</span>
+                                <span class="text-xs text-gray-400" data-i18n="calc_prot">🥩 البروتين المطلوب</span>
                                 <div class="text-base font-black text-white mt-1" id="resProtein">0g</div>
                             </div>
                             <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                                <span class="text-xs text-gray-400">🍞 الكربوهيدرات</span>
+                                <span class="text-xs text-gray-400" data-i18n="calc_carb">🍞 الكربوهيدرات</span>
                                 <div class="text-base font-black text-amber-400 mt-1" id="resCarbs">0g</div>
                             </div>
                             <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                                <span class="text-xs text-gray-400">🥑 الدهون الصحية</span>
+                                <span class="text-xs text-gray-400" data-i18n="calc_fat">🥑 الدهون الصحية</span>
                                 <div class="text-base font-black text-teal-400 mt-1" id="resFats">0g</div>
                             </div>
                         </div>
 
                         <div class="mt-6 text-center">
-                            <button onclick="IronApp.saveTargetCalories()" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition">
+                            <button onclick="IronApp.saveTargetCalories()" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition" data-i18n="calc_save">
                                 حفظ ومزامنة الهدف مع جدول الوجبات ✅
                             </button>
                         </div>
@@ -433,15 +440,15 @@
                 <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/40 border border-emerald-500/30 rounded-3xl p-6">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                         <div>
-                            <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">الذكاء الغذائي الرياضي</span>
-                            <h3 class="text-xl font-black text-white mt-1">مولد الدايت الذكي لليوم الكامل</h3>
-                            <p class="text-xs text-gray-400 mt-1">يختار ويحفظ لك تلقائياً توليفة وجبات (فطور، غداء، عشاء، سناك) تغطي سعراتك اليومية بدقة فائقة.</p>
+                            <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full" data-i18n="meals_badge">الذكاء الغذائي الرياضي</span>
+                            <h3 class="text-xl font-black text-white mt-1" data-i18n="meals_gen_title">مولد الدايت الذكي لليوم الكامل</h3>
+                            <p class="text-xs text-gray-400 mt-1" data-i18n="meals_gen_sub">يختار ويحفظ لك تلقائياً توليفة وجبات (فطور، غداء، عشاء، سناك) تغطي سعراتك اليومية بدقة فائقة.</p>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <button onclick="IronApp.generateDayDiet(true)" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition">
+                            <button onclick="IronApp.generateDayDiet(true)" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition" data-i18n="meals_gen_btn">
                                 🎲 توليد دايت كامل جديد
                             </button>
-                            <button onclick="openModal('addCustomMealModal')" class="px-4 py-2.5 bg-slate-800 text-white font-bold text-xs rounded-xl border border-slate-700 hover:bg-slate-700 transition">
+                            <button onclick="openModal('addCustomMealModal')" class="px-4 py-2.5 bg-slate-800 text-white font-bold text-xs rounded-xl border border-slate-700 hover:bg-slate-700 transition" data-i18n="meals_add_btn">
                                 + إضافة وجبة خاصة
                             </button>
                         </div>
@@ -457,22 +464,22 @@
                 <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div>
-                            <h3 class="text-lg font-black text-white">مكتبة الـ 100 وجبة الصحية بالمكونات الدقيقة</h3>
+                            <h3 class="text-lg font-black text-white" data-i18n="meals_lib_title">مكتبة الـ 100 وجبة الصحية بالمكونات الدقيقة</h3>
                             <div class="text-xs text-gray-400" id="mealsCounterText">إجمالي الوجبات: 100 وجبة</div>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <input type="text" id="mealsSearchInput" oninput="IronApp.filterMeals()" placeholder="ابحث في الوجبات (دجاج، بيض، شوفان، سلمون)..." 
+                            <input type="text" id="mealsSearchInput" oninput="IronApp.filterMeals()" placeholder="ابحث في الوجبات (دجاج، بيض، شوفان، سلمون)..." data-i18n-placeholder="meals_search_ph"
                                 class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white placeholder-gray-500 outline-none w-64 focus:border-emerald-500">
                         </div>
                     </div>
 
                     <!-- أزرار التصنيفات -->
                     <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
-                        <button onclick="IronApp.setMealCategory('all')" class="meal-cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950" data-cat="all">الكل (100)</button>
-                        <button onclick="IronApp.setMealCategory('إفطار')" class="meal-cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-cat="إفطار">🍳 إفطار (25)</button>
-                        <button onclick="IronApp.setMealCategory('غداء')" class="meal-cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-cat="غداء">🍗 غداء (35)</button>
-                        <button onclick="IronApp.setMealCategory('عشاء')" class="meal-cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-cat="عشاء">🥣 عشاء (25)</button>
-                        <button onclick="IronApp.setMealCategory('سناكس')" class="meal-cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-cat="سناكس">🥜 سناكس (15)</button>
+                        <button onclick="IronApp.setMealCategory('all')" class="meal-cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950" data-cat="all" data-i18n="meals_cat_all">الكل (100)</button>
+                        <button onclick="IronApp.setMealCategory('إفطار')" class="meal-cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-cat="إفطار" data-i18n="meals_cat_b">🍳 إفطار (25)</button>
+                        <button onclick="IronApp.setMealCategory('غداء')" class="meal-cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-cat="غداء" data-i18n="meals_cat_l">🍗 غداء (35)</button>
+                        <button onclick="IronApp.setMealCategory('عشاء')" class="meal-cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-cat="عشاء" data-i18n="meals_cat_d">🥣 عشاء (25)</button>
+                        <button onclick="IronApp.setMealCategory('سناكس')" class="meal-cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-cat="سناكس" data-i18n="meals_cat_s">🥜 سناكس (15)</button>
                     </div>
 
                     <!-- شبكة عرض الوجبات -->
@@ -488,10 +495,10 @@
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div>
                             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold mb-2">
-                                <span>🎯 جدولك التدريبي المخصص لك</span>
+                                <span data-i18n="wo_badge">🎯 جدولك التدريبي المخصص لك</span>
                             </div>
-                            <h3 class="text-xl font-black text-white">برنامجك التدريبي المعتمد من الكوتش</h3>
-                            <p class="text-xs text-gray-400 mt-1" id="assignedProgramSubtitle">هذا الجدول مصمم لهدفك وبياناتك الخاصة لمتابعة تمارينك بدقة.</p>
+                            <h3 class="text-xl font-black text-white" data-i18n="wo_title">برنامجك التدريبي المعتمد من الكوتش</h3>
+                            <p class="text-xs text-gray-400 mt-1" id="assignedProgramSubtitle" data-i18n="wo_sub">هذا الجدول مصمم لهدفك وبياناتك الخاصة لمتابعة تمارينك بدقة.</p>
                         </div>
                         <div id="assignedProgramBadge" class="px-4 py-2 rounded-2xl bg-slate-950 border border-emerald-500/30 text-emerald-400 text-xs font-black"></div>
                     </div>
@@ -539,22 +546,22 @@
                 <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div>
-                            <h3 class="text-xl font-black text-white">مكتبة التمارين التفاعلية والشروحات الحركية</h3>
-                            <p class="text-xs text-gray-400 mt-1">صور متحركة (GIFs) تشرح الأداء الصحيح، الأخطاء الشائعة، وتكنيك التنفس لكل عضلة.</p>
+                            <h3 class="text-xl font-black text-white" data-i18n="ex_lib_title">مكتبة التمارين التفاعلية والشروحات الحركية</h3>
+                            <p class="text-xs text-gray-400 mt-1" data-i18n="ex_lib_sub">صور متحركة (GIFs) تشرح الأداء الصحيح، الأخطاء الشائعة، وتكنيك التنفس لكل عضلة.</p>
                         </div>
-                        <input type="text" id="exerciseSearchInput" oninput="IronApp.filterExercises()" placeholder="ابحث باسم التمرين (بنش، سكوات، ديدليفت)..." 
+                        <input type="text" id="exerciseSearchInput" oninput="IronApp.filterExercises()" placeholder="ابحث باسم التمرين (بنش، سكوات، ديدليفت)..." data-i18n-placeholder="ex_search_ph"
                             class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white placeholder-gray-500 outline-none w-64 focus:border-emerald-500">
                     </div>
 
                     <!-- أزرار عضلات الجسم -->
                     <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
-                        <button onclick="IronApp.setExerciseMuscle('all')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950" data-muscle="all">الكل</button>
-                        <button onclick="IronApp.setExerciseMuscle('صدر')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="صدر">عضلات الصدر</button>
-                        <button onclick="IronApp.setExerciseMuscle('ظهر')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="ظهر">عضلات الظهر</button>
-                        <button onclick="IronApp.setExerciseMuscle('أكتاف')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="أكتاف">الأكتاف</button>
-                        <button onclick="IronApp.setExerciseMuscle('أرجل')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="أرجل">الأرجل والأفخاذ</button>
-                        <button onclick="IronApp.setExerciseMuscle('ذراعين')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="ذراعين">الذراعين (باي وتراي)</button>
-                        <button onclick="IronApp.setExerciseMuscle('بطن وكور')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="بطن وكور">البطن والكور</button>
+                        <button onclick="IronApp.setExerciseMuscle('all')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950" data-muscle="all" data-i18n="ex_all">الكل</button>
+                        <button onclick="IronApp.setExerciseMuscle('صدر')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="صدر" data-i18n="ex_chest">عضلات الصدر</button>
+                        <button onclick="IronApp.setExerciseMuscle('ظهر')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="ظهر" data-i18n="ex_back">عضلات الظهر</button>
+                        <button onclick="IronApp.setExerciseMuscle('أكتاف')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="أكتاف" data-i18n="ex_shoulders">الأكتاف</button>
+                        <button onclick="IronApp.setExerciseMuscle('أرجل')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="أرجل" data-i18n="ex_legs">الأرجل والأفخاذ</button>
+                        <button onclick="IronApp.setExerciseMuscle('ذراعين')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="ذراعين" data-i18n="ex_arms">الذراعين (باي وتراي)</button>
+                        <button onclick="IronApp.setExerciseMuscle('بطن وكور')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="بطن وكور" data-i18n="ex_abs">البطن والكور</button>
                     </div>
 
                     <!-- شبكة التمارين -->
@@ -571,54 +578,54 @@
                         <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mx-auto flex items-center justify-center text-3xl mb-3">
                             📲
                         </div>
-                        <h3 class="text-xl font-black text-white">المتابعة الأسبوعية المباشرة مع الكوتش</h3>
-                        <p class="text-xs text-gray-400 mt-1">سجل تطورك هذا الأسبوع وسيتم إرسال تقرير أنيق ومنسق مباشرة إلى واتساب الكوتش بنقرة زر.</p>
+                        <h3 class="text-xl font-black text-white" data-i18n="chk_title">المتابعة الأسبوعية المباشرة مع الكوتش</h3>
+                        <p class="text-xs text-gray-400 mt-1" data-i18n="chk_sub">سجل تطورك هذا الأسبوع وسيتم إرسال تقرير أنيق ومنسق مباشرة إلى واتساب الكوتش بنقرة زر.</p>
                     </div>
 
                     <form id="checkinForm" onsubmit="IronApp.handleCheckinSubmit(event)" class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-gray-300 mb-1.5">الوزن الحالي هذا الأسبوع (كجم) *</label>
-                                <input type="number" step="0.1" id="chkWeight" required placeholder="مثال: 78.5" 
+                                <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="chk_weight_lbl">الوزن الحالي هذا الأسبوع (كجم) *</label>
+                                <input type="number" step="0.1" id="chkWeight" required placeholder="78.5" 
                                     class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none focus:border-emerald-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-gray-300 mb-1.5">محيط الخصر (سم) - اختياري</label>
-                                <input type="number" step="0.5" id="chkWaist" placeholder="مثال: 84" 
+                                <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="chk_waist_lbl">محيط الخصر (سم) - اختياري</label>
+                                <input type="number" step="0.5" id="chkWaist" placeholder="84" 
                                     class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none focus:border-emerald-500">
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-gray-300 mb-1.5">نسبة الالتزام بالدايت هذا الأسبوع (من 10)</label>
+                                <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="chk_adh_lbl">نسبة الالتزام بالدايت هذا الأسبوع (من 10)</label>
                                 <select id="chkAdherence" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
-                                    <option value="10">10/10 - التزام تام 100% 🎯</option>
-                                    <option value="9" selected>9/10 - ممتاز جداً مع وجبة فري</option>
-                                    <option value="8">8/10 - التزام جيد</option>
-                                    <option value="7">7/10 - متوسط</option>
-                                    <option value="5">5/10 - ضعيف محتاج ضبط</option>
+                                    <option value="10">10/10 🎯</option>
+                                    <option value="9" selected>9/10 🔥</option>
+                                    <option value="8">8/10 ✅</option>
+                                    <option value="7">7/10</option>
+                                    <option value="5">5/10</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-gray-300 mb-1.5">مستوى طاقتك في التمارين والجيم</label>
+                                <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="chk_eng_lbl">مستوى طاقتك في التمارين والجيم</label>
                                 <select id="chkEnergy" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
-                                    <option value="10">10/10 - طاقة نارية وأوزان زادت 🔥</option>
-                                    <option value="8" selected>8/10 - طاقة ممتازة</option>
-                                    <option value="6">6/10 - إرهاق خفيف</option>
-                                    <option value="4">4/10 - خمول وتعب</option>
+                                    <option value="10">10/10 🔥</option>
+                                    <option value="8" selected>8/10 ⚡</option>
+                                    <option value="6">6/10</option>
+                                    <option value="4">4/10</option>
                                 </select>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-gray-300 mb-1.5">ملاحظاتك، تطور أوزانك، أو استفسارات للكوتش</label>
-                            <textarea id="chkNotes" rows="3" placeholder="اكتب للكوتش أي ملاحظة عن التمارين، الجوع، أو الأوزان التي زادت..." 
+                            <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="chk_notes_lbl">ملاحظاتك، تطور أوزانك، أو استفسارات للكوتش</label>
+                            <textarea id="chkNotes" rows="3" placeholder="اكتب للكوتش أي ملاحظة عن التمارين، الجوع، أو الأوزان التي زادت..." data-i18n-placeholder="chk_notes_ph"
                                 class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white placeholder-gray-500 outline-none focus:border-emerald-500"></textarea>
                         </div>
 
                         <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
-                            <span>📲 إرسال تقرير المتابعة الآن لواتساب الكوتش</span>
+                            <span data-i18n="chk_submit">📲 إرسال تقرير المتابعة الآن لواتساب الكوتش</span>
                         </button>
                     </form>
 
@@ -633,15 +640,15 @@
         <footer class="mt-10 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
             <div class="flex items-center gap-3">
                 <div class="brand-logo-frame w-12 flex-shrink-0 flex items-center justify-center">
-                    <img src="LOGO.jpg" alt="Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
+                    <img src="LOGO.png" alt="Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
                 </div>
                 <div>
-                    <div class="font-black text-white text-xs">Coach Mahmoud • أيرون كوتش PRO</div>
+                    <div class="font-black text-white text-xs" data-i18n="brand_footer_title">Coach Mahmoud • أيرون كوتش PRO</div>
                     <div class="text-[10px] text-gray-400">Train Hard • Stay Focused • Be Strong</div>
                 </div>
             </div>
             <div class="text-[11px] font-bold text-gray-400">
-                منصة التدريب والتغذية الأونلاين المعتمدة • v2.3
+                <span data-i18n="brand_footer_sub">منصة التدريب والتغذية الأونلاين المعتمدة</span> • v2.9
             </div>
         </footer>
 
@@ -651,27 +658,27 @@
     <nav class="mobile-bottom-nav">
         <button onclick="IronApp.switchTab('overview')" class="nav-item active" data-nav="overview">
             <span class="text-lg">🏠</span>
-            <span>الرئيسية</span>
+            <span data-i18n="mnav_overview">الرئيسية</span>
         </button>
         <button onclick="IronApp.switchTab('workouts')" class="nav-item" data-nav="workouts">
             <span class="text-lg">🏋️‍♂️</span>
-            <span>البرامج</span>
+            <span data-i18n="mnav_workouts">البرامج</span>
         </button>
         <button onclick="IronApp.switchTab('exercises')" class="nav-item" data-nav="exercises">
             <span class="text-lg">💪</span>
-            <span>التمارين</span>
+            <span data-i18n="mnav_exercises">التمارين</span>
         </button>
         <button onclick="IronApp.switchTab('meals')" class="nav-item" data-nav="meals">
             <span class="text-lg">🥗</span>
-            <span>الوجبات</span>
+            <span data-i18n="mnav_meals">الوجبات</span>
         </button>
         <button onclick="IronApp.switchTab('calculator')" class="nav-item" data-nav="calculator">
             <span class="text-lg">🧮</span>
-            <span>السعرات</span>
+            <span data-i18n="mnav_calculator">السعرات</span>
         </button>
         <button onclick="IronApp.switchTab('checkin')" class="nav-item" data-nav="checkin">
             <span class="text-lg">📲</span>
-            <span>المتابعة</span>
+            <span data-i18n="mnav_checkin">المتابعة</span>
         </button>
     </nav>
 
@@ -692,11 +699,11 @@
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">⚡</span>
-                    <h3 class="text-base font-black text-white">التمارين البديلة المقترحة فورياً</h3>
+                    <h3 class="text-base font-black text-white" data-i18n="gym_alt_title">التمارين البديلة المقترحة فورياً</h3>
                 </div>
                 <button onclick="closeModal('altExercisesModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
             </div>
-            <p class="text-xs text-gray-400 mb-4">إذا كان البنش أو الجهاز مشغولاً في الجيم، يمكنك أداء أحد هذه التمارين البديلة التي تستهدف نفس الزوايا العضلية تماماً:</p>
+            <p class="text-xs text-gray-400 mb-4" data-i18n="gym_alt_desc">إذا كان البنش أو الجهاز مشغولاً في الجيم، يمكنك أداء أحد هذه التمارين البديلة التي تستهدف نفس العضلة:</p>
             <div id="altExercisesList" class="space-y-3">
                 <!-- يتم ملؤها بواسطة JS -->
             </div>
@@ -1068,6 +1075,7 @@
     </div>
 
     <!-- Scripts Layer -->
+    <script src="js/i18n.js"></script>
     <script src="js/config.js"></script>
     <script src="js/mealsData.js"></script>
     <script src="js/exercisesData.js"></script>

@@ -94,7 +94,8 @@ const IronAuth = {
         let trainee = trainees.find(t => t.username.toLowerCase() === username && verifyPassword(password, t.password));
 
         if (!trainee) {
-            return { success: false, message: "اسم المستخدم أو كلمة المرور غير صحيحة" };
+            const msg = typeof IronI18n !== "undefined" ? IronI18n.t("login_invalid") : "اسم المستخدم أو كلمة المرور غير صحيحة";
+            return { success: false, message: msg };
         }
 
         // تحديث حالة الاشتراك
@@ -170,14 +171,36 @@ const IronAuth = {
         return null;
     },
 
-    // تحديث بيانات متدرب
-    updateTrainee(updatedTrainee) {
+    // تحديث بيانات متدرب (يدعم تمرير كائن كامل أو معرف + الحقول المعدلة مع مزامنة الجلسة)
+    updateTrainee(traineeOrId, patchFields = null) {
         const trainees = this.getAllTrainees();
-        const index = trainees.findIndex(t => t.id === updatedTrainee.id);
-        if (index !== -1) {
-            trainees[index] = updatedTrainee;
-            this.saveAllTrainees(trainees);
-        }
+        const targetId = typeof traineeOrId === "string" ? traineeOrId : traineeOrId?.id;
+        if (!targetId) return null;
+
+        const index = trainees.findIndex(t => t.id === targetId);
+        if (index === -1) return null;
+
+        const updated = typeof traineeOrId === "string"
+            ? { ...trainees[index], ...(patchFields || {}) }
+            : traineeOrId;
+
+        trainees[index] = updated;
+        this.saveAllTrainees(trainees);
+
+        // تحديث الجلسة النشطة إن كان المتدرب نفسه متصلاً الآن (بما فيها صورة البروفايل)
+        try {
+            const sessionStr = localStorage.getItem("iron_session");
+            if (sessionStr) {
+                const session = JSON.parse(sessionStr);
+                if (session && session.role === "trainee" && session.id === targetId) {
+                    session.name = updated.name;
+                    session.traineeData = updated;
+                    localStorage.setItem("iron_session", JSON.stringify(session));
+                }
+            }
+        } catch (e) {}
+
+        return updated;
     },
 
     // تعديل بيانات متدرب بواسطة الكوتش
