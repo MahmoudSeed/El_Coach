@@ -36,7 +36,6 @@ const IronI18n = {
             lang_btn_label: "EN",
             btn_login: "تسجيل الدخول 🔑",
             btn_logout: "خروج",
-            coach_admin_sub: "لوحة الكوتش الإدارية",
             back_to_coach: "👑 الكوتش",
             impersonating_notice: "👁️ وضع معاينة الكوتش — أنت تشاهد الآن حساب المتدرب فقط:",
             impersonating_return: "العودة للوحة الكوتش 👑",
@@ -194,8 +193,9 @@ const IronI18n = {
             gym_alt_title: "التمارين البديلة المقترحة فورياً",
             gym_alt_desc: "إذا كان البنش أو الجهاز مشغولاً في الجيم، يمكنك أداء أحد هذه التمارين البديلة التي تستهدف نفس العضلة:",
             gym_alt_pick: "اختيار كبديل",
-            coach_badge: "👑 لوحة تحكم الكوتش الرسمية",
-            coach_welcome: "أهلاً بك، {name} 👋",
+            doc_title: "أيرون كوتش (IronCoach Pro) - منصة التدريب والتغذية الرياضية الأونلاين",
+            coach_badge: "👑 لوحة تحكم الكوتش",
+            coach_welcome: "أهلاً بك يا كوتش 👋",
             coach_sub: "{title} | إدارة المشتركين، تعديل الخطط، والنسخ الاحتياطي",
             coach_add_btn: "+ إضافة مشترك جديد",
             coach_settings_btn: "⚙️ إعدادات الدفع",
@@ -220,7 +220,80 @@ const IronI18n = {
             status_expiring: "باقي {days} يوم ⚠️",
             status_expired: "منتهي 🚫",
             status_renew_short: "تجديد 💳",
-            lang_switched: "تم تغيير لغة التطبيق إلى العربية 🇪🇬"
+            lang_switched: "تم تغيير لغة التطبيق إلى العربية 🇪🇬",
+            modal_meal_title: "إضافة وجبة صحية جديدة",
+            modal_meal_name: "اسم الوجبة",
+            modal_meal_name_ph: "مثال: ستيك سلمون مع البروكلي",
+            modal_meal_cat: "التصنيف",
+            modal_meal_cat_b: "إفطار",
+            modal_meal_cat_l: "غداء",
+            modal_meal_cat_d: "عشاء",
+            modal_meal_cat_s: "سناكس",
+            modal_meal_ing: "المكونات والأوزان بالجرام",
+            modal_meal_ing_ph: "مثال: سلمون 180ج + بروكلي 100ج + زيت زيتون 5ج",
+            modal_meal_cal: "السعرات",
+            modal_meal_prot: "البروتين (ج)",
+            modal_meal_carb: "الكارب (ج)",
+            modal_meal_fat: "الدهون (ج)",
+            modal_meal_img: "رابط صورة الوجبة (اختياري)",
+            modal_meal_save: "حفظ الوجبة في المكتبة ✅",
+            modal_add_title: "إضافة مشترك جديد للمنصة",
+            modal_tr_fullname: "اسم المتدرب بالكامل *",
+            modal_tr_fullname_ph: "مثال: محمد السيد",
+            modal_tr_phone: "رقم الهاتف / الواتساب",
+            modal_tr_user: "اسم المستخدم (Username) *",
+            modal_tr_pass: "كلمة المرور (Password) *",
+            modal_tr_gender: "الجنس",
+            modal_tr_age: "العمر",
+            modal_tr_weight: "الوزن (كجم)",
+            modal_tr_height: "الطول (سم)",
+            modal_tr_goal: "الهدف التدريبي",
+            modal_tr_goal_cut: "تنشيف وخسارة دهون",
+            modal_tr_goal_recomp: "نحت الجسم وتثبيت الوزن",
+            modal_tr_goal_bulk: "تضخيم وبناء عضلات",
+            modal_tr_activity: "مستوى النشاط",
+            modal_tr_act_12: "خامل (قليل الحركة)",
+            modal_tr_act_1375: "نشاط خفيف (1-3 أيام)",
+            modal_tr_act_155: "نشاط متوسط (3-5 أيام)",
+            modal_tr_act_1725: "نشاط عالي (6-7 أيام)",
+            modal_tr_days: "مدة الاشتراك (يوم)",
+            modal_tr_cal: "السعرات المستهدفة (محسوبة علمياً)",
+            modal_tr_prog: "البرنامج التدريبي المقترح",
+            modal_tr_note: "توجيهات الكوتش الخاصة لهذا المتدرب (تظهر له في حسابه فقط)",
+            modal_tr_note_ph: "مثال: ركز على النوم 8 ساعات، شرب 3.5 لتر ماء، والالتزام بالكارديو بعد التمرين 20 دقيقة...",
+            modal_add_submit: "إنشاء حساب المتدرب وتفعيله فوراً 🚀",
+            modal_edit_title: "✏️ تعديل بيانات وخطة المشترك",
+            modal_edit_name: "اسم المتدرب *",
+            modal_edit_newpass: "كلمة مرور جديدة (اختياري)",
+            modal_edit_newpass_ph: "اتركه فارغاً لعدم التغيير",
+            modal_edit_cal: "السعرات المستهدفة (kcal)",
+            modal_edit_daysleft: "الأيام المتبقية في الاشتراك",
+            modal_edit_prog: "البرنامج التدريبي",
+            modal_edit_note_ph: "أضف ملاحظة أو توجيه خاص يظهر لهذا المتدرب في شاشته الرئيسية...",
+            modal_edit_submit: "حفظ التعديلات وتحديث حساب المشترك ✅",
+            modal_cfg_title: "إعدادات الكوتش وبيانات الدفع والواتساب",
+            modal_cfg_name: "اسم الكوتش",
+            modal_cfg_jobtitle: "المسمى المهني",
+            modal_cfg_price: "قيمة الاشتراك الشهري",
+            modal_cfg_currency: "العملة المعروضة",
+            modal_cfg_wa: "رقم الواتساب لاستقبال المتابعات (مع كود الدولة دون +)",
+            modal_cfg_vodafone: "رقم فودافون كاش / محفظة",
+            modal_cfg_instapay: "معرف انستاباي (InstaPay)",
+            modal_cfg_stc: "STC Pay (للمشتركين بالسعودية)",
+            modal_cfg_card: "رابط دفع ببطاقة (Stripe/Tap)",
+            modal_cfg_iban: "رقم الحساب البنكي / الآيبان (IBAN)",
+            modal_cfg_pass: "تغيير كلمة مرور الكوتش (اختياري)",
+            modal_cfg_pass_ph: "اتركه فارغاً للإبقاء على الحالية",
+            modal_cfg_submit: "حفظ الإعدادات وبيانات الدفع ✅",
+            modal_renew_title: "تجديد الاشتراك الشهري (30 يوماً)",
+            modal_renew_price: "قيمة الاشتراك:",
+            modal_renew_card: "💳 الدفع بالبطاقة البنكية أونلاين (فيزا / ماستركارد)",
+            modal_renew_wallets: "أو التحويل السريع عبر المحافظ الإلكترونية:",
+            modal_renew_voda_lbl: "فودافون كاش:",
+            modal_renew_insta_lbl: "انستاباي:",
+            modal_renew_stc_lbl: "STC Pay:",
+            modal_renew_receipt: "رفع صورة إيصال التحويل لتأكيد التجديد فوري *:",
+            modal_renew_submit: "تأكيد إرسال الإيصال وتفعيل الـ 30 يوماً ✅"
         },
         en: {
             brand_name: "IronCoach",
@@ -244,7 +317,6 @@ const IronI18n = {
             lang_btn_label: "عربي",
             btn_login: "Sign In 🔑",
             btn_logout: "Logout",
-            coach_admin_sub: "Coach Admin Panel",
             back_to_coach: "👑 Coach Panel",
             impersonating_notice: "👁️ Coach Preview Mode — Viewing client account:",
             impersonating_return: "Return to Coach Panel 👑",
@@ -402,8 +474,9 @@ const IronI18n = {
             gym_alt_title: "Instant Alternative Exercises",
             gym_alt_desc: "If the machine or bench is occupied, pick one of these alternatives targeting the same muscle:",
             gym_alt_pick: "Select Alternative",
-            coach_badge: "👑 Official Coach Admin Panel",
-            coach_welcome: "Welcome, {name} 👋",
+            doc_title: "IronCoach Pro - Online Training & Nutrition Platform",
+            coach_badge: "👑 Coach Dashboard",
+            coach_welcome: "Welcome, Coach 👋",
             coach_sub: "{title} | Manage clients, plans, check-ins & backups",
             coach_add_btn: "+ Add New Client",
             coach_settings_btn: "⚙️ Payment Settings",
@@ -428,7 +501,80 @@ const IronI18n = {
             status_expiring: "{days} days left ⚠️",
             status_expired: "Expired 🚫",
             status_renew_short: "Renew 💳",
-            lang_switched: "App language switched to English 🇺🇸"
+            lang_switched: "App language switched to English 🇺🇸",
+            modal_meal_title: "Add New Healthy Meal",
+            modal_meal_name: "Meal Name",
+            modal_meal_name_ph: "e.g., Grilled Salmon with Broccoli",
+            modal_meal_cat: "Category",
+            modal_meal_cat_b: "Breakfast",
+            modal_meal_cat_l: "Lunch",
+            modal_meal_cat_d: "Dinner",
+            modal_meal_cat_s: "Snacks",
+            modal_meal_ing: "Ingredients & Grams",
+            modal_meal_ing_ph: "e.g., Salmon 180g + Broccoli 100g + Olive oil 5g",
+            modal_meal_cal: "Calories",
+            modal_meal_prot: "Protein (g)",
+            modal_meal_carb: "Carbs (g)",
+            modal_meal_fat: "Fats (g)",
+            modal_meal_img: "Meal Image URL (Optional)",
+            modal_meal_save: "Save Meal to Library ✅",
+            modal_add_title: "Add New Client to Platform",
+            modal_tr_fullname: "Client Full Name *",
+            modal_tr_fullname_ph: "e.g., Mohamed El-Sayed",
+            modal_tr_phone: "Phone / WhatsApp Number",
+            modal_tr_user: "Username *",
+            modal_tr_pass: "Password *",
+            modal_tr_gender: "Gender",
+            modal_tr_age: "Age",
+            modal_tr_weight: "Weight (kg)",
+            modal_tr_height: "Height (cm)",
+            modal_tr_goal: "Training Goal",
+            modal_tr_goal_cut: "Fat Loss & Cutting",
+            modal_tr_goal_recomp: "Body Recomp & Maintenance",
+            modal_tr_goal_bulk: "Muscle Building & Bulking",
+            modal_tr_activity: "Activity Level",
+            modal_tr_act_12: "Sedentary (Desk job)",
+            modal_tr_act_1375: "Lightly Active (1-3 days/wk)",
+            modal_tr_act_155: "Moderately Active (3-5 days/wk)",
+            modal_tr_act_1725: "Very Active (6-7 days/wk)",
+            modal_tr_days: "Subscription Duration (Days)",
+            modal_tr_cal: "Target Calories (Auto-Calculated)",
+            modal_tr_prog: "Assigned Workout Split",
+            modal_tr_note: "Coach Private Notes for Client (Shown in their dashboard only)",
+            modal_tr_note_ph: "e.g., Aim for 8h sleep, 3.5L water daily, and 20 min post-workout cardio...",
+            modal_add_submit: "Create & Activate Client Account 🚀",
+            modal_edit_title: "✏️ Edit Client Details & Plan",
+            modal_edit_name: "Client Name *",
+            modal_edit_newpass: "New Password (Optional)",
+            modal_edit_newpass_ph: "Leave blank to keep current",
+            modal_edit_cal: "Target Calories (kcal)",
+            modal_edit_daysleft: "Remaining Subscription Days",
+            modal_edit_prog: "Workout Program",
+            modal_edit_note_ph: "Add a personal note or instruction shown on this client's home screen...",
+            modal_edit_submit: "Save Changes & Update Client ✅",
+            modal_cfg_title: "Coach Settings, Payment & WhatsApp Info",
+            modal_cfg_name: "Coach Name",
+            modal_cfg_jobtitle: "Professional Title",
+            modal_cfg_price: "Monthly Subscription Price",
+            modal_cfg_currency: "Display Currency",
+            modal_cfg_wa: "WhatsApp Number for Check-ins (with country code, no +)",
+            modal_cfg_vodafone: "Vodafone Cash / Mobile Wallet",
+            modal_cfg_instapay: "InstaPay Handle",
+            modal_cfg_stc: "STC Pay (for KSA clients)",
+            modal_cfg_card: "Card Payment Link (Stripe/Tap)",
+            modal_cfg_iban: "Bank Account / IBAN",
+            modal_cfg_pass: "Change Coach Password (Optional)",
+            modal_cfg_pass_ph: "Leave blank to keep current",
+            modal_cfg_submit: "Save Settings & Payment Info ✅",
+            modal_renew_title: "Monthly Subscription Renewal (30 Days)",
+            modal_renew_price: "Subscription Fee:",
+            modal_renew_card: "💳 Pay Online by Card (Visa / Mastercard)",
+            modal_renew_wallets: "Or Quick Transfer via Mobile Wallets:",
+            modal_renew_voda_lbl: "Vodafone Cash:",
+            modal_renew_insta_lbl: "InstaPay:",
+            modal_renew_stc_lbl: "STC Pay:",
+            modal_renew_receipt: "Upload Transfer Receipt Screenshot for Instant Activation *:",
+            modal_renew_submit: "Confirm Receipt & Activate 30 Days ✅"
         }
     },
 
@@ -439,6 +585,95 @@ const IronI18n = {
             str = str.replace(new RegExp(`\\{${k}\\}`, "g"), vars[k] !== undefined && vars[k] !== null ? vars[k] : "");
         });
         return str;
+    },
+
+    trName(personOrStr) {
+        if (!personOrStr) return "";
+        const raw = typeof personOrStr === "object" ? (personOrStr.name || "") : String(personOrStr);
+        if (!this.isEn()) return raw;
+        if (typeof personOrStr === "object" && personOrStr.nameEn) return personOrStr.nameEn;
+        if (typeof IronI18nEn !== "undefined") {
+            const clean = raw.trim();
+            if (IronI18nEn.names[clean]) return IronI18nEn.names[clean];
+            return IronI18nEn.transliterateArabic(clean);
+        }
+        return raw;
+    },
+
+    trCoachTitle(title = "") {
+        if (!this.isEn()) return title;
+        if (typeof IronI18nEn !== "undefined" && IronI18nEn.titles[title]) {
+            return IronI18nEn.titles[title];
+        }
+        if (/[\u0600-\u06FF]/.test(title)) {
+            return "Certified NASM Trainer & Sports Nutrition Specialist";
+        }
+        return title;
+    },
+
+    trGoal(goal = "") {
+        if (!this.isEn()) return goal;
+        const g = String(goal).trim();
+        if (typeof IronI18nEn !== "undefined" && IronI18nEn.goals[g]) {
+            return IronI18nEn.goals[g];
+        }
+        if (g.includes("تضخيم") || g.includes("بناء")) return "Muscle Building & Bulking";
+        if (g.includes("نحت") || g.includes("تثبيت")) return "Body Recomp & Maintenance";
+        if (g.includes("تنشيف") || g.includes("دهون")) return "Fat Loss & Cutting";
+        return /[\u0600-\u06FF]/.test(g) ? "Custom Fitness Goal" : g;
+    },
+
+    trCurrency(curr = "") {
+        if (!this.isEn()) return curr;
+        return String(curr)
+            .replace(/ج\.م/g, "EGP")
+            .replace(/ر\.س/g, "SAR")
+            .replace(/د\.إ/g, "AED")
+            .replace(/د\.ك/g, "KWD");
+    },
+
+    trNote(traineeOrNote) {
+        if (!traineeOrNote) return "";
+        const raw = typeof traineeOrNote === "object" ? (traineeOrNote.coachNote || "") : String(traineeOrNote);
+        if (!this.isEn()) return raw;
+        if (typeof traineeOrNote === "object" && traineeOrNote.coachNoteEn) return traineeOrNote.coachNoteEn;
+        return raw;
+    },
+
+    trMeal(meal) {
+        if (!meal || !this.isEn()) return meal;
+        if (typeof IronI18nEn !== "undefined" && IronI18nEn.meals[meal.id]) {
+            return {
+                ...meal,
+                name: IronI18nEn.meals[meal.id].name,
+                ingredients: IronI18nEn.meals[meal.id].ingredients
+            };
+        }
+        // Fallback for custom meals created in Arabic
+        let ing = String(meal.ingredients || "")
+            .replace(/(\d+)\s*ج\b/g, "$1g")
+            .replace(/(\d+)\s*مل\b/g, "$1ml");
+        return {
+            ...meal,
+            name: meal.nameEn || meal.name,
+            ingredients: meal.ingredientsEn || ing
+        };
+    },
+
+    trExercise(ex) {
+        if (!ex || !this.isEn()) return ex;
+        if (typeof IronI18nEn !== "undefined" && IronI18nEn.exercises[ex.id]) {
+            const tr = IronI18nEn.exercises[ex.id];
+            return {
+                ...ex,
+                equipment: tr.equipment || ex.equipment,
+                setup: tr.setup || ex.setup,
+                execution: tr.execution || ex.execution,
+                breathing: tr.breathing || ex.breathing,
+                mistakes: tr.mistakes || ex.mistakes
+            };
+        }
+        return ex;
     },
 
     translateMuscle(muscle) {
@@ -470,6 +705,7 @@ const IronI18n = {
         const dir = lang === "en" ? "ltr" : "rtl";
         document.documentElement.lang = lang;
         document.documentElement.dir = dir;
+        document.title = this.t("doc_title");
 
         document.querySelectorAll("[data-i18n]").forEach(el => {
             const key = el.getAttribute("data-i18n");

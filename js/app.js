@@ -207,7 +207,8 @@ const IronApp = {
         const nameEl = document.getElementById("impersonatingTraineeName");
         if (!banner) return;
         if (user && user.role === "trainee" && user.isImpersonating) {
-            if (nameEl) nameEl.innerText = `${user.name} (@${user.username})`;
+            const displayName = typeof IronI18n !== "undefined" ? IronI18n.trName(user.traineeData || user) : user.name;
+            if (nameEl) nameEl.innerText = `${displayName} (@${user.username})`;
             banner.classList.remove("hidden");
         } else {
             banner.classList.add("hidden");
@@ -231,19 +232,13 @@ const IronApp = {
         if (user.role === "coach") {
             area.innerHTML = `
                 <div class="flex items-center gap-2 sm:gap-3">
-                    <div class="text-end">
-                        <div class="text-xs font-black text-white flex items-center gap-1 justify-end">
-                            <span class="truncate max-w-[110px] sm:max-w-none">${user.name}</span>
-                            <span class="text-amber-400">👑</span>
-                        </div>
-                        <div class="text-[10px] text-emerald-400 font-bold hidden sm:block">${this.t("coach_admin_sub")}</div>
-                    </div>
                     <button onclick="IronAuth.logout()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-xs rounded-xl border border-slate-700 transition">
                         ${this.t("btn_logout")} 🚪
                     </button>
                 </div>
             `;
         } else {
+            const displayName = typeof IronI18n !== "undefined" ? IronI18n.trName(user.traineeData || user) : user.name;
             const statusColor = user.status === "active" ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
                 : user.status === "expiring" ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
                 : "text-rose-400 border-rose-500/30 bg-rose-500/10";
@@ -253,9 +248,9 @@ const IronApp = {
                 : this.t("status_expired");
 
             const avatarData = user.traineeData?.avatar;
-            const initial = (user.name || "U").trim().charAt(0).toUpperCase();
+            const initial = (displayName || "U").trim().charAt(0).toUpperCase();
             const headerAvatar = avatarData
-                ? `<img src="${avatarData}" alt="${user.name}" class="w-8 h-8 rounded-full object-cover border-2 border-emerald-500/50 cursor-pointer flex-shrink-0" onclick="document.getElementById('traineeAvatarInput')?.click()" title="${this.t("avatar_change")}">`
+                ? `<img src="${avatarData}" alt="${displayName}" class="w-8 h-8 rounded-full object-cover border-2 border-emerald-500/50 cursor-pointer flex-shrink-0" onclick="document.getElementById('traineeAvatarInput')?.click()" title="${this.t("avatar_change")}">`
                 : `<button type="button" onclick="document.getElementById('traineeAvatarInput')?.click()" class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black text-xs flex-shrink-0 hover:bg-emerald-500/25 transition" title="${this.t("avatar_add")}">${initial}</button>`;
 
             area.innerHTML = `
@@ -267,7 +262,7 @@ const IronApp = {
                     ` : ''}
                     ${headerAvatar}
                     <div class="text-end">
-                        <div class="text-[11px] sm:text-xs font-black text-white truncate max-w-[95px] sm:max-w-none">${user.name}</div>
+                        <div class="text-[11px] sm:text-xs font-black text-white truncate max-w-[115px] sm:max-w-none">${displayName}</div>
                         <div class="text-[9px] sm:text-[10px] ${statusColor} px-2 py-0.5 rounded-full border inline-block font-bold">
                             ${statusText}
                         </div>
@@ -318,7 +313,8 @@ const IronApp = {
         if (user.status === "expired") {
             expiredView.classList.remove("hidden");
             const config = getAppConfig();
-            document.getElementById("expiredPriceDisplay").innerText = `${config.subscriptionPrice.monthly} ${config.subscriptionPrice.currency}`;
+            const currencyTxt = typeof IronI18n !== "undefined" ? IronI18n.trCurrency(config.subscriptionPrice.currency) : config.subscriptionPrice.currency;
+            document.getElementById("expiredPriceDisplay").innerText = `${config.subscriptionPrice.monthly} ${currencyTxt}`;
             document.getElementById("expiredVodafoneDisplay").innerText = config.coachInfo.vodafoneCash;
             document.getElementById("expiredInstapayDisplay").innerText = config.coachInfo.instapayUser;
             document.getElementById("expiredStcDisplay").innerText = config.coachInfo.stcPay;
@@ -342,14 +338,15 @@ const IronApp = {
         const box = document.getElementById("traineeAvatarBox");
         if (!box || !trainee) return;
 
-        const initial = (trainee.name || "U").trim().charAt(0).toUpperCase();
+        const displayName = typeof IronI18n !== "undefined" ? IronI18n.trName(trainee) : trainee.name;
+        const initial = (displayName || "U").trim().charAt(0).toUpperCase();
         const hasAvatar = Boolean(trainee.avatar);
 
         box.innerHTML = `
             <div class="flex flex-col items-center gap-1.5">
                 <div onclick="document.getElementById('traineeAvatarInput')?.click()" class="trainee-avatar-ring cursor-pointer group relative flex items-center justify-center" title="${hasAvatar ? this.t('avatar_change') : this.t('avatar_add')}">
                     ${hasAvatar ? `
-                        <img src="${trainee.avatar}" alt="${trainee.name}" class="trainee-avatar-img">
+                        <img src="${trainee.avatar}" alt="${displayName}" class="trainee-avatar-img">
                     ` : `
                         <div class="w-full h-full flex flex-col items-center justify-center bg-slate-950/80 text-emerald-400">
                             <span class="text-2xl font-black leading-none">${initial}</span>
@@ -440,7 +437,8 @@ const IronApp = {
 
         // الصورة الشخصية للمشترك + بيانات الترحيب الرئيسية
         this.renderTraineeAvatar(trainee);
-        document.getElementById("homeWelcomeName").innerText = this.t("home_welcome", { name: trainee.name });
+        const displayName = typeof IronI18n !== "undefined" ? IronI18n.trName(trainee) : trainee.name;
+        document.getElementById("homeWelcomeName").innerText = this.t("home_welcome", { name: displayName });
         document.getElementById("homeDaysLeftBadge").innerText = this.t("home_days_left", { days: trainee.daysLeft });
         document.getElementById("homeTargetCal").innerText = `${targetCal} kcal`;
         document.getElementById("homeTargetProtein").innerText = `${proteinGrams}g`;
@@ -489,6 +487,8 @@ const IronApp = {
         const assignedProg = trainee.program || "PPL (Push Pull Legs)";
         const checkinsCount = Array.isArray(trainee.history) ? trainee.history.length : 0;
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const displayGoal = typeof IronI18n !== "undefined" ? IronI18n.trGoal(trainee.goal || "تنشيف وخسارة دهون") : (trainee.goal || "تنشيف وخسارة دهون");
+        const displayNote = typeof IronI18n !== "undefined" ? IronI18n.trNote(trainee) : trainee.coachNote;
 
         card.innerHTML = `
             <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
@@ -501,7 +501,7 @@ const IronApp = {
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                     <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
                         <div class="text-[10px] text-gray-400 font-bold">${this.t("plan_goal")}</div>
-                        <div class="font-black text-white mt-0.5">${trainee.goal || (isEn ? 'Fat Loss' : 'تنشيف وخسارة دهون')}</div>
+                        <div class="font-black text-white mt-0.5">${displayGoal}</div>
                     </div>
                     <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
                         <div class="text-[10px] text-gray-400 font-bold">${this.t("plan_program")}</div>
@@ -512,10 +512,10 @@ const IronApp = {
                         <div class="font-black text-cyan-400 mt-0.5">${this.t("plan_checkins_count", { weight: trainee.weight, count: checkinsCount })}</div>
                     </div>
                 </div>
-                ${trainee.coachNote ? `
+                ${displayNote ? `
                     <div class="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3 text-xs">
                         <div class="text-[10px] font-black text-emerald-400 mb-1">${this.t("plan_coach_note")}</div>
-                        <p class="text-gray-200 leading-relaxed">${trainee.coachNote}</p>
+                        <p class="text-gray-200 leading-relaxed">${displayNote}</p>
                     </div>
                 ` : ''}
             </div>
@@ -879,28 +879,48 @@ const IronApp = {
     shareDietPlanWhatsapp() {
         if (!this.currentDayDiet) return;
         const d = this.currentDayDiet;
-        const msg =
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const trM = (m) => typeof IronI18n !== "undefined" ? IronI18n.trMeal(m) : m;
+        const b = trM(d.breakfast), l = trM(d.lunch), dn = trM(d.dinner), s = trM(d.snack);
+
+        const msg = isEn ?
+`🥗 *My Daily Meal Plan - IronCoach Pro*
+🔥 *Total Calories:* ${d.totalCalories} kcal
+🥩 Protein: ${d.totalProtein}g | 🍞 Carbs: ${d.totalCarbs}g | 🥑 Fats: ${d.totalFats}g
+-------------------------------------------
+🍳 *Breakfast:* ${b.name} (${b.calories} kcal)
+• ${b.ingredients}
+
+🍗 *Lunch:* ${l.name} (${l.calories} kcal)
+• ${l.ingredients}
+
+🥣 *Dinner:* ${dn.name} (${dn.calories} kcal)
+• ${dn.ingredients}
+
+🥜 *Snack:* ${s.name} (${s.calories} kcal)
+• ${s.ingredients}` :
 `🥗 *جدولي الغذائي اليومي - أيرون كوتش (IronCoach Pro)*
 🔥 *إجمالي السعرات:* ${d.totalCalories} kcal
 🥩 بروتين: ${d.totalProtein}g | 🍞 كارب: ${d.totalCarbs}g | 🥑 دهون: ${d.totalFats}g
 -------------------------------------------
-🍳 *الإفطار:* ${d.breakfast.name} (${d.breakfast.calories} سعرة)
-• ${d.breakfast.ingredients}
+🍳 *الإفطار:* ${b.name} (${b.calories} سعرة)
+• ${b.ingredients}
 
-🍗 *الغداء:* ${d.lunch.name} (${d.lunch.calories} سعرة)
-• ${d.lunch.ingredients}
+🍗 *الغداء:* ${l.name} (${l.calories} سعرة)
+• ${l.ingredients}
 
-🥣 *العشاء:* ${d.dinner.name} (${d.dinner.calories} سعرة)
-• ${d.dinner.ingredients}
+🥣 *العشاء:* ${dn.name} (${dn.calories} سعرة)
+• ${dn.ingredients}
 
-🥜 *السناك:* ${d.snack.name} (${d.snack.calories} سعرة)
-• ${d.snack.ingredients}`;
+🥜 *السناك:* ${s.name} (${s.calories} سعرة)
+• ${s.ingredients}`;
 
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
     },
 
-    renderDayDietSlotCard(slotTitle, meal, slotKey) {
+    renderDayDietSlotCard(slotTitle, rawMeal, slotKey) {
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const meal = typeof IronI18n !== "undefined" ? IronI18n.trMeal(rawMeal) : rawMeal;
         const calUnit = isEn ? "kcal" : "ك";
         const gramUnit = isEn ? "g" : "ج";
         return `
@@ -957,7 +977,8 @@ const IronApp = {
 
         this.saveDietPlanForCurrentUser(d);
         this.generateDayDietWithPlan(d);
-        showToast(isEn ? `Meal swapped to: ${randomAlt.name}` : `تم استبدال الوجبة بـ: ${randomAlt.name}`, "success");
+        const altName = typeof IronI18n !== "undefined" ? IronI18n.trMeal(randomAlt).name : randomAlt.name;
+        showToast(isEn ? `Meal swapped to: ${altName}` : `تم استبدال الوجبة بـ: ${altName}`, "success");
     },
 
     generateDayDietWithPlan(plan) {
@@ -1021,10 +1042,12 @@ const IronApp = {
 
         const trCat = (arCat) => typeof IronI18n !== "undefined" ? IronI18n.translateMealCategory(arCat) : arCat;
 
-        grid.innerHTML = meals.map(m => `
+        grid.innerHTML = meals.map(rawMeal => {
+            const m = typeof IronI18n !== "undefined" ? IronI18n.trMeal(rawMeal) : rawMeal;
+            return `
             <div class="meal-card bg-slate-950/60 border border-slate-800/80 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition flex flex-col justify-between">
                 <div class="relative h-44 w-full bg-slate-950 overflow-hidden">
-                    <img src="${m.img}" onerror="this.onerror=null;this.src=IronApp.getMealFallbackSvg('${m.category}')" class="w-full h-full object-cover transition duration-300 hover:scale-105" alt="${m.name}" loading="lazy">
+                    <img src="${m.img}" onerror="this.onerror=null;this.src=IronApp.getMealFallbackSvg('${trCat(m.category)}')" class="w-full h-full object-cover transition duration-300 hover:scale-105" alt="${m.name}" loading="lazy">
                     <div class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-slate-950/80 backdrop-blur text-xs font-bold text-white border border-slate-700">
                         ${trCat(m.category)}
                     </div>
@@ -1059,7 +1082,8 @@ const IronApp = {
                     </div>
                 </div>
             </div>
-        `).join("");
+        `;
+        }).join("");
     },
 
     setMealCategory(cat) {
@@ -1204,7 +1228,9 @@ const IronApp = {
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const trMuscle = (m) => typeof IronI18n !== "undefined" ? IronI18n.translateMuscle(m) : m;
 
-        grid.innerHTML = list.map(e => `
+        grid.innerHTML = list.map(rawEx => {
+            const e = typeof IronI18n !== "undefined" ? IronI18n.trExercise(rawEx) : rawEx;
+            return `
             <div onclick="IronApp.openExerciseDetail('${e.id}')" class="exercise-card bg-slate-950/60 border border-slate-800/80 rounded-2xl overflow-hidden cursor-pointer flex flex-col justify-between">
                 <div class="relative h-48 w-full bg-slate-950 overflow-hidden flex items-center justify-center p-2">
                     <img src="${e.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${trMuscle(e.muscle)}')" class="w-full h-full object-contain" alt="${e.nameEn}" loading="lazy">
@@ -1216,7 +1242,7 @@ const IronApp = {
                 <div class="p-4 flex-1 flex flex-col justify-between">
                     <div>
                         <h4 class="font-black text-white text-sm">${isEn ? e.nameEn : e.nameAr}</h4>
-                        <div class="text-xs text-gray-400 font-mono mb-2">${isEn ? e.nameAr : e.nameEn}</div>
+                        <div class="text-xs text-gray-400 font-mono mb-2">${isEn ? trMuscle(e.muscle) : e.nameEn}</div>
                         <p class="text-xs text-gray-300 line-clamp-2 leading-relaxed mb-3">${e.setup}</p>
                     </div>
 
@@ -1226,7 +1252,8 @@ const IronApp = {
                     </div>
                 </div>
             </div>
-        `).join("");
+        `;
+        }).join("");
     },
 
     setExerciseMuscle(muscle) {
@@ -1247,12 +1274,13 @@ const IronApp = {
 
     // فتح تفاصيل التمرين الكاملة
     openExerciseDetail(exId, customNameEn = null) {
-        const ex = getExerciseById(exId);
+        const rawEx = getExerciseById(exId);
         const container = document.getElementById("exerciseDetailModalContent");
-        if (!container || !ex) return;
+        if (!container || !rawEx) return;
 
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const trMuscle = (m) => typeof IronI18n !== "undefined" ? IronI18n.translateMuscle(m) : m;
+        const ex = typeof IronI18n !== "undefined" ? IronI18n.trExercise(rawEx) : rawEx;
         const alternatives = getAlternativeExercises(exId);
         const titleEn = customNameEn || ex.nameEn;
 
@@ -1261,7 +1289,7 @@ const IronApp = {
                 <div dir="ltr" class="text-left">
                     <span class="text-xs font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">${trMuscle(ex.muscle)}</span>
                     <h3 class="text-lg font-black text-white mt-1">${titleEn}</h3>
-                    <div class="text-xs text-gray-400 font-bold">${ex.nameAr}</div>
+                    ${!isEn ? `<div class="text-xs text-gray-400 font-bold">${ex.nameAr}</div>` : ''}
                 </div>
                 <button onclick="closeModal('exerciseDetailModal')" class="text-gray-400 hover:text-white text-xl">✕</button>
             </div>
@@ -1297,7 +1325,9 @@ const IronApp = {
                     <div class="border-t border-slate-800 pt-3">
                         <strong class="text-amber-400 block mb-2">${isEn ? '⚡ Alternative Exercises:' : '⚡ التمارين البديلة (إذا كان الجهاز مشغولاً):'}</strong>
                         <div class="grid grid-cols-2 gap-2">
-                            ${alternatives.map(alt => `
+                            ${alternatives.map(rawAlt => {
+                                const alt = typeof IronI18n !== "undefined" ? IronI18n.trExercise(rawAlt) : rawAlt;
+                                return `
                                 <div onclick="IronApp.openExerciseDetail('${alt.id}')" class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 hover:border-amber-500/40 cursor-pointer flex items-center gap-2">
                                     <img src="${alt.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${trMuscle(alt.muscle)}')" class="w-10 h-10 rounded-lg object-contain bg-slate-950" alt="${alt.nameEn}">
                                     <div class="min-w-0">
@@ -1305,7 +1335,8 @@ const IronApp = {
                                         <div class="text-[9px] text-gray-400 truncate">${alt.equipment}</div>
                                     </div>
                                 </div>
-                            `).join('')}
+                            `;
+                            }).join('')}
                         </div>
                     </div>
                 ` : ''}
@@ -1379,7 +1410,8 @@ const IronApp = {
         saveCustomMeal(newMeal);
         closeModal("addCustomMealModal");
         form.reset();
-        showToast("تمت إضافة الوجبة وحفظها في مكتبتك بنجاح!", "success");
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        showToast(isEn ? "Meal added and saved to your library!" : "تمت إضافة الوجبة وحفظها في مكتبتك بنجاح!", "success");
         this.renderMealsGrid();
     },
 
@@ -1405,6 +1437,7 @@ const IronApp = {
     handleAddTrainee(e) {
         e.preventDefault();
         const form = e.target;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const trainee = {
             name: form.tName.value.trim(),
             username: form.tUsername.value.trim().toLowerCase(),
@@ -1422,10 +1455,11 @@ const IronApp = {
             coachNote: form.tCoachNote ? form.tCoachNote.value.trim() : ""
         };
 
-        IronAuth.addTrainee(trainee);
+        const added = IronAuth.addTrainee(trainee);
         closeModal("addTraineeModal");
         form.reset();
-        showToast(`تم إنشاء حساب المتدرب ${trainee.name} بنجاح!`, "success");
+        const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(added || trainee) : trainee.name;
+        showToast(isEn ? `Client account created for ${dispName}!` : `تم إنشاء حساب المتدرب ${dispName} بنجاح!`, "success");
         IronCoachPanel.renderCoachDashboard();
     },
 
@@ -1439,6 +1473,7 @@ const IronApp = {
     handleReceiptFileChange(input) {
         const previewBox = document.getElementById("receiptPreviewBox");
         const errorBox = document.getElementById("receiptUploadError");
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         if (errorBox) errorBox.classList.add("hidden");
 
         if (!input.files || !input.files[0]) {
@@ -1449,7 +1484,9 @@ const IronApp = {
         const file = input.files[0];
         if (previewBox) {
             const sizeKB = Math.max(1, Math.round(file.size / 1024));
-            previewBox.innerHTML = `✅ تم إرفاق الإيصال: <strong class="text-white">${file.name}</strong> (${sizeKB} KB)`;
+            previewBox.innerHTML = isEn
+                ? `✅ Receipt attached: <strong class="text-white">${file.name}</strong> (${sizeKB} KB)`
+                : `✅ تم إرفاق الإيصال: <strong class="text-white">${file.name}</strong> (${sizeKB} KB)`;
             previewBox.classList.remove("hidden");
         }
     },
@@ -1466,7 +1503,8 @@ const IronApp = {
         const errorBox = document.getElementById("receiptUploadError");
 
         if (priceEl && config.subscriptionPrice) {
-            priceEl.innerText = `${config.subscriptionPrice.monthly} ${config.subscriptionPrice.currency}`;
+            const currencyTxt = typeof IronI18n !== "undefined" ? IronI18n.trCurrency(config.subscriptionPrice.currency) : config.subscriptionPrice.currency;
+            priceEl.innerText = `${config.subscriptionPrice.monthly} ${currencyTxt}`;
         }
         if (vodafone) vodafone.innerText = config.coachInfo.vodafoneCash;
         if (instapay) instapay.innerText = config.coachInfo.instapayUser;
@@ -1483,13 +1521,15 @@ const IronApp = {
     confirmRenewalPayment() {
         const fileInput = document.getElementById("receiptUploadInput");
         const errorBox = document.getElementById("receiptUploadError");
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
 
         if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            const errMsg = isEn ? "⚠️ Please attach your payment transfer receipt first" : "⚠️ يرجى اختيار وإرفاق صورة إيصال التحويل أولاً لتأكيد التجديد";
             if (errorBox) {
-                errorBox.innerText = "⚠️ يرجى اختيار وإرفاق صورة إيصال التحويل أولاً لتأكيد التجديد";
+                errorBox.innerText = errMsg;
                 errorBox.classList.remove("hidden");
             }
-            showToast("يرجى إرفاق صورة إيصال التحويل أولاً لتأكيد التجديد ⚠️", "error");
+            showToast(errMsg, "error");
             return;
         }
 
@@ -1503,7 +1543,7 @@ const IronApp = {
             };
             IronAuth.renewSubscription(user.id, 30, receiptInfo);
             closeModal("renewModal");
-            showToast(`تم استلام الإيصال (${receiptFile.name}) وتجديد اشتراكك لـ 30 يوماً بنجاح! 🔥`, "success");
+            showToast(isEn ? `Receipt (${receiptFile.name}) received! Your 30-day subscription is renewed! 🔥` : `تم استلام الإيصال (${receiptFile.name}) وتجديد اشتراكك لـ 30 يوماً بنجاح! 🔥`, "success");
             setTimeout(() => window.location.reload(), 1200);
         }
     },
@@ -1511,7 +1551,9 @@ const IronApp = {
     contactCoachWhatsapp() {
         const config = getAppConfig();
         const coachPhone = (config.coachInfo.whatsapp || "").replace(/\D/g, '');
-        window.open(`https://wa.me/${coachPhone}?text=${encodeURIComponent('مرحباً كوتش، أود تجديد اشتراكي الشهري في أيرون كوتش.')}`, '_blank');
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const text = isEn ? "Hi Coach, I would like to renew my monthly IronCoach Pro subscription." : "مرحباً كوتش، أود تجديد اشتراكي الشهري في أيرون كوتش.";
+        window.open(`https://wa.me/${coachPhone}?text=${encodeURIComponent(text)}`, '_blank');
     },
 
     initEventListeners() {

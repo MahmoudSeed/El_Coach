@@ -19,11 +19,14 @@ const IronMealsEngine = {
 
         if (query && query.trim() !== "") {
             const q = query.trim().toLowerCase();
-            meals = meals.filter(m =>
-                m.name.toLowerCase().includes(q) ||
-                m.ingredients.toLowerCase().includes(q) ||
-                (m.tags && m.tags.some(t => t.toLowerCase().includes(q)))
-            );
+            meals = meals.filter(m => {
+                const trM = typeof IronI18n !== "undefined" ? IronI18n.trMeal(m) : m;
+                return m.name.toLowerCase().includes(q) ||
+                    m.ingredients.toLowerCase().includes(q) ||
+                    (trM.name && trM.name.toLowerCase().includes(q)) ||
+                    (trM.ingredients && trM.ingredients.toLowerCase().includes(q)) ||
+                    (m.tags && m.tags.some(t => t.toLowerCase().includes(q)));
+            });
         }
 
         if (maxCalories) {

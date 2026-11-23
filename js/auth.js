@@ -366,8 +366,9 @@ const IronAuth = {
 
     // استيراد واستعادة نسخة احتياطية
     importBackupData(payload) {
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         if (!payload || !Array.isArray(payload.trainees)) {
-            return { success: false, message: "ملف النسخة الاحتياطية غير صالح أو تالف" };
+            return { success: false, message: isEn ? "Invalid or corrupted backup JSON file" : "ملف النسخة الاحتياطية غير صالح أو تالف" };
         }
         if (payload.config) {
             saveAppConfig(payload.config);

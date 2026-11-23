@@ -29,19 +29,20 @@ const IronCheckinSync = {
         // تحديد الوزن السابق من آخر قراءة مسجلة في السجل أو الوزن المبدئي
         const lastHistoryEntry = trainee.history.length > 0 ? trainee.history[trainee.history.length - 1] : null;
         const hasBaseline = lastHistoryEntry && typeof lastHistoryEntry.weight === "number";
-        let diffSymbol = "أول تسجيل قياس 🎯";
+        let diffSymbol = isEn ? "First Baseline 🎯" : "أول تسجيل قياس 🎯";
+        const unitKg = isEn ? "kg" : "كجم";
 
         if (hasBaseline) {
             const prevWeight = parseFloat(lastHistoryEntry.weight);
             const diff = parseFloat((parsedWeight - prevWeight).toFixed(1));
             diffSymbol = diff < 0
-                ? `-${Math.abs(diff)} كجم 📉 (نزول)`
+                ? (isEn ? `-${Math.abs(diff)} kg 📉 (Loss)` : `-${Math.abs(diff)} كجم 📉 (نزول)`)
                 : diff > 0
-                ? `+${diff} كجم 📈 (زيادة)`
-                : `ثبات (0.0 كجم) 🎯`;
+                ? (isEn ? `+${diff} kg 📈 (Gain)` : `+${diff} كجم 📈 (زيادة)`)
+                : (isEn ? `Stable (0.0 kg) 🎯` : `ثبات (0.0 كجم) 🎯`);
         }
 
-        const todayStr = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const todayStr = new Date().toLocaleDateString(isEn ? 'en-US' : 'ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
         // حفظ التقييم في سجل المتدرب
         trainee.weight = parsedWeight;
@@ -61,8 +62,26 @@ const IronCheckinSync = {
             if (IronApp.renderHomePlanSummary) IronApp.renderHomePlanSummary(trainee);
         }
 
+        const displayName = typeof IronI18n !== "undefined" ? IronI18n.trName(trainee) : trainee.name;
+        const displayGoal = typeof IronI18n !== "undefined" ? IronI18n.trGoal(trainee.goal || "تنشيف وبناء عضلات") : (trainee.goal || "تنشيف وبناء عضلات");
+
         // إنشاء نص الرسالة المنسق للواتساب
-        const message = 
+        const message = isEn ?
+`🏋️‍♂️ *Weekly Check-in Report - IronCoach Pro*
+-------------------------------------------
+👤 *Client:* ${displayName}
+📅 *Date:* ${todayStr}
+⚖️ *Current Weight:* ${parsedWeight} kg (${diffSymbol})
+📏 *Waist:* ${waist ? waist + ' cm' : 'Not set'}
+🎯 *Current Goal:* ${displayGoal} (${trainee.calories || 2000} kcal)
+💪 *Workout Split:* ${trainee.program || 'PPL'}
+🥗 *Diet Adherence:* ${adherenceRating}/10
+⚡ *Workout Energy:* ${workoutEnergy}/10
+-------------------------------------------
+📝 *Client Notes:*
+${notes || 'No additional notes, everything is going smoothly.'}
+-------------------------------------------
+_Sent automatically via IronCoach Pro_` :
 `🏋️‍♂️ *تقرير المتابعة الأسبوعي - أيرون كوتش (IronCoach Pro)*
 -------------------------------------------
 👤 *المتدرب:* ${trainee.name}

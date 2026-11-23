@@ -216,7 +216,9 @@ const IronLiveGym = {
         if (alternatives.length === 0) {
             container.innerHTML = `<div class="text-center py-6 text-gray-400">No direct alternative listed. Use dumbbells or a cable machine targeting the same muscle.</div>`;
         } else {
-            container.innerHTML = alternatives.map(alt => `
+            container.innerHTML = alternatives.map(altRaw => {
+                const alt = typeof IronI18n !== "undefined" ? IronI18n.trExercise(altRaw) : altRaw;
+                return `
                 <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 flex items-center justify-between gap-4 hover:border-emerald-500/50 transition">
                     <img src="${alt.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${alt.muscle}')" class="w-16 h-16 rounded-lg object-cover border border-slate-700 bg-slate-950" alt="${alt.nameEn}">
                     <div class="flex-1 text-left" dir="ltr">
@@ -227,7 +229,8 @@ const IronLiveGym = {
                         ${typeof IronI18n !== "undefined" ? IronI18n.t("gym_alt_pick") : "اختيار كبديل"}
                     </button>
                 </div>
-            `).join("");
+            `;
+            }).join("");
         }
 
         openModal("altExercisesModal");
@@ -283,7 +286,8 @@ const IronLiveGym = {
 
         const w = this.currentWorkout;
         const ex = w.exercises[this.activeExerciseIndex];
-        const details = ex.details || { nameEn: ex.displayNameEn, gif: "", muscle: "Workout", execution: "" };
+        const rawDetails = ex.details || { nameEn: ex.displayNameEn, gif: "", muscle: "Workout", execution: "" };
+        const details = typeof IronI18n !== "undefined" ? IronI18n.trExercise(rawDetails) : rawDetails;
         const exerciseTitleEn = ex.displayNameEn || details.nameEn;
 
         const txt = (k, v) => typeof IronI18n !== "undefined" ? IronI18n.t(k, v) : k;

@@ -648,7 +648,7 @@
                 </div>
             </div>
             <div class="text-[11px] font-bold text-gray-400">
-                <span data-i18n="brand_footer_sub">منصة التدريب والتغذية الأونلاين المعتمدة</span> • v2.9
+                <span data-i18n="brand_footer_sub">منصة التدريب والتغذية الأونلاين المعتمدة</span> • v3.0
             </div>
         </footer>
 
@@ -721,50 +721,50 @@
     <div id="addCustomMealModal" class="modal-overlay">
         <div class="modal-container p-6 max-w-lg">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                <h3 class="text-base font-black text-white">إضافة وجبة صحية جديدة</h3>
+                <h3 class="text-base font-black text-white" data-i18n="modal_meal_title">إضافة وجبة صحية جديدة</h3>
                 <button onclick="closeModal('addCustomMealModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
             </div>
             <form onsubmit="IronApp.handleAddCustomMeal(event)" class="space-y-3">
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 mb-1">اسم الوجبة</label>
-                    <input type="text" name="mealName" required placeholder="مثال: ستيك سلمون مع البروكلي" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
+                    <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_meal_name">اسم الوجبة</label>
+                    <input type="text" name="mealName" required placeholder="مثال: ستيك سلمون مع البروكلي" data-i18n-placeholder="modal_meal_name_ph" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 mb-1">التصنيف</label>
+                    <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_meal_cat">التصنيف</label>
                     <select name="mealCategory" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
-                        <option value="إفطار">إفطار</option>
-                        <option value="غداء" selected>غداء</option>
-                        <option value="عشاء">عشاء</option>
-                        <option value="سناكس">سناكس</option>
+                        <option value="إفطار" data-i18n="modal_meal_cat_b">إفطار</option>
+                        <option value="غداء" selected data-i18n="modal_meal_cat_l">غداء</option>
+                        <option value="عشاء" data-i18n="modal_meal_cat_d">عشاء</option>
+                        <option value="سناكس" data-i18n="modal_meal_cat_s">سناكس</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 mb-1">المكونات والأوزان بالجرام</label>
-                    <textarea name="mealIngredients" required rows="2" placeholder="مثال: سلمون 180ج + بروكلي 100ج + زيت زيتون 5ج" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none"></textarea>
+                    <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_meal_ing">المكونات والأوزان بالجرام</label>
+                    <textarea name="mealIngredients" required rows="2" placeholder="مثال: سلمون 180ج + بروكلي 100ج + زيت زيتون 5ج" data-i18n-placeholder="modal_meal_ing_ph" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none"></textarea>
                 </div>
                 <div class="grid grid-cols-4 gap-2">
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">السعرات</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_meal_cal">السعرات</label>
                         <input type="number" name="mealCalories" required placeholder="450" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">البروتين (ج)</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_meal_prot">البروتين (ج)</label>
                         <input type="number" name="mealProtein" required placeholder="40" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">الكارب (ج)</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_meal_carb">الكارب (ج)</label>
                         <input type="number" name="mealCarbs" required placeholder="30" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">الدهون (ج)</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_meal_fat">الدهون (ج)</label>
                         <input type="number" name="mealFats" required placeholder="12" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 mb-1">رابط صورة الوجبة (اختياري)</label>
+                    <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_meal_img">رابط صورة الوجبة (اختياري)</label>
                     <input type="url" name="mealImg" placeholder="https://..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none">
                 </div>
-                <button type="submit" class="w-full py-3 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition mt-2">
+                <button type="submit" class="w-full py-3 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition mt-2" data-i18n="modal_meal_save">
                     حفظ الوجبة في المكتبة ✅
                 </button>
             </form>
@@ -775,82 +775,82 @@
     <div id="addTraineeModal" class="modal-overlay">
         <div class="modal-container p-6 max-w-lg">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                <h3 class="text-base font-black text-white">إضافة مشترك جديد للمنصة</h3>
+                <h3 class="text-base font-black text-white" data-i18n="modal_add_title">إضافة مشترك جديد للمنصة</h3>
                 <button onclick="closeModal('addTraineeModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
             </div>
             <form id="addTraineeForm" onsubmit="IronApp.handleAddTrainee(event)" class="space-y-3">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">اسم المتدرب بالكامل *</label>
-                        <input type="text" name="tName" required placeholder="مثال: محمد السيد" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_tr_fullname">اسم المتدرب بالكامل *</label>
+                        <input type="text" name="tName" required placeholder="مثال: محمد السيد" data-i18n-placeholder="modal_tr_fullname_ph" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">رقم الهاتف / الواتساب</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_tr_phone">رقم الهاتف / الواتساب</label>
                         <input type="text" name="tPhone" placeholder="+2010..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">اسم المستخدم (Username) *</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_tr_user">اسم المستخدم (Username) *</label>
                         <input type="text" name="tUsername" required placeholder="mohamed" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">كلمة المرور (Password) *</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_tr_pass">كلمة المرور (Password) *</label>
                         <input type="text" name="tPassword" required value="123" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-4 gap-2">
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">الجنس</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_gender">الجنس</label>
                         <select name="tGender" onchange="IronApp.autoCalcNewTraineeCalories()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white font-bold outline-none">
-                            <option value="male">ذكر</option>
-                            <option value="female">أنثى</option>
+                            <option value="male" data-i18n="calc_male">ذكر</option>
+                            <option value="female" data-i18n="calc_female">أنثى</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">العمر</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_age">العمر</label>
                         <input type="number" name="tAge" value="26" oninput="IronApp.autoCalcNewTraineeCalories()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">الوزن (كجم)</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_weight">الوزن (كجم)</label>
                         <input type="number" step="0.5" name="tWeight" value="75" oninput="IronApp.autoCalcNewTraineeCalories()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">الطول (سم)</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_height">الطول (سم)</label>
                         <input type="number" name="tHeight" value="175" oninput="IronApp.autoCalcNewTraineeCalories()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">الهدف التدريبي</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_goal">الهدف التدريبي</label>
                         <select name="tGoal" onchange="IronApp.autoCalcNewTraineeCalories()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white font-bold outline-none">
-                            <option value="تنشيف وخسارة دهون">تنشيف وخسارة دهون</option>
-                            <option value="نحت الجسم وتثبيت الوزن">نحت الجسم وتثبيت الوزن</option>
-                            <option value="تضخيم وبناء عضلات">تضخيم وبناء عضلات</option>
+                            <option value="تنشيف وخسارة دهون" data-i18n="modal_tr_goal_cut">تنشيف وخسارة دهون</option>
+                            <option value="نحت الجسم وتثبيت الوزن" data-i18n="modal_tr_goal_recomp">نحت الجسم وتثبيت الوزن</option>
+                            <option value="تضخيم وبناء عضلات" data-i18n="modal_tr_goal_bulk">تضخيم وبناء عضلات</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">مستوى النشاط</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_activity">مستوى النشاط</label>
                         <select name="tActivity" onchange="IronApp.autoCalcNewTraineeCalories()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white font-bold outline-none">
-                            <option value="1.2">خامل (قليل الحركة)</option>
-                            <option value="1.375">نشاط خفيف (1-3 أيام)</option>
-                            <option value="1.55" selected>نشاط متوسط (3-5 أيام)</option>
-                            <option value="1.725">نشاط عالي (6-7 أيام)</option>
+                            <option value="1.2" data-i18n="modal_tr_act_12">خامل (قليل الحركة)</option>
+                            <option value="1.375" data-i18n="modal_tr_act_1375">نشاط خفيف (1-3 أيام)</option>
+                            <option value="1.55" selected data-i18n="modal_tr_act_155">نشاط متوسط (3-5 أيام)</option>
+                            <option value="1.725" data-i18n="modal_tr_act_1725">نشاط عالي (6-7 أيام)</option>
                         </select>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">مدة الاشتراك (يوم)</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_days">مدة الاشتراك (يوم)</label>
                         <input type="number" name="tDays" value="30" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-emerald-400 font-bold mb-1">السعرات المستهدفة (محسوبة علمياً)</label>
+                        <label class="block text-[10px] text-emerald-400 font-bold mb-1" data-i18n="modal_tr_cal">السعرات المستهدفة (محسوبة علمياً)</label>
                         <input type="number" name="tCalories" value="2000" class="w-full bg-slate-950 border border-emerald-500/40 rounded-xl p-2 text-xs text-center text-emerald-400 font-black outline-none">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 mb-1">البرنامج التدريبي المقترح</label>
+                    <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_tr_prog">البرنامج التدريبي المقترح</label>
                     <select name="tProgram" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                         <option value="PPL (Push Pull Legs)">Push / Pull / Legs (PPL)</option>
                         <option value="Upper / Lower Split">Upper / Lower Split</option>
@@ -861,10 +861,10 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 mb-1">توجيهات الكوتش الخاصة لهذا المتدرب (تظهر له في حسابه فقط)</label>
-                    <textarea name="tCoachNote" rows="2" placeholder="مثال: ركز على النوم 8 ساعات، شرب 3.5 لتر ماء، والالتزام بالكارديو بعد التمرين 20 دقيقة..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none"></textarea>
+                    <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_tr_note">توجيهات الكوتش الخاصة لهذا المتدرب (تظهر له في حسابه فقط)</label>
+                    <textarea name="tCoachNote" rows="2" placeholder="مثال: ركز على النوم 8 ساعات، شرب 3.5 لتر ماء، والالتزام بالكارديو بعد التمرين 20 دقيقة..." data-i18n-placeholder="modal_tr_note_ph" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none"></textarea>
                 </div>
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition mt-2">
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition mt-2" data-i18n="modal_add_submit">
                     إنشاء حساب المتدرب وتفعيله فوراً 🚀
                 </button>
             </form>
@@ -875,73 +875,73 @@
     <div id="editTraineeModal" class="modal-overlay">
         <div class="modal-container p-6 max-w-lg">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                <h3 class="text-base font-black text-white">✏️ تعديل بيانات وخطة المشترك</h3>
+                <h3 class="text-base font-black text-white" data-i18n="modal_edit_title">✏️ تعديل بيانات وخطة المشترك</h3>
                 <button onclick="closeModal('editTraineeModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
             </div>
             <form id="editTraineeForm" onsubmit="IronCoachPanel.saveEditedTrainee(event)" class="space-y-3">
                 <input type="hidden" id="editTId">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">اسم المتدرب *</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_edit_name">اسم المتدرب *</label>
                         <input type="text" id="editTName" required class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">رقم الهاتف / الواتساب</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_tr_phone">رقم الهاتف / الواتساب</label>
                         <input type="text" id="editTPhone" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">اسم المستخدم (Username) *</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_tr_user">اسم المستخدم (Username) *</label>
                         <input type="text" id="editTUsername" required class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">كلمة مرور جديدة (اختياري)</label>
-                        <input type="password" id="editTPassword" placeholder="اتركه فارغاً لعدم التغيير" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_edit_newpass">كلمة مرور جديدة (اختياري)</label>
+                        <input type="password" id="editTPassword" placeholder="اتركه فارغاً لعدم التغيير" data-i18n-placeholder="modal_edit_newpass_ph" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-4 gap-2">
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">الجنس</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_gender">الجنس</label>
                         <select id="editTGender" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white font-bold outline-none">
-                            <option value="male">ذكر</option>
-                            <option value="female">أنثى</option>
+                            <option value="male" data-i18n="calc_male">ذكر</option>
+                            <option value="female" data-i18n="calc_female">أنثى</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">العمر</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_age">العمر</label>
                         <input type="number" id="editTAge" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">الوزن (كجم)</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_weight">الوزن (كجم)</label>
                         <input type="number" step="0.5" id="editTWeight" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">الطول (سم)</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_height">الطول (سم)</label>
                         <input type="number" id="editTHeight" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">الهدف التدريبي</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_goal">الهدف التدريبي</label>
                         <select id="editTGoal" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white font-bold outline-none">
-                            <option value="تنشيف وخسارة دهون">تنشيف وخسارة دهون</option>
-                            <option value="نحت الجسم وتثبيت الوزن">نحت الجسم وتثبيت الوزن</option>
-                            <option value="تضخيم وبناء عضلات">تضخيم وبناء عضلات</option>
+                            <option value="تنشيف وخسارة دهون" data-i18n="modal_tr_goal_cut">تنشيف وخسارة دهون</option>
+                            <option value="نحت الجسم وتثبيت الوزن" data-i18n="modal_tr_goal_recomp">نحت الجسم وتثبيت الوزن</option>
+                            <option value="تضخيم وبناء عضلات" data-i18n="modal_tr_goal_bulk">تضخيم وبناء عضلات</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] text-emerald-400 font-bold mb-1">السعرات المستهدفة (kcal)</label>
+                        <label class="block text-[10px] text-emerald-400 font-bold mb-1" data-i18n="modal_edit_cal">السعرات المستهدفة (kcal)</label>
                         <input type="number" id="editTCalories" class="w-full bg-slate-950 border border-emerald-500/40 rounded-xl p-2 text-xs text-center text-emerald-400 font-black outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">الأيام المتبقية في الاشتراك</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_edit_daysleft">الأيام المتبقية في الاشتراك</label>
                         <input type="number" id="editTDaysLeft" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-gray-400 font-bold mb-1">البرنامج التدريبي</label>
+                        <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_edit_prog">البرنامج التدريبي</label>
                         <select id="editTProgram" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white font-bold outline-none">
                             <option value="PPL (Push Pull Legs)">Push / Pull / Legs (PPL)</option>
                             <option value="Upper / Lower Split">Upper / Lower Split</option>
@@ -953,10 +953,10 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 mb-1">توجيهات الكوتش الخاصة بهذا المتدرب (تظهر له في حسابه فقط)</label>
-                    <textarea id="editTCoachNote" rows="2" placeholder="أضف ملاحظة أو توجيه خاص يظهر لهذا المتدرب في شاشته الرئيسية..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none"></textarea>
+                    <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_tr_note">توجيهات الكوتش الخاصة لهذا المتدرب (تظهر له في حسابه فقط)</label>
+                    <textarea id="editTCoachNote" rows="2" placeholder="أضف ملاحظة أو توجيه خاص يظهر لهذا المتدرب في شاشته الرئيسية..." data-i18n-placeholder="modal_edit_note_ph" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none"></textarea>
                 </div>
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition mt-2">
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition mt-2" data-i18n="modal_edit_submit">
                     حفظ التعديلات وتحديث حساب المشترك ✅
                 </button>
             </form>
@@ -967,65 +967,65 @@
     <div id="coachSettingsModal" class="modal-overlay">
         <div class="modal-container p-6 max-w-lg">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                <h3 class="text-base font-black text-white">إعدادات الكوتش وبيانات الدفع والواتساب</h3>
+                <h3 class="text-base font-black text-white" data-i18n="modal_cfg_title">إعدادات الكوتش وبيانات الدفع والواتساب</h3>
                 <button onclick="closeModal('coachSettingsModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
             </div>
             <form id="coachSettingsForm" onsubmit="IronApp.handleSaveCoachSettings(event)" class="space-y-3">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">اسم الكوتش</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_name">اسم الكوتش</label>
                         <input type="text" name="coachName" id="cfgName" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">المسمى المهني</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_jobtitle">المسمى المهني</label>
                         <input type="text" name="coachTitle" id="cfgTitle" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">قيمة الاشتراك الشهري</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_price">قيمة الاشتراك الشهري</label>
                         <input type="number" name="coachMonthlyPrice" id="cfgMonthlyPrice" placeholder="500" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-emerald-400 font-black outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">العملة المعروضة</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_currency">العملة المعروضة</label>
                         <input type="text" name="coachCurrency" id="cfgCurrency" placeholder="ج.م / ر.س" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 mb-1">رقم الواتساب لاستقبال المتابعات (مع كود الدولة دون +)</label>
+                    <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_wa">رقم الواتساب لاستقبال المتابعات (مع كود الدولة دون +)</label>
                     <input type="text" name="coachWhatsapp" id="cfgWhatsapp" placeholder="201000000000" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">رقم فودافون كاش / محفظة</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_vodafone">رقم فودافون كاش / محفظة</label>
                         <input type="text" name="coachVodafone" id="cfgVodafone" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">معرف انستاباي (InstaPay)</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_instapay">معرف انستاباي (InstaPay)</label>
                         <input type="text" name="coachInstapay" id="cfgInstapay" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">STC Pay (للمشتركين بالسعودية)</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_stc">STC Pay (للمشتركين بالسعودية)</label>
                         <input type="text" name="coachStc" id="cfgStc" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">رابط دفع ببطاقة (Stripe/Tap)</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_card">رابط دفع ببطاقة (Stripe/Tap)</label>
                         <input type="url" name="coachPaymentLink" id="cfgPaymentLink" placeholder="https://..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">رقم الحساب البنكي / الآيبان (IBAN)</label>
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_iban">رقم الحساب البنكي / الآيبان (IBAN)</label>
                         <input type="text" name="coachIban" id="cfgIban" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1">تغيير كلمة مرور الكوتش (اختياري)</label>
-                        <input type="password" name="coachNewPassword" id="cfgNewPassword" placeholder="اتركه فارغاً للإبقاء على الحالية" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none">
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_pass">تغيير كلمة مرور الكوتش (اختياري)</label>
+                        <input type="password" name="coachNewPassword" id="cfgNewPassword" placeholder="اتركه فارغاً للإبقاء على الحالية" data-i18n-placeholder="modal_cfg_pass_ph" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none">
                     </div>
                 </div>
-                <button type="submit" class="w-full py-3 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition mt-2">
+                <button type="submit" class="w-full py-3 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition mt-2" data-i18n="modal_cfg_submit">
                     حفظ الإعدادات وبيانات الدفع ✅
                 </button>
             </form>
@@ -1036,38 +1036,38 @@
     <div id="renewModal" class="modal-overlay">
         <div class="modal-container p-6 max-w-lg">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                <h3 class="text-base font-black text-white">تجديد الاشتراك الشهري (30 يوماً)</h3>
+                <h3 class="text-base font-black text-white" data-i18n="modal_renew_title">تجديد الاشتراك الشهري (30 يوماً)</h3>
                 <button onclick="closeModal('renewModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
             </div>
             <div class="space-y-4">
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
-                    <span class="text-xs text-gray-400">قيمة الاشتراك:</span>
+                    <span class="text-xs text-gray-400" data-i18n="modal_renew_price">قيمة الاشتراك:</span>
                     <div class="text-2xl font-black text-emerald-400 mt-1" id="renewModalPrice">500 ج.م / ر.س</div>
                 </div>
 
                 <div class="space-y-2">
                     <a id="renewStripeLink" href="#" target="_blank" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 flex items-center justify-center gap-2 transition">
-                        <span>💳 الدفع بالبطاقة البنكية أونلاين (فيزا / ماستركارد)</span>
+                        <span data-i18n="modal_renew_card">💳 الدفع بالبطاقة البنكية أونلاين (فيزا / ماستركارد)</span>
                     </a>
                 </div>
 
                 <div class="border-t border-slate-800 pt-3">
-                    <h5 class="text-xs font-bold text-white mb-2">أو التحويل السريع عبر المحافظ الإلكترونية:</h5>
+                    <h5 class="text-xs font-bold text-white mb-2" data-i18n="modal_renew_wallets">أو التحويل السريع عبر المحافظ الإلكترونية:</h5>
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1.5 font-mono">
-                        <div class="flex justify-between"><span class="text-gray-400">فودافون كاش:</span> <strong class="text-white" id="renewModalVodafone">01000000000</strong></div>
-                        <div class="flex justify-between"><span class="text-gray-400">انستاباي:</span> <strong class="text-white" id="renewModalInstapay">coach@instapay</strong></div>
-                        <div class="flex justify-between"><span class="text-gray-400">STC Pay:</span> <strong class="text-white" id="renewModalStc">0500000000</strong></div>
+                        <div class="flex justify-between"><span class="text-gray-400" data-i18n="modal_renew_voda_lbl">فودافون كاش:</span> <strong class="text-white" id="renewModalVodafone">01000000000</strong></div>
+                        <div class="flex justify-between"><span class="text-gray-400" data-i18n="modal_renew_insta_lbl">انستاباي:</span> <strong class="text-white" id="renewModalInstapay">coach@instapay</strong></div>
+                        <div class="flex justify-between"><span class="text-gray-400" data-i18n="modal_renew_stc_lbl">STC Pay:</span> <strong class="text-white" id="renewModalStc">0500000000</strong></div>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 mb-1">رفع صورة إيصال التحويل لتأكيد التجديد فوري *:</label>
+                    <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_renew_receipt">رفع صورة إيصال التحويل لتأكيد التجديد فوري *:</label>
                     <input type="file" id="receiptUploadInput" onchange="IronApp.handleReceiptFileChange(this)" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-500/20 file:text-emerald-400 hover:file:bg-emerald-500/30">
                     <div id="receiptPreviewBox" class="hidden mt-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold"></div>
                     <div id="receiptUploadError" class="hidden mt-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold text-center"></div>
                 </div>
 
-                <button onclick="IronApp.confirmRenewalPayment()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition">
+                <button onclick="IronApp.confirmRenewalPayment()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition" data-i18n="modal_renew_submit">
                     تأكيد إرسال الإيصال وتفعيل الـ 30 يوماً ✅
                 </button>
             </div>
@@ -1075,6 +1075,7 @@
     </div>
 
     <!-- Scripts Layer -->
+    <script src="js/i18nDataEn.js"></script>
     <script src="js/i18n.js"></script>
     <script src="js/config.js"></script>
     <script src="js/mealsData.js"></script>

@@ -26,16 +26,21 @@ const IronCoachPanel = {
 
         if (this.searchQuery && this.searchQuery.trim() !== "") {
             const q = this.searchQuery.trim().toLowerCase();
-            filteredTrainees = filteredTrainees.filter(t =>
-                (t.name && t.name.toLowerCase().includes(q)) ||
-                (t.username && t.username.toLowerCase().includes(q)) ||
-                (t.phone && t.phone.toLowerCase().includes(q)) ||
-                (t.goal && t.goal.toLowerCase().includes(q))
-            );
+            filteredTrainees = filteredTrainees.filter(t => {
+                const enName = typeof IronI18n !== "undefined" ? IronI18n.trName(t).toLowerCase() : "";
+                const enGoal = typeof IronI18n !== "undefined" ? IronI18n.trGoal(t.goal || "").toLowerCase() : "";
+                return (t.name && t.name.toLowerCase().includes(q)) ||
+                    (enName && enName.includes(q)) ||
+                    (t.username && t.username.toLowerCase().includes(q)) ||
+                    (t.phone && t.phone.toLowerCase().includes(q)) ||
+                    (t.goal && t.goal.toLowerCase().includes(q)) ||
+                    (enGoal && enGoal.includes(q));
+            });
         }
 
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const txt = (key, vars) => typeof IronI18n !== "undefined" ? IronI18n.t(key, vars) : key;
+        const displayTitle = typeof IronI18n !== "undefined" ? IronI18n.trCoachTitle(config.coachInfo.title) : config.coachInfo.title;
 
         container.innerHTML = `
             <div class="space-y-6">
@@ -44,14 +49,14 @@ const IronCoachPanel = {
                     <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div class="flex items-center gap-4">
                             <div class="brand-logo-frame w-20 sm:w-24 flex-shrink-0 flex items-center justify-center">
-                                <img src="LOGO.png" alt="Coach Mahmoud Logo" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='👑'">
+                                <img src="LOGO.png" alt="Coach Logo" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='👑'">
                             </div>
                             <div>
                                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-2">
                                     <span>${txt("coach_badge")}</span>
                                 </div>
-                                <h2 class="text-2xl font-black text-white">${txt("coach_welcome", { name: config.coachInfo.name })}</h2>
-                                <p class="text-xs text-gray-400 mt-1">${txt("coach_sub", { title: config.coachInfo.title })}</p>
+                                <h2 class="text-2xl font-black text-white">${txt("coach_welcome")}</h2>
+                                <p class="text-xs text-gray-400 mt-1">${txt("coach_sub", { title: displayTitle })}</p>
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
@@ -126,9 +131,11 @@ const IronCoachPanel = {
                                 : `<span class="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[11px] font-bold">${txt("status_expired")}</span>`;
 
                             const checkinsCount = Array.isArray(t.history) ? t.history.length : 0;
-                            const initial = (t.name || "U").trim().charAt(0).toUpperCase();
+                            const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(t) : t.name;
+                            const dispGoal = typeof IronI18n !== "undefined" ? IronI18n.trGoal(t.goal || "تنشيف وخسارة دهون") : (t.goal || "تنشيف");
+                            const initial = (dispName || "U").trim().charAt(0).toUpperCase();
                             const avatarBadge = t.avatar
-                                ? `<img src="${t.avatar}" alt="${t.name}" class="w-10 h-10 rounded-full object-cover border-2 border-emerald-500/40 flex-shrink-0">`
+                                ? `<img src="${t.avatar}" alt="${dispName}" class="w-10 h-10 rounded-full object-cover border-2 border-emerald-500/40 flex-shrink-0">`
                                 : `<div class="w-10 h-10 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-sm flex-shrink-0">${initial}</div>`;
 
                             return `
@@ -138,7 +145,7 @@ const IronCoachPanel = {
                                             <div class="flex items-center gap-2.5 min-w-0">
                                                 ${avatarBadge}
                                                 <div class="min-w-0">
-                                                    <h4 class="font-black text-white text-base truncate">${t.name}</h4>
+                                                    <h4 class="font-black text-white text-base truncate">${dispName}</h4>
                                                     <span class="text-xs text-gray-400 font-mono truncate block">@${t.username} • ${t.phone || (isEn ? 'No phone' : 'بدون هاتف')}</span>
                                                 </div>
                                             </div>
@@ -148,7 +155,7 @@ const IronCoachPanel = {
                                         <div class="grid grid-cols-2 gap-2 text-xs bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 my-3">
                                             <div>
                                                 <span class="text-gray-400">${isEn ? 'Goal:' : 'الهدف:'}</span>
-                                                <div class="font-bold text-white truncate">${t.goal || (isEn ? 'Fat Loss' : 'تنشيف')}</div>
+                                                <div class="font-bold text-white truncate">${dispGoal}</div>
                                             </div>
                                             <div>
                                                 <span class="text-gray-400">${isEn ? 'Calories:' : 'السعرات:'}</span>
@@ -213,7 +220,9 @@ const IronCoachPanel = {
     renewTrainee(id) {
         const renewed = IronAuth.renewSubscription(id, 30);
         if (renewed) {
-            showToast(`تم تجديد اشتراك ${renewed.name} لمدة 30 يوماً إضافية بنجاح!`, "success");
+            const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+            const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(renewed) : renewed.name;
+            showToast(isEn ? `Subscription renewed +30 days for ${dispName}!` : `تم تجديد اشتراك ${dispName} لمدة 30 يوماً إضافية بنجاح!`, "success");
             this.renderCoachDashboard();
         }
     },
@@ -270,7 +279,9 @@ const IronCoachPanel = {
 
         if (updated) {
             closeModal("editTraineeModal");
-            showToast(`تم تحديث بيانات وخطة المشترك ${updated.name} بنجاح! ✅`, "success");
+            const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+            const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(updated) : updated.name;
+            showToast(isEn ? `Updated ${dispName}'s profile & plan successfully! ✅` : `تم تحديث بيانات وخطة المشترك ${dispName} بنجاح! ✅`, "success");
             this.renderCoachDashboard();
         }
     },
@@ -280,13 +291,15 @@ const IronCoachPanel = {
         const target = trainees.find(t => t.id === id);
         if (!target) return;
 
-        if (!window.confirm(`هل أنت متأكد من حذف حساب المشترك "${target.name}" نهائياً؟`)) {
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(target) : target.name;
+        if (!window.confirm(isEn ? `Are you sure you want to permanently delete "${dispName}"?` : `هل أنت متأكد من حذف حساب المشترك "${dispName}" نهائياً؟`)) {
             return;
         }
 
         const deleted = IronAuth.deleteTrainee(id);
         if (deleted) {
-            showToast(`تم حذف حساب المشترك ${deleted.name} من المنصة`, "success");
+            showToast(isEn ? `Deleted client ${dispName} from platform` : `تم حذف حساب المشترك ${dispName} من المنصة`, "success");
             this.renderCoachDashboard();
         }
     },
@@ -296,15 +309,21 @@ const IronCoachPanel = {
         const t = trainees.find(item => item.id === id);
         if (!t) return;
 
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(t) : t.name;
         const cleanPhone = (t.phone || "").replace(/\D/g, "");
         if (!cleanPhone) {
-            showToast("لم يتم تسجيل رقم هاتف لهذا المشترك بعد. يمكنك إضافته من زر التعديل.", "error");
+            showToast(isEn ? "No phone number recorded for this client yet. Add it via Edit." : "لم يتم تسجيل رقم هاتف لهذا المشترك بعد. يمكنك إضافته من زر التعديل.", "error");
             return;
         }
 
-        const msg = t.status === "expired"
-            ? `أهلاً بك يا ${t.name} 👋، معك الكوتش من منصة أيرون كوتش. نود تذكيرك بانتهاء مدة اشتراكك الشهري، تواصل معي لتجديد خطتك ومواصلة التقدم! 💪`
-            : `أهلاً بك يا بطل (${t.name}) 👋، معك الكوتش لمتابعة التزامك بالخطة (${t.program} - ${t.calories} سعرة). طمني كيف أخبار التمارين والدايت معك هذا الأسبوع؟ 🔥`;
+        const msg = isEn
+            ? (t.status === "expired"
+                ? `Hi ${dispName} 👋, your Coach from IronCoach Pro here. Your monthly subscription has ended — message me to renew your plan and keep progressing! 💪`
+                : `Hi Champ (${dispName}) 👋, checking in on your ${t.program} (${t.calories} kcal) plan. How are workouts and nutrition going this week? 🔥`)
+            : (t.status === "expired"
+                ? `أهلاً بك يا ${t.name} 👋، معك الكوتش من منصة أيرون كوتش. نود تذكيرك بانتهاء مدة اشتراكك الشهري، تواصل معي لتجديد خطتك ومواصلة التقدم! 💪`
+                : `أهلاً بك يا بطل (${t.name}) 👋، معك الكوتش لمتابعة التزامك بالخطة (${t.program} - ${t.calories} سعرة). طمني كيف أخبار التمارين والدايت معك هذا الأسبوع؟ 🔥`);
 
         window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
     },
@@ -321,25 +340,27 @@ const IronCoachPanel = {
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
-        showToast("تم تصدير النسخة الاحتياطية لبيانات المنصة بنجاح! 📥", "success");
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        showToast(isEn ? "Platform backup JSON exported successfully! 📥" : "تم تصدير النسخة الاحتياطية لبيانات المنصة بنجاح! 📥", "success");
     },
 
     importBackup(input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const reader = new FileReader();
         reader.onload = (ev) => {
             try {
                 const parsed = JSON.parse(ev.target.result);
                 const result = IronAuth.importBackupData(parsed);
                 if (result.success) {
-                    showToast(`تم استعادة النسخة الاحتياطية بنجاح (${result.count} مشتركين)! 🚀`, "success");
+                    showToast(isEn ? `Backup restored successfully (${result.count} clients)! 🚀` : `تم استعادة النسخة الاحتياطية بنجاح (${result.count} مشتركين)! 🚀`, "success");
                     this.renderCoachDashboard();
                 } else {
-                    showToast(result.message || "فشل استيراد الملف", "error");
+                    showToast(result.message || (isEn ? "Failed to import file" : "فشل استيراد الملف"), "error");
                 }
             } catch (err) {
-                showToast("ملف JSON غير صالح", "error");
+                showToast(isEn ? "Invalid JSON file" : "ملف JSON غير صالح", "error");
             }
             input.value = "";
         };
@@ -418,7 +439,8 @@ const IronCoachPanel = {
 
         saveAppConfig(config);
         closeModal("coachSettingsModal");
-        showToast("تم حفظ إعدادات الكوتش وبيانات الدفع بنجاح!", "success");
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        showToast(isEn ? "Coach settings & payment info saved!" : "تم حفظ إعدادات الكوتش وبيانات الدفع بنجاح!", "success");
 
         const user = IronAuth.getCurrentUser();
         if (user && typeof IronApp !== "undefined") {
