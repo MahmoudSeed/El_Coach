@@ -10,11 +10,13 @@ const IronLiveGym = {
     timerSecondsRemaining: 0,
     timerTotalSeconds: 60,
 
-    // حفظ مسودة الجلسة النشطة لمنع ضياع الأوزان أثناء التمرين
+    // حفظ مسودة الجلسة النشطة مرتبطة بمعرف المتدرب لمنع تداخل البيانات
     saveDraftSession() {
         if (this.currentWorkout) {
             try {
+                const user = IronAuth.getCurrentUser();
                 sessionStorage.setItem("iron_active_workout", JSON.stringify({
+                    traineeId: user && user.id ? user.id : null,
                     workout: this.currentWorkout,
                     activeExerciseIndex: this.activeExerciseIndex
                 }));
@@ -32,12 +34,15 @@ const IronLiveGym = {
         const day = program.days.find(d => d.dayId === dayId);
         if (!day) return false;
 
-        // التحقق مما إذا كان هناك تمرين نشط محفوظ لنفس اليوم
+        const user = IronAuth.getCurrentUser();
+        const currentTraineeId = user && user.id ? user.id : null;
+
+        // التحقق مما إذا كان هناك تمرين نشط محفوظ لنفس اليوم ونفس المتدرب فقط
         try {
             const savedRaw = sessionStorage.getItem("iron_active_workout");
             if (savedRaw) {
                 const parsed = JSON.parse(savedRaw);
-                if (parsed.workout && parsed.workout.programId === programId && parsed.workout.dayId === dayId) {
+                if (parsed.traineeId === currentTraineeId && parsed.workout && parsed.workout.programId === programId && parsed.workout.dayId === dayId) {
                     this.currentWorkout = parsed.workout;
                     this.activeExerciseIndex = parsed.activeExerciseIndex || 0;
                     this.renderLiveGymModal();

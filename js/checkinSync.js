@@ -53,9 +53,10 @@ const IronCheckinSync = {
         });
         IronAuth.updateTrainee(trainee);
 
-        // تحديث واجهة المتدرب وسجل المتابعات فوراً
-        if (typeof IronApp !== "undefined" && IronApp.renderCheckinHistory) {
-            IronApp.renderCheckinHistory(trainee);
+        // تحديث واجهة المتدرب وسجل المتابعات وملخص الخطة فوراً
+        if (typeof IronApp !== "undefined") {
+            if (IronApp.renderCheckinHistory) IronApp.renderCheckinHistory(trainee);
+            if (IronApp.renderHomePlanSummary) IronApp.renderHomePlanSummary(trainee);
         }
 
         // إنشاء نص الرسالة المنسق للواتساب

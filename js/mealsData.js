@@ -1221,13 +1221,19 @@ const defaultMealsData = [
     }
 ];
 
-// وظائف التخزين المحلي للوجبات المخصصة
+// وظائف التخزين المحلي للوجبات المخصصة مع عزل بيانات كل مشترك
 function getMealsDatabase() {
     const customMeals = localStorage.getItem("iron_custom_meals");
     if (customMeals) {
         try {
             const parsed = JSON.parse(customMeals);
-            return [...defaultMealsData, ...parsed];
+            const currentUser = (typeof IronAuth !== "undefined" && IronAuth.getCurrentUser) ? IronAuth.getCurrentUser() : null;
+            const visibleCustom = parsed.filter(m => {
+                if (!m.ownerId || m.ownerId === "coach") return true;
+                if (currentUser && currentUser.role === "coach") return true;
+                return currentUser && currentUser.id && m.ownerId === currentUser.id;
+            });
+            return [...defaultMealsData, ...visibleCustom];
         } catch (e) { }
     }
     return defaultMealsData;
@@ -1239,7 +1245,9 @@ function saveCustomMeal(meal) {
     if (current) {
         try { list = JSON.parse(current); } catch (e) { }
     }
+    const currentUser = (typeof IronAuth !== "undefined" && IronAuth.getCurrentUser) ? IronAuth.getCurrentUser() : null;
     meal.id = "custom_" + Date.now();
+    meal.ownerId = currentUser && currentUser.role === "trainee" && currentUser.id ? currentUser.id : "coach";
     list.push(meal);
     localStorage.setItem("iron_custom_meals", JSON.stringify(list));
     return meal;

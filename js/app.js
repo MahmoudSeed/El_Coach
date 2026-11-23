@@ -58,7 +58,7 @@ const IronApp = {
         const user = IronAuth.getCurrentUser();
 
         this.renderUserHeader(user);
-        this.highlightActiveDemoAccount(user);
+        this.updateImpersonationBanner(user);
         this.renderAppViews(user);
         this.initEventListeners();
 
@@ -145,17 +145,17 @@ const IronApp = {
         return "prog_ppl";
     },
 
-    // تمييز الحساب النشط حالياً في شريط المعاينة السريعة
-    highlightActiveDemoAccount(user) {
-        const activeUsername = user && user.username ? user.username.toLowerCase() : "";
-        document.querySelectorAll(".demo-acc-btn").forEach(btn => {
-            const acc = (btn.getAttribute("data-demo-user") || "").toLowerCase();
-            if (activeUsername && (activeUsername === acc || (activeUsername === "coach" && acc === "el_coach"))) {
-                btn.classList.add("ring-2", "ring-emerald-400");
-            } else {
-                btn.classList.remove("ring-2", "ring-emerald-400");
-            }
-        });
+    // إظهار شريط المعاينة للكوتش فقط أثناء معاينة حساب أحد المتدربين (يُخفى تماماً عن العملاء)
+    updateImpersonationBanner(user) {
+        const banner = document.getElementById("impersonatingBanner");
+        const nameEl = document.getElementById("impersonatingTraineeName");
+        if (!banner) return;
+        if (user && user.role === "trainee" && user.isImpersonating) {
+            if (nameEl) nameEl.innerText = `${user.name} (@${user.username})`;
+            banner.classList.remove("hidden");
+        } else {
+            banner.classList.add("hidden");
+        }
     },
 
     // رسم شريط المستخدم العلوي (متجاوب يظهر حالة الاشتراك على الهواتف والحواسيب)
@@ -272,7 +272,7 @@ const IronApp = {
         this.switchTab(this.currentTab || "overview");
     },
 
-    // تعبئة بيانات شاشات المتدرب
+    // تعبئة بيانات شاشات المتدرب (بياناته وجداوله ومتابعته فقط)
     renderTraineeData(trainee) {
         if (!trainee) return;
 
@@ -292,20 +292,30 @@ const IronApp = {
         document.getElementById("homeTargetCarbs").innerText = `${carbGrams}g`;
         document.getElementById("homeTargetWater").innerText = `${waterTargetLiters} لتر`;
 
-        // إعداد الحاسبة بقيم المتدرب
+        // بطاقة ملخص خطة العميل وتوجيهات الكوتش الخاصة به فقط
+        this.renderHomePlanSummary(trainee);
+
+        // إعداد الحاسبة بقيم المتدرب الخاصة
         if (document.getElementById("calcWeight")) document.getElementById("calcWeight").value = weight;
         if (document.getElementById("calcHeight")) document.getElementById("calcHeight").value = trainee.height || 175;
         if (document.getElementById("calcAge")) document.getElementById("calcAge").value = trainee.age || 26;
         if (document.getElementById("calcGender")) document.getElementById("calcGender").value = trainee.gender || "male";
         if (document.getElementById("calcActivity")) document.getElementById("calcActivity").value = trainee.activity || 1.55;
+        if (document.getElementById("calcGoal")) {
+            const gStr = String(trainee.goal || "");
+            document.getElementById("calcGoal").value = gStr.includes("تضخيم") ? "450" : (gStr.includes("تثبيت") || gStr.includes("نحت")) ? "0" : "-500";
+        }
 
-        // تعبئة الوزن الحالي في نموذج المتابعة الأسبوعية
-        if (document.getElementById("chkWeight") && !document.getElementById("chkWeight").value) {
+        // تعبئة نموذج المتابعة الأسبوعية بقيم المتدرب الحالي فقط (ومنع بقايا أي مستخدم سابق)
+        if (document.getElementById("chkWeight")) {
             document.getElementById("chkWeight").value = weight;
         }
         const lastHist = trainee.history && trainee.history.length > 0 ? trainee.history[trainee.history.length - 1] : null;
-        if (document.getElementById("chkWaist") && !document.getElementById("chkWaist").value && lastHist?.waist) {
-            document.getElementById("chkWaist").value = lastHist.waist;
+        if (document.getElementById("chkWaist")) {
+            document.getElementById("chkWaist").value = lastHist?.waist || "";
+        }
+        if (document.getElementById("chkNotes")) {
+            document.getElementById("chkNotes").value = "";
         }
 
         this.renderWaterTracker(trainee, parseFloat(waterTargetLiters));
@@ -316,6 +326,44 @@ const IronApp = {
         this.renderWorkoutLogs();
         this.renderExercisesGrid();
         this.renderCheckinHistory(trainee);
+    },
+
+    renderHomePlanSummary(trainee) {
+        const card = document.getElementById("homePlanSummaryCard");
+        if (!card || !trainee) return;
+        const assignedProg = trainee.program || "PPL (Push Pull Legs)";
+        const checkinsCount = Array.isArray(trainee.history) ? trainee.history.length : 0;
+
+        card.innerHTML = `
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-xs font-black text-emerald-400 flex items-center gap-1.5">
+                        <span>📋 ملخص خطتك الخاصة وجدولك المعتمد</span>
+                    </span>
+                    <span class="text-[11px] text-gray-400 font-mono">تاريخ الاشتراك: ${trainee.joinedDate || '-'}</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
+                        <div class="text-[10px] text-gray-400 font-bold">هدفك التدريبي</div>
+                        <div class="font-black text-white mt-0.5">${trainee.goal || 'تنشيف وخسارة دهون'}</div>
+                    </div>
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
+                        <div class="text-[10px] text-gray-400 font-bold">جدول التمرين المخصص لك</div>
+                        <div class="font-black text-emerald-400 mt-0.5">${assignedProg}</div>
+                    </div>
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
+                        <div class="text-[10px] text-gray-400 font-bold">الوزن الحالي / المتابعات المسجلة</div>
+                        <div class="font-black text-cyan-400 mt-0.5">${trainee.weight} كجم • ${checkinsCount} قراءات</div>
+                    </div>
+                </div>
+                ${trainee.coachNote ? `
+                    <div class="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3 text-xs">
+                        <div class="text-[10px] font-black text-emerald-400 mb-1">💬 توجيهات الكوتش الخاصة لك:</div>
+                        <p class="text-gray-200 leading-relaxed">${trainee.coachNote}</p>
+                    </div>
+                ` : ''}
+            </div>
+        `;
     },
 
     // =========================================================================
@@ -393,8 +441,8 @@ const IronApp = {
 
         const allLogs = JSON.parse(localStorage.getItem("iron_workout_logs") || "[]");
         const myLogs = traineeId
-            ? allLogs.filter(l => !l.traineeId || l.traineeId === traineeId)
-            : allLogs;
+            ? allLogs.filter(l => l.traineeId === traineeId)
+            : [];
 
         const renderHtml = (limit = 5) => {
             if (myLogs.length === 0) {
@@ -519,13 +567,22 @@ const IronApp = {
                     : `<span class="text-cyan-400 font-bold">ثبات 🎯</span>`;
             }
             return `
-                <div class="flex items-center justify-between bg-slate-950/70 border border-slate-800/80 rounded-xl px-4 py-2.5 text-xs">
-                    <div class="flex items-center gap-3">
-                        <span class="font-mono text-gray-400">${item.date}</span>
-                        <strong class="text-white font-black">${item.weight} كجم</strong>
-                        ${item.waist ? `<span class="text-gray-400">• الخصر: ${item.waist} سم</span>` : ''}
+                <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl px-4 py-2.5 text-xs space-y-1">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="font-mono text-gray-400">${item.date}</span>
+                            <strong class="text-white font-black">${item.weight} كجم</strong>
+                            ${item.waist ? `<span class="text-gray-400">• الخصر: ${item.waist} سم</span>` : ''}
+                        </div>
+                        <div>${badge}</div>
                     </div>
-                    <div>${badge}</div>
+                    ${(item.adherence || item.energy || item.notes) ? `
+                        <div class="flex flex-wrap items-center gap-2 text-[10px] text-gray-400 pt-1 border-t border-slate-800/60">
+                            ${item.adherence ? `<span>🥗 الالتزام: <strong class="text-emerald-400">${item.adherence}/10</strong></span>` : ''}
+                            ${item.energy ? `<span>⚡ الطاقة: <strong class="text-cyan-400">${item.energy}/10</strong></span>` : ''}
+                            ${item.notes ? `<span class="text-gray-300 truncate max-w-xs">📝 ${item.notes}</span>` : ''}
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }).join("");
@@ -590,10 +647,20 @@ const IronApp = {
         this.latestCalcResults = results;
     },
 
-    // حفظ السعرات ومزامنتها مع المتدرب
+    // حفظ السعرات ومزامنتها مع ملف المتدرب الحالي فقط
     saveTargetCalories() {
         if (!this.latestCalcResults) this.runCalculator();
-        const applied = IronCalculator.applyTargetToCurrentUser(this.latestCalcResults);
+        const goalSelect = document.getElementById("calcGoal");
+        const goalLabel = goalSelect && goalSelect.selectedIndex >= 0 ? goalSelect.options[goalSelect.selectedIndex].text.split("(")[0].trim() : undefined;
+        const inputs = {
+            gender: document.getElementById("calcGender")?.value,
+            age: document.getElementById("calcAge")?.value,
+            weight: document.getElementById("calcWeight")?.value,
+            height: document.getElementById("calcHeight")?.value,
+            activity: document.getElementById("calcActivity")?.value,
+            goalLabel
+        };
+        const applied = IronCalculator.applyTargetToCurrentUser(this.latestCalcResults, inputs);
         if (applied) {
             showToast("تم حفظ السعرات والماكروز في ملفك ومزامنتها بنجاح! 🎯", "success");
             const user = IronAuth.getCurrentUser();
@@ -607,21 +674,24 @@ const IronApp = {
     },
 
     // =========================================================================
-    // توليد وحفظ دايت اليوم الكامل + مشاركته عبر واتساب
+    // توليد وحفظ دايت اليوم الكامل (معزول لكل متدرب بمعرفه الخاص)
     // =========================================================================
     saveDietPlanForCurrentUser(plan) {
         const user = IronAuth.getCurrentUser();
-        const key = user && user.id ? user.id : "guest";
+        if (!user || !user.id) return;
         const allSaved = JSON.parse(localStorage.getItem("iron_saved_diets") || "{}");
-        allSaved[key] = plan;
+        allSaved[user.id] = {
+            ...plan,
+            targetCaloriesSnapshot: user.traineeData?.calories || 2000
+        };
         localStorage.setItem("iron_saved_diets", JSON.stringify(allSaved));
     },
 
     getSavedDietPlanForCurrentUser() {
         const user = IronAuth.getCurrentUser();
-        const key = user && user.id ? user.id : "guest";
+        if (!user || !user.id) return null;
         const allSaved = JSON.parse(localStorage.getItem("iron_saved_diets") || "{}");
-        return allSaved[key] || null;
+        return allSaved[user.id] || null;
     },
 
     generateDayDiet(forceNew = false) {
@@ -629,7 +699,9 @@ const IronApp = {
         const targetCal = user && user.traineeData && user.traineeData.calories ? user.traineeData.calories : 2000;
 
         let plan = !forceNew ? this.getSavedDietPlanForCurrentUser() : null;
-        if (!plan || !plan.breakfast || !plan.lunch || !plan.dinner || !plan.snack) {
+        const targetChanged = plan && plan.targetCaloriesSnapshot && Math.abs(plan.targetCaloriesSnapshot - targetCal) > 50;
+
+        if (!plan || !plan.breakfast || !plan.lunch || !plan.dinner || !plan.snack || targetChanged) {
             plan = IronMealsEngine.generateFullDayPlan(targetCal);
             this.saveDietPlanForCurrentUser(plan);
         } else {
@@ -834,15 +906,34 @@ const IronApp = {
         this.renderMealsGrid();
     },
 
-    // اختيار وعرض برنامج تدريبي
+    // عرض البرنامج التدريبي المخصص للمتدرب فقط (دون عرض جداول أو خطط برامج أخرى)
     selectProgram(progId) {
-        this.selectedProgramId = progId;
-        const program = getProgramById(progId);
+        const user = IronAuth.getCurrentUser();
+        const assignedProgId = (user && user.role === "trainee" && user.traineeData?.program)
+            ? this.resolveProgramIdFromName(user.traineeData.program)
+            : progId;
+
+        this.selectedProgramId = assignedProgId;
+        const program = getProgramById(assignedProgId);
         const container = document.getElementById("workoutProgramDetails");
         if (!container || !program) return;
 
+        // إخفاء شبكة التبديل بين البرامج عن المتدرب ليرى جدوله المخصص فقط
+        const selectorWrapper = document.getElementById("programSelectorWrapper");
+        const assignedBadge = document.getElementById("assignedProgramBadge");
+        if (selectorWrapper) {
+            if (user && user.role === "trainee") {
+                selectorWrapper.classList.add("hidden");
+            } else {
+                selectorWrapper.classList.remove("hidden");
+            }
+        }
+        if (assignedBadge) {
+            assignedBadge.innerText = `الجدول المعتمد: ${program.nameAr}`;
+        }
+
         document.querySelectorAll(".prog-select-btn").forEach(btn => {
-            if (btn.getAttribute("data-prog") === progId) {
+            if (btn.getAttribute("data-prog") === assignedProgId) {
                 btn.className = "prog-select-btn p-3 rounded-2xl border text-center transition bg-emerald-500/10 border-emerald-500 text-emerald-400 font-bold text-xs shadow-lg shadow-emerald-500/10";
             } else {
                 btn.className = "prog-select-btn p-3 rounded-2xl border text-center transition bg-slate-950 border-slate-800 text-gray-300 font-bold text-xs hover:border-slate-700";
@@ -1144,7 +1235,8 @@ const IronApp = {
             activity: parseFloat(form.tActivity?.value) || 1.55,
             goal: form.tGoal?.value || "تنشيف وخسارة دهون",
             calories: parseInt(form.tCalories.value) || 2000,
-            program: form.tProgram.value
+            program: form.tProgram.value,
+            coachNote: form.tCoachNote ? form.tCoachNote.value.trim() : ""
         };
 
         IronAuth.addTrainee(trainee);

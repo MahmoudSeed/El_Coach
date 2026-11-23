@@ -54,8 +54,8 @@ const IronCalculator = {
         };
     },
 
-    // حفظ النتائج في ملف المتدرب النشط
-    applyTargetToCurrentUser(results) {
+    // حفظ النتائج في ملف المتدرب النشط فقط
+    applyTargetToCurrentUser(results, inputs = null) {
         const currentUser = IronAuth.getCurrentUser();
         if (currentUser && currentUser.role === "trainee") {
             const trainee = currentUser.traineeData;
@@ -65,6 +65,14 @@ const IronCalculator = {
                 fats: results.fatGrams,
                 carbs: results.carbGrams
             };
+            if (inputs) {
+                if (inputs.weight) trainee.weight = parseFloat(inputs.weight);
+                if (inputs.height) trainee.height = parseFloat(inputs.height);
+                if (inputs.age) trainee.age = parseInt(inputs.age);
+                if (inputs.gender) trainee.gender = inputs.gender;
+                if (inputs.activity) trainee.activity = parseFloat(inputs.activity);
+                if (inputs.goalLabel) trainee.goal = inputs.goalLabel;
+            }
             IronAuth.updateTrainee(trainee);
             return true;
         }

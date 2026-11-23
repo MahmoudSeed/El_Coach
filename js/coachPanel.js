@@ -231,6 +231,7 @@ const IronCoachPanel = {
         setVal("editTCalories", t.calories || 2000);
         setVal("editTDaysLeft", t.daysLeft !== undefined ? t.daysLeft : 30);
         setVal("editTProgram", t.program || "PPL (Push Pull Legs)");
+        setVal("editTCoachNote", t.coachNote || "");
 
         openModal("editTraineeModal");
     },
@@ -253,7 +254,8 @@ const IronCoachPanel = {
             goal: document.getElementById("editTGoal")?.value,
             calories: document.getElementById("editTCalories")?.value,
             daysLeft: document.getElementById("editTDaysLeft")?.value,
-            program: document.getElementById("editTProgram")?.value
+            program: document.getElementById("editTProgram")?.value,
+            coachNote: document.getElementById("editTCoachNote")?.value
         });
 
         if (updated) {

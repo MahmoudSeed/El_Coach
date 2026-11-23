@@ -112,6 +112,7 @@ const IronAuth = {
         };
 
         localStorage.setItem("iron_session", JSON.stringify(traineeUser));
+        sessionStorage.removeItem("iron_active_workout");
         return { success: true, user: traineeUser };
     },
 
@@ -125,6 +126,7 @@ const IronAuth = {
             username: (current && current.impersonatedBy) || (config.coachInfo && config.coachInfo.adminUsername) || "El_Coach",
             title: config.coachInfo.title || IronConfig.coachInfo.title
         };
+        sessionStorage.removeItem("iron_active_workout");
         localStorage.setItem("iron_session", JSON.stringify(coachUser));
         window.location.reload();
     },
@@ -132,6 +134,7 @@ const IronAuth = {
     // تسجيل الخروج
     logout() {
         localStorage.removeItem("iron_session");
+        sessionStorage.removeItem("iron_active_workout");
         window.location.reload();
     },
 
@@ -146,18 +149,20 @@ const IronAuth = {
                     user.name = config.coachInfo.name || user.name;
                     user.title = config.coachInfo.title || user.title;
                 }
-                // إذا كان متدرب، نحدث بياناته من قاعدة البيانات
+                // إذا كان متدرب، نحدث بياناته من قاعدة البيانات الخاصة به فقط
                 if (user.role === "trainee") {
                     const trainees = this.getAllTrainees();
                     const fresh = trainees.find(t => t.id === user.id);
-                    if (fresh) {
-                        const updated = this.refreshSubscriptionStatus(fresh);
-                        user.name = updated.name;
-                        user.username = updated.username;
-                        user.status = updated.status;
-                        user.daysLeft = updated.daysLeft;
-                        user.traineeData = updated;
+                    if (!fresh) {
+                        localStorage.removeItem("iron_session");
+                        return null;
                     }
+                    const updated = this.refreshSubscriptionStatus(fresh);
+                    user.name = updated.name;
+                    user.username = updated.username;
+                    user.status = updated.status;
+                    user.daysLeft = updated.daysLeft;
+                    user.traineeData = updated;
                 }
                 return user;
             } catch (e) { }
@@ -193,6 +198,9 @@ const IronAuth = {
         existing.goal = fields.goal || existing.goal;
         existing.calories = parseInt(fields.calories) || existing.calories || 2000;
         existing.program = fields.program || existing.program;
+        if (fields.coachNote !== undefined) {
+            existing.coachNote = fields.coachNote.trim();
+        }
 
         if (fields.newPassword && fields.newPassword.trim() !== "") {
             existing.password = hashPassword(fields.newPassword.trim());
@@ -222,13 +230,32 @@ const IronAuth = {
         return existing;
     },
 
-    // حذف متدرب من المنصة
+    // حذف متدرب من المنصة وتنظيف كافة بياناته المرتبطة
     deleteTrainee(traineeId) {
         const trainees = this.getAllTrainees();
         const target = trainees.find(t => t.id === traineeId);
         if (!target) return null;
         const filtered = trainees.filter(t => t.id !== traineeId);
         this.saveAllTrainees(filtered);
+
+        // تنظيف سجلات المتدرب المحذوف الخاصة بالدايت والماء والتمارين والوجبات المخصصة
+        try {
+            const diets = JSON.parse(localStorage.getItem("iron_saved_diets") || "{}");
+            if (diets[traineeId]) {
+                delete diets[traineeId];
+                localStorage.setItem("iron_saved_diets", JSON.stringify(diets));
+            }
+            const water = JSON.parse(localStorage.getItem("iron_water_logs") || "{}");
+            Object.keys(water).forEach(k => {
+                if (k.startsWith(`${traineeId}_`)) delete water[k];
+            });
+            localStorage.setItem("iron_water_logs", JSON.stringify(water));
+            const logs = JSON.parse(localStorage.getItem("iron_workout_logs") || "[]");
+            localStorage.setItem("iron_workout_logs", JSON.stringify(logs.filter(l => l.traineeId !== traineeId)));
+            const customMeals = JSON.parse(localStorage.getItem("iron_custom_meals") || "[]");
+            localStorage.setItem("iron_custom_meals", JSON.stringify(customMeals.filter(m => m.ownerId !== traineeId)));
+        } catch (e) {}
+
         return target;
     },
 
