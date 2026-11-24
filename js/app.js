@@ -1637,7 +1637,7 @@ const IronApp = {
 
     switchAuthMode(mode = "login") {
         this.signupState.mode = mode === "signup" ? "signup" : "login";
-        const loginForm = document.getElementById("loginForm");
+        const loginPanel = document.getElementById("loginPanel");
         const signupCont = document.getElementById("signupContainer");
         const tabLogin = document.getElementById("authTabLogin");
         const tabSignup = document.getElementById("authTabSignup");
@@ -1645,19 +1645,130 @@ const IronApp = {
         this.showSignupError("");
         const loginErr = document.getElementById("loginError");
         if (loginErr) loginErr.classList.add("hidden");
+        const loginOtpErr = document.getElementById("loginOtpError");
+        if (loginOtpErr) loginOtpErr.classList.add("hidden");
 
         if (this.signupState.mode === "signup") {
-            if (loginForm) loginForm.classList.add("hidden");
+            if (loginPanel) loginPanel.classList.add("hidden");
             if (signupCont) signupCont.classList.remove("hidden");
             if (tabSignup) tabSignup.className = "py-2.5 px-3 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 transition";
             if (tabLogin) tabLogin.className = "py-2.5 px-3 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition";
         } else {
             if (signupCont) signupCont.classList.add("hidden");
-            if (loginForm) loginForm.classList.remove("hidden");
+            if (loginPanel) loginPanel.classList.remove("hidden");
             if (tabLogin) tabLogin.className = "py-2.5 px-3 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 transition";
             if (tabSignup) tabSignup.className = "py-2.5 px-3 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition";
         }
         this.refreshSignupHeaderLabels();
+    },
+
+    loginOtpState: {
+        phone: "",
+        code: null,
+        timerId: null
+    },
+
+    sendLoginOtp() {
+        const phoneInput = document.getElementById("loginPhoneInput");
+        const errBox = document.getElementById("loginOtpError");
+        const phoneVal = (phoneInput?.value || "").trim();
+        const digits = phoneVal.replace(/\D/g, "");
+
+        if (errBox) errBox.classList.add("hidden");
+        if (digits.length < 8) {
+            if (errBox) {
+                errBox.innerText = this.t("signup_err_phone");
+                errBox.classList.remove("hidden");
+            }
+            return;
+        }
+
+        const matched = IronAuth.findAccountByPhone(phoneVal);
+        if (!matched) {
+            if (errBox) {
+                errBox.innerHTML = `
+                    <div>${this.t("login_err_not_found")}</div>
+                    <button type="button" onclick="IronApp.switchToSignupWithPhone()" class="text-emerald-400 hover:text-emerald-300 font-black underline mt-1">
+                        ${this.t("login_switch_to_signup")}
+                    </button>
+                `;
+                errBox.classList.remove("hidden");
+            }
+            return;
+        }
+
+        const otp = String(Math.floor(1000 + Math.random() * 9000));
+        this.loginOtpState.phone = phoneVal;
+        this.loginOtpState.code = otp;
+
+        const verifyBox = document.getElementById("loginOtpVerifyBox");
+        const demoDisp = document.getElementById("loginOtpDemoCodeDisplay");
+        const codeInput = document.getElementById("loginOtpCode");
+        if (verifyBox) verifyBox.classList.remove("hidden");
+        if (demoDisp) demoDisp.innerText = otp;
+        if (codeInput) {
+            codeInput.value = "";
+            codeInput.focus();
+        }
+        showToast(this.t("signup_otp_sent", { phone: phoneVal }), "success");
+
+        clearInterval(this.loginOtpState.timerId);
+        const resendBtn = document.getElementById("resendLoginOtpBtn");
+        let sec = 30;
+        if (resendBtn) {
+            resendBtn.disabled = true;
+            resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
+            this.loginOtpState.timerId = setInterval(() => {
+                sec--;
+                if (sec <= 0) {
+                    clearInterval(this.loginOtpState.timerId);
+                    resendBtn.disabled = false;
+                    resendBtn.innerText = this.t("signup_resend_otp");
+                } else {
+                    resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
+                }
+            }, 1000);
+        }
+    },
+
+    verifyLoginOtp() {
+        const errBox = document.getElementById("loginOtpError");
+        const code = (document.getElementById("loginOtpCode")?.value || "").trim();
+        if (!this.loginOtpState.code || code !== this.loginOtpState.code) {
+            if (errBox) {
+                errBox.innerText = this.t("signup_err_otp");
+                errBox.classList.remove("hidden");
+            }
+            return;
+        }
+
+        clearInterval(this.loginOtpState.timerId);
+        const matched = IronAuth.findAccountByPhone(this.loginOtpState.phone);
+        if (!matched) {
+            if (errBox) {
+                errBox.innerText = this.t("login_err_not_found");
+                errBox.classList.remove("hidden");
+            }
+            return;
+        }
+
+        if (matched.type === "coach") {
+            IronAuth.loginCoachDirect();
+        } else {
+            IronAuth.loginTraineeDirect(matched.trainee);
+        }
+        window.location.reload();
+    },
+
+    switchToSignupWithPhone() {
+        const phoneVal = (document.getElementById("loginPhoneInput")?.value || "").trim();
+        this.switchAuthMode("signup");
+        this.cancelOAuthSignup();
+        const regPhone = document.getElementById("regPhoneInput");
+        if (regPhone && phoneVal) {
+            regPhone.value = phoneVal;
+            regPhone.focus();
+        }
     },
 
     refreshSignupHeaderLabels() {

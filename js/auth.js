@@ -65,18 +65,48 @@ const IronAuth = {
         return trainee;
     },
 
+    phonesMatch(phoneA = "", phoneB = "") {
+        const a = String(phoneA || "").replace(/\D/g, "");
+        const b = String(phoneB || "").replace(/\D/g, "");
+        if (!a || !b || a.length < 7 || b.length < 7) return false;
+        if (a === b) return true;
+        return a.length >= 9 && b.length >= 9 && a.slice(-9) === b.slice(-9);
+    },
+
     findExistingTrainee({ email = "", phone = "" } = {}) {
         const trainees = this.getAllTrainees();
         const cleanEmail = String(email || "").trim().toLowerCase();
-        const cleanPhone = String(phone || "").replace(/\D/g, "");
         return trainees.find(t => {
             if (cleanEmail && t.email && t.email.toLowerCase() === cleanEmail) return true;
-            if (cleanPhone && cleanPhone.length >= 7 && t.phone) {
-                const tDigits = String(t.phone).replace(/\D/g, "");
-                if (tDigits && tDigits === cleanPhone) return true;
-            }
+            if (phone && t.phone && this.phonesMatch(phone, t.phone)) return true;
             return false;
         }) || null;
+    },
+
+    loginCoachDirect() {
+        const config = getAppConfig();
+        const coachUser = {
+            role: "coach",
+            name: config.coachInfo.name || IronConfig.coachInfo.name,
+            username: (config.coachInfo && config.coachInfo.adminUsername) || "El_Coach",
+            title: config.coachInfo.title || IronConfig.coachInfo.title
+        };
+        localStorage.setItem("iron_session", JSON.stringify(coachUser));
+        sessionStorage.removeItem("iron_active_workout");
+        return { success: true, user: coachUser };
+    },
+
+    findAccountByPhone(phone = "") {
+        const config = getAppConfig();
+        const coachPhones = [config.coachInfo?.phone, config.coachInfo?.whatsapp].filter(Boolean);
+        if (coachPhones.some(p => this.phonesMatch(p, phone))) {
+            return { type: "coach" };
+        }
+        const trainee = this.findExistingTrainee({ phone });
+        if (trainee) {
+            return { type: "trainee", trainee };
+        }
+        return null;
     },
 
     loginTraineeDirect(trainee) {
@@ -99,9 +129,10 @@ const IronAuth = {
         return { success: true, user: traineeUser };
     },
 
-    // تسجيل الدخول
-    login(username, password) {
-        username = (username || "").trim().toLowerCase();
+    // تسجيل الدخول (باسم المستخدم أو رقم الجوال + كلمة المرور)
+    login(usernameOrPhone, password) {
+        const rawInput = (usernameOrPhone || "").trim();
+        const username = rawInput.toLowerCase();
         password = (password || "").trim();
 
         const config = getAppConfig();
@@ -109,9 +140,12 @@ const IronAuth = {
         const adminStoredHash = (config.coachInfo && config.coachInfo.adminPasswordHash) || hashPassword(this.ADMIN_PASSWORD);
         const coachStoredHash = (config.coachInfo && config.coachInfo.passwordHash) || hashPassword(this.COACH_PASSWORD);
 
-        // 1. فحص حساب الأدمن الرئيسي (El_Coach) أو حساب الكوتش التجريبي (coach)
-        const isMainAdmin = username === adminUsername.toLowerCase() && verifyPassword(password, adminStoredHash);
-        const isDemoCoach = username === this.COACH_USERNAME && verifyPassword(password, coachStoredHash);
+        const coachPhones = [config.coachInfo?.phone, config.coachInfo?.whatsapp].filter(Boolean);
+        const matchesCoachPhone = coachPhones.some(p => this.phonesMatch(p, rawInput));
+
+        // 1. فحص حساب الأدمن الرئيسي (El_Coach / رقم هاتف الكوتش) أو حساب الكوتش التجريبي (coach)
+        const isMainAdmin = (username === adminUsername.toLowerCase() || matchesCoachPhone) && verifyPassword(password, adminStoredHash);
+        const isDemoCoach = (username === this.COACH_USERNAME || matchesCoachPhone) && verifyPassword(password, coachStoredHash);
 
         if (isMainAdmin || isDemoCoach) {
             const coachUser = {
@@ -124,9 +158,12 @@ const IronAuth = {
             return { success: true, user: coachUser };
         }
 
-        // 2. فحص حسابات المشتركين
+        // 2. فحص حسابات المشتركين (باسم المستخدم أو رقم الجوال)
         const trainees = this.getAllTrainees();
-        let trainee = trainees.find(t => t.username.toLowerCase() === username && verifyPassword(password, t.password));
+        let trainee = trainees.find(t =>
+            (t.username.toLowerCase() === username || (t.phone && this.phonesMatch(t.phone, rawInput))) &&
+            verifyPassword(password, t.password)
+        );
 
         if (!trainee) {
             const msg = typeof IronI18n !== "undefined" ? IronI18n.t("login_invalid") : "اسم المستخدم أو كلمة المرور غير صحيحة";

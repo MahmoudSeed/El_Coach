@@ -25,9 +25,9 @@ public class IronHttpServer {
     };
 
     public static void Start(int port, string rootDir) {
-        var listener = new TcpListener(IPAddress.Loopback, port);
+        var listener = new TcpListener(IPAddress.Any, port);
         listener.Start(64);
-        Console.WriteLine("IronCoach Server listening on http://localhost:" + port + "/");
+        Console.WriteLine("IronCoach Server listening on http://localhost:" + port + "/ (and LAN IP)");
 
         while (true) {
             TcpClient client = listener.AcceptTcpClient();
