@@ -50,18 +50,53 @@ const IronAuth = {
         const joined = new Date(trainee.joinedDate);
         const diffMs = Math.max(0, now - joined);
         const daysPassed = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        const subDays = parseInt(trainee.subscriptionDays) || 30;
+        const rawSubDays = parseInt(trainee.subscriptionDays);
+        const subDays = isNaN(rawSubDays) ? 30 : Math.max(0, rawSubDays);
         const daysLeft = Math.max(0, subDays - daysPassed);
 
         trainee.daysLeft = daysLeft;
         if (daysLeft === 0) {
-            trainee.status = "expired";
+            trainee.status = (subDays === 0 && !trainee.hasActivatedOnce) ? "pending" : "expired";
         } else if (daysLeft <= 3) {
             trainee.status = "expiring";
         } else {
             trainee.status = "active";
         }
         return trainee;
+    },
+
+    findExistingTrainee({ email = "", phone = "" } = {}) {
+        const trainees = this.getAllTrainees();
+        const cleanEmail = String(email || "").trim().toLowerCase();
+        const cleanPhone = String(phone || "").replace(/\D/g, "");
+        return trainees.find(t => {
+            if (cleanEmail && t.email && t.email.toLowerCase() === cleanEmail) return true;
+            if (cleanPhone && cleanPhone.length >= 7 && t.phone) {
+                const tDigits = String(t.phone).replace(/\D/g, "");
+                if (tDigits && tDigits === cleanPhone) return true;
+            }
+            return false;
+        }) || null;
+    },
+
+    loginTraineeDirect(trainee) {
+        if (!trainee) return { success: false };
+        const refreshed = this.refreshSubscriptionStatus(trainee);
+        this.updateTrainee(refreshed);
+
+        const traineeUser = {
+            role: "trainee",
+            id: refreshed.id,
+            name: refreshed.name,
+            username: refreshed.username,
+            status: refreshed.status,
+            daysLeft: refreshed.daysLeft,
+            traineeData: refreshed
+        };
+
+        localStorage.setItem("iron_session", JSON.stringify(traineeUser));
+        sessionStorage.removeItem("iron_active_workout");
+        return { success: true, user: traineeUser };
     },
 
     // تسجيل الدخول
@@ -327,6 +362,71 @@ const IronAuth = {
         return newTrainee;
     },
 
+    // تسجيل عميل جديد عبر Google أو iCloud أو رقم الجوال OTP (بحالة بانتظار الدفع حتى تفعيل الـ 30 يوماً)
+    registerClient(data) {
+        const trainees = this.getAllTrainees();
+        const existing = this.findExistingTrainee({ email: data.email, phone: data.phone });
+        if (existing) {
+            return this.loginTraineeDirect(existing);
+        }
+
+        const nowId = Date.now();
+        const emailBase = data.email ? data.email.split("@")[0].replace(/[^a-z0-9_]/gi, "").toLowerCase() : "";
+        const phoneDigits = String(data.phone || "").replace(/\D/g, "");
+        const baseHandle = emailBase || (phoneDigits ? `user_${phoneDigits.slice(-6)}` : `client_${nowId.toString().slice(-5)}`);
+        let uniqueUsername = baseHandle;
+        let suffix = 1;
+        while (trainees.some(t => t.username.toLowerCase() === uniqueUsername.toLowerCase())) {
+            uniqueUsername = `${baseHandle}_${suffix++}`;
+        }
+
+        const weight = parseFloat(data.weight) || 75;
+        const height = parseFloat(data.height) || 175;
+        const age = parseInt(data.age) || 26;
+        const gender = data.gender || "male";
+        const activity = parseFloat(data.activity) || 1.55;
+        const goal = data.goal || "تنشيف وخسارة دهون";
+        const goalOffset = goal.includes("تضخيم") ? 350 : (goal.includes("تثبيت") || goal.includes("نحت")) ? 0 : -500;
+
+        let targetCalories = parseInt(data.calories) || 2000;
+        let macros = { protein: Math.round(weight * 2), fats: 55, carbs: 200 };
+        if (typeof IronCalculator !== "undefined") {
+            const calc = IronCalculator.calculate({ gender, age, weight, height, activity, goal: goalOffset });
+            targetCalories = calc.targetCalories;
+            macros = { protein: calc.proteinGrams, fats: calc.fatGrams, carbs: calc.carbGrams };
+        }
+
+        const todayStr = new Date().toISOString().split("T")[0];
+        const newTrainee = {
+            id: "tr_" + nowId,
+            name: (data.name || uniqueUsername).trim(),
+            username: uniqueUsername,
+            email: (data.email || "").trim().toLowerCase(),
+            phone: (data.phone || "").trim(),
+            authProvider: data.authProvider || "phone",
+            password: hashPassword(data.password || ("otp_" + nowId)),
+            joinedDate: todayStr,
+            subscriptionDays: 0,
+            daysLeft: 0,
+            status: "pending",
+            hasActivatedOnce: false,
+            weight,
+            height,
+            age,
+            gender,
+            activity,
+            goal,
+            calories: targetCalories,
+            macros,
+            program: data.program || "PPL (Push Pull Legs)",
+            history: [{ date: todayStr, weight, waist: null }]
+        };
+
+        trainees.push(newTrainee);
+        this.saveAllTrainees(trainees);
+        return this.loginTraineeDirect(newTrainee);
+    },
+
     // تجديد اشتراك متدرب مع إضافة الأيام للرصيد المتبقي
     renewSubscription(traineeId, additionalDays = 30, receiptInfo = null) {
         const trainees = this.getAllTrainees();
@@ -339,6 +439,7 @@ const IronAuth = {
             trainee.joinedDate = new Date().toISOString().split('T')[0];
             trainee.subscriptionDays = totalDays;
             trainee.daysLeft = totalDays;
+            trainee.hasActivatedOnce = true;
             trainee.status = "active";
             if (receiptInfo) {
                 trainee.lastRenewalReceipt = receiptInfo;

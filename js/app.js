@@ -108,10 +108,16 @@ const IronApp = {
         if (user !== undefined) {
             this.renderUserHeader(user);
             this.updateImpersonationBanner(user);
-            if (user && user.role === "coach" && typeof IronCoachPanel !== "undefined") {
+            if (!user) {
+                this.refreshSignupHeaderLabels();
+            } else if (user.role === "coach" && typeof IronCoachPanel !== "undefined") {
                 IronCoachPanel.renderCoachDashboard();
-            } else if (user && user.role === "trainee" && user.status !== "expired" && user.traineeData) {
-                this.renderTraineeData(user.traineeData);
+            } else if (user.role === "trainee") {
+                if (user.status === "expired" || user.status === "pending") {
+                    this.renderAppViews(user);
+                } else if (user.traineeData) {
+                    this.renderTraineeData(user.traineeData);
+                }
             }
         }
 
@@ -240,11 +246,12 @@ const IronApp = {
         } else {
             const displayName = typeof IronI18n !== "undefined" ? IronI18n.trName(user.traineeData || user) : user.name;
             const statusColor = user.status === "active" ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
-                : user.status === "expiring" ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
+                : (user.status === "expiring" || user.status === "pending") ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
                 : "text-rose-400 border-rose-500/30 bg-rose-500/10";
 
             const statusText = user.status === "active" ? this.t("status_active", { days: user.daysLeft })
                 : user.status === "expiring" ? this.t("status_expiring", { days: user.daysLeft })
+                : user.status === "pending" ? this.t("status_pending")
                 : this.t("status_expired");
 
             const avatarData = user.traineeData?.avatar;
@@ -267,7 +274,7 @@ const IronApp = {
                             ${statusText}
                         </div>
                     </div>
-                    ${user.status === "expired" ? `
+                    ${(user.status === "expired" || user.status === "pending") ? `
                         <button onclick="IronApp.openRenewPaymentModal()" class="px-2.5 py-1.5 bg-rose-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition animate-pulse">
                             ${this.t("status_renew_short")}
                         </button>
@@ -309,15 +316,52 @@ const IronApp = {
             return;
         }
 
-        // 2. إذا كان متدرب منتهي الاشتراك
-        if (user.status === "expired") {
+        // 2. إذا كان متدرب منتهي الاشتراك أو حساب جديد بانتظار الدفع والتفعيل
+        if (user.status === "expired" || user.status === "pending") {
             expiredView.classList.remove("hidden");
             const config = getAppConfig();
+            const isPending = user.status === "pending";
             const currencyTxt = typeof IronI18n !== "undefined" ? IronI18n.trCurrency(config.subscriptionPrice.currency) : config.subscriptionPrice.currency;
             document.getElementById("expiredPriceDisplay").innerText = `${config.subscriptionPrice.monthly} ${currencyTxt}`;
             document.getElementById("expiredVodafoneDisplay").innerText = config.coachInfo.vodafoneCash;
             document.getElementById("expiredInstapayDisplay").innerText = config.coachInfo.instapayUser;
             document.getElementById("expiredStcDisplay").innerText = config.coachInfo.stcPay;
+
+            const badgeWrap = document.getElementById("expiredBadgeWrap");
+            const badgeText = document.getElementById("expiredBadgeText");
+            const titleText = document.getElementById("expiredTitleText");
+            const descText = document.getElementById("expiredDescText");
+            const renewBtnText = document.getElementById("expiredRenewBtnText");
+            const waBtnText = document.getElementById("expiredWaBtnText");
+            const previewBox = document.getElementById("pendingPlanPreviewBox");
+
+            if (isPending) {
+                if (badgeWrap) badgeWrap.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black mb-3";
+                if (badgeText) badgeText.innerText = this.t("pending_badge");
+                if (titleText) titleText.innerText = this.t("pending_title");
+                if (descText) descText.innerText = this.t("pending_desc");
+                if (renewBtnText) renewBtnText.innerText = this.t("pending_activate_btn");
+                if (waBtnText) waBtnText.innerText = this.t("pending_wa_btn");
+                if (previewBox && user.traineeData) {
+                    const tr = user.traineeData;
+                    const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(tr) : tr.name;
+                    const dispGoal = typeof IronI18n !== "undefined" ? IronI18n.trGoal(tr.goal) : tr.goal;
+                    const dispProv = typeof IronI18n !== "undefined" ? IronI18n.trProvider(tr.authProvider) : (tr.authProvider || "OTP");
+                    previewBox.innerHTML = `
+                        <div class="font-black text-emerald-400 mb-1">${dispName} • ${dispProv} ✅</div>
+                        <div class="text-gray-300 font-bold">${dispGoal} • ${tr.calories} kcal • ${tr.program}</div>
+                    `;
+                    previewBox.classList.remove("hidden");
+                }
+            } else {
+                if (badgeWrap) badgeWrap.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-black mb-3";
+                if (badgeText) badgeText.innerText = this.t("expired_badge");
+                if (titleText) titleText.innerText = this.t("expired_title");
+                if (descText) descText.innerText = this.t("expired_desc");
+                if (renewBtnText) renewBtnText.innerText = this.t("expired_renew_btn");
+                if (waBtnText) waBtnText.innerText = this.t("expired_wa_btn");
+                if (previewBox) previewBox.classList.add("hidden");
+            }
             return;
         }
 
@@ -1552,8 +1596,281 @@ const IronApp = {
         const config = getAppConfig();
         const coachPhone = (config.coachInfo.whatsapp || "").replace(/\D/g, '');
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
-        const text = isEn ? "Hi Coach, I would like to renew my monthly IronCoach Pro subscription." : "مرحباً كوتش، أود تجديد اشتراكي الشهري في أيرون كوتش.";
+        const user = IronAuth.getCurrentUser();
+        let text = isEn ? "Hi Coach, I would like to renew my monthly IronCoach Pro subscription." : "مرحباً كوتش، أود تجديد اشتراكي الشهري في أيرون كوتش.";
+        if (user && user.status === "pending" && user.traineeData) {
+            const tr = user.traineeData;
+            const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(tr) : tr.name;
+            const dispGoal = typeof IronI18n !== "undefined" ? IronI18n.trGoal(tr.goal) : tr.goal;
+            const dispProv = typeof IronI18n !== "undefined" ? IronI18n.trProvider(tr.authProvider) : (tr.authProvider || "");
+            text = isEn
+                ? `Hi Coach, I just signed up on IronCoach Pro via ${dispProv}.\nName: ${dispName}\nWeight: ${tr.weight} kg | Target: ${tr.calories} kcal\nGoal: ${dispGoal} | Split: ${tr.program}\nI'm ready to send the subscription payment receipt to activate my 30-day plan.`
+                : `مرحباً كوتش، قمت بالتسجيل الآن عبر ${dispProv} في أيرون كوتش.\nالاسم: ${tr.name}\nالوزن: ${tr.weight} كجم | السعرات: ${tr.calories} kcal\nالهدف: ${tr.goal} | الجدول: ${tr.program}\nأود إرسال إيصال الدفع لتفعيل اشتراكي (30 يوماً).`;
+        }
         window.open(`https://wa.me/${coachPhone}?text=${encodeURIComponent(text)}`, '_blank');
+    },
+
+    // =========================================================================
+    // تسجيل اشتراك العملاء الجدد من الصفحة الرئيسية (Google / iCloud / Phone OTP)
+    // =========================================================================
+    signupState: {
+        mode: "login",
+        provider: null,
+        generatedOtp: null,
+        otpTimerId: null,
+        verifiedPhone: "",
+        verifiedEmail: "",
+        verifiedName: ""
+    },
+
+    showSignupError(msg = "") {
+        const box = document.getElementById("signupError");
+        if (!box) return;
+        if (!msg) {
+            box.classList.add("hidden");
+            box.innerText = "";
+        } else {
+            box.innerText = msg;
+            box.classList.remove("hidden");
+        }
+    },
+
+    switchAuthMode(mode = "login") {
+        this.signupState.mode = mode === "signup" ? "signup" : "login";
+        const loginForm = document.getElementById("loginForm");
+        const signupCont = document.getElementById("signupContainer");
+        const tabLogin = document.getElementById("authTabLogin");
+        const tabSignup = document.getElementById("authTabSignup");
+
+        this.showSignupError("");
+        const loginErr = document.getElementById("loginError");
+        if (loginErr) loginErr.classList.add("hidden");
+
+        if (this.signupState.mode === "signup") {
+            if (loginForm) loginForm.classList.add("hidden");
+            if (signupCont) signupCont.classList.remove("hidden");
+            if (tabSignup) tabSignup.className = "py-2.5 px-3 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 transition";
+            if (tabLogin) tabLogin.className = "py-2.5 px-3 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition";
+        } else {
+            if (signupCont) signupCont.classList.add("hidden");
+            if (loginForm) loginForm.classList.remove("hidden");
+            if (tabLogin) tabLogin.className = "py-2.5 px-3 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 transition";
+            if (tabSignup) tabSignup.className = "py-2.5 px-3 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition";
+        }
+        this.refreshSignupHeaderLabels();
+    },
+
+    refreshSignupHeaderLabels() {
+        const titleEl = document.getElementById("authMainTitle");
+        const subEl = document.getElementById("authMainSubtitle");
+        const isSignup = this.signupState.mode === "signup";
+        if (titleEl) titleEl.innerText = this.t(isSignup ? "signup_title" : "login_title");
+        if (subEl) subEl.innerText = this.t(isSignup ? "signup_subtitle" : "login_subtitle");
+
+        const p = this.signupState.provider;
+        if (p) {
+            const provName = this.t(p === "google" ? "provider_google" : p === "icloud" ? "provider_icloud" : "provider_phone");
+            const badge = document.getElementById("oauthProviderBadge");
+            const lbl = document.getElementById("regOauthEmailLbl");
+            const stepBadge = document.getElementById("signupVerifiedBadge");
+            if (badge) badge.innerText = `${p === "google" ? "🔵" : "☁️"} ${provName}`;
+            if (lbl) lbl.innerText = this.t("signup_oauth_email", { provider: provName });
+            if (stepBadge) stepBadge.innerText = `✅ ${provName}`;
+        }
+    },
+
+    startOAuthSignup(provider) {
+        this.signupState.provider = provider;
+        this.showSignupError("");
+
+        const btnsWrap = document.getElementById("signupButtonsWrapper");
+        const otpSec = document.getElementById("otpPhoneSection");
+        const oauthCard = document.getElementById("oauthProviderCard");
+        const emailInput = document.getElementById("regOauthEmail");
+
+        if (btnsWrap) btnsWrap.classList.add("hidden");
+        if (otpSec) otpSec.classList.add("hidden");
+        if (oauthCard) oauthCard.classList.remove("hidden");
+        if (emailInput) {
+            emailInput.placeholder = provider === "icloud" ? "name@icloud.com" : "name@gmail.com";
+        }
+        this.refreshSignupHeaderLabels();
+    },
+
+    cancelOAuthSignup() {
+        this.signupState.provider = null;
+        this.showSignupError("");
+        document.getElementById("oauthProviderCard")?.classList.add("hidden");
+        document.getElementById("signupButtonsWrapper")?.classList.remove("hidden");
+        document.getElementById("otpPhoneSection")?.classList.remove("hidden");
+    },
+
+    submitOAuthStep(e) {
+        e.preventDefault();
+        const name = (document.getElementById("regOauthName")?.value || "").trim();
+        const email = (document.getElementById("regOauthEmail")?.value || "").trim().toLowerCase();
+        const phone = (document.getElementById("regOauthPhone")?.value || "").trim();
+
+        if (!name) {
+            this.showSignupError(this.t("signup_err_name"));
+            return;
+        }
+        if (!email || !email.includes("@")) {
+            this.showSignupError(this.t("signup_err_email"));
+            return;
+        }
+
+        // إذا كان العميل مسجلاً مسبقاً بنفس البريد أو الهاتف يدخل مباشرة إلى حسابه
+        const existing = IronAuth.findExistingTrainee({ email, phone });
+        if (existing) {
+            IronAuth.loginTraineeDirect(existing);
+            const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(existing) : existing.name;
+            showToast(this.t("signup_existing_welcome", { name: dispName }), "success");
+            setTimeout(() => window.location.reload(), 600);
+            return;
+        }
+
+        this.signupState.verifiedName = name;
+        this.signupState.verifiedEmail = email;
+        this.signupState.verifiedPhone = phone;
+        this.enterSignupProfileStep();
+    },
+
+    sendSignupOtp() {
+        const phoneInput = document.getElementById("regPhoneInput");
+        const phoneVal = (phoneInput?.value || "").trim();
+        const digits = phoneVal.replace(/\D/g, "");
+        if (digits.length < 8) {
+            this.showSignupError(this.t("signup_err_phone"));
+            return;
+        }
+
+        this.showSignupError("");
+        this.signupState.provider = "phone";
+        this.signupState.verifiedPhone = phoneVal;
+        const otp = String(Math.floor(1000 + Math.random() * 9000));
+        this.signupState.generatedOtp = otp;
+
+        const verifyBox = document.getElementById("otpVerifyBox");
+        const demoDisp = document.getElementById("otpDemoCodeDisplay");
+        const otpInput = document.getElementById("regOtpCode");
+        if (verifyBox) verifyBox.classList.remove("hidden");
+        if (demoDisp) demoDisp.innerText = otp;
+        if (otpInput) {
+            otpInput.value = "";
+            otpInput.focus();
+        }
+
+        showToast(this.t("signup_otp_sent", { phone: phoneVal }), "success");
+
+        clearInterval(this.signupState.otpTimerId);
+        const resendBtn = document.getElementById("resendOtpBtn");
+        let sec = 30;
+        if (resendBtn) {
+            resendBtn.disabled = true;
+            resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
+            this.signupState.otpTimerId = setInterval(() => {
+                sec--;
+                if (sec <= 0) {
+                    clearInterval(this.signupState.otpTimerId);
+                    resendBtn.disabled = false;
+                    resendBtn.innerText = this.t("signup_resend_otp");
+                } else {
+                    resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
+                }
+            }, 1000);
+        }
+    },
+
+    verifySignupOtp() {
+        const code = (document.getElementById("regOtpCode")?.value || "").trim();
+        if (!this.signupState.generatedOtp || code !== this.signupState.generatedOtp) {
+            this.showSignupError(this.t("signup_err_otp"));
+            return;
+        }
+
+        this.showSignupError("");
+        clearInterval(this.signupState.otpTimerId);
+
+        const existing = IronAuth.findExistingTrainee({ phone: this.signupState.verifiedPhone });
+        if (existing) {
+            IronAuth.loginTraineeDirect(existing);
+            const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(existing) : existing.name;
+            showToast(this.t("signup_existing_welcome", { name: dispName }), "success");
+            setTimeout(() => window.location.reload(), 600);
+            return;
+        }
+
+        this.signupState.verifiedEmail = "";
+        this.signupState.verifiedName = "";
+        this.enterSignupProfileStep();
+    },
+
+    enterSignupProfileStep() {
+        this.showSignupError("");
+        document.getElementById("signupStepMethod")?.classList.add("hidden");
+        document.getElementById("signupStepProfile")?.classList.remove("hidden");
+
+        const nameEl = document.getElementById("regName");
+        const phoneEl = document.getElementById("regProfilePhone");
+        if (nameEl) nameEl.value = this.signupState.verifiedName || "";
+        if (phoneEl) {
+            phoneEl.value = this.signupState.verifiedPhone || "";
+            phoneEl.readOnly = this.signupState.provider === "phone";
+        }
+        this.refreshSignupHeaderLabels();
+        this.updateSignupCalPreview();
+    },
+
+    backToSignupMethod() {
+        this.showSignupError("");
+        document.getElementById("signupStepProfile")?.classList.add("hidden");
+        document.getElementById("signupStepMethod")?.classList.remove("hidden");
+    },
+
+    updateSignupCalPreview() {
+        const previewEl = document.getElementById("regCalPreview");
+        if (!previewEl || typeof IronCalculator === "undefined") return;
+        const gender = document.getElementById("regGender")?.value || "male";
+        const age = document.getElementById("regAge")?.value || 26;
+        const weight = document.getElementById("regWeight")?.value || 78;
+        const height = document.getElementById("regHeight")?.value || 175;
+        const activity = document.getElementById("regActivity")?.value || 1.55;
+        const goalStr = document.getElementById("regGoal")?.value || "";
+        const goalOffset = goalStr.includes("تضخيم") ? 350 : (goalStr.includes("تثبيت") || goalStr.includes("نحت")) ? 0 : -500;
+        const calc = IronCalculator.calculate({ gender, age, weight, height, activity, goal: goalOffset });
+        previewEl.innerText = `${calc.targetCalories} kcal`;
+    },
+
+    handleCompleteClientSignup(e) {
+        e.preventDefault();
+        const name = (document.getElementById("regName")?.value || "").trim();
+        if (!name) {
+            this.showSignupError(this.t("signup_err_name"));
+            return;
+        }
+
+        const res = IronAuth.registerClient({
+            name,
+            email: this.signupState.verifiedEmail,
+            phone: (document.getElementById("regProfilePhone")?.value || this.signupState.verifiedPhone || "").trim(),
+            authProvider: this.signupState.provider || "phone",
+            gender: document.getElementById("regGender")?.value || "male",
+            age: document.getElementById("regAge")?.value || 26,
+            weight: document.getElementById("regWeight")?.value || 78,
+            height: document.getElementById("regHeight")?.value || 175,
+            activity: document.getElementById("regActivity")?.value || 1.55,
+            goal: document.getElementById("regGoal")?.value || "تنشيف وخسارة دهون",
+            program: document.getElementById("regProgram")?.value || "PPL (Push Pull Legs)"
+        });
+
+        if (res && res.success) {
+            showToast(this.t("signup_created_toast"), "success");
+            this.renderUserHeader(res.user);
+            this.updateImpersonationBanner(res.user);
+            this.renderAppViews(res.user);
+            this.openRenewPaymentModal();
+        }
     },
 
     initEventListeners() {

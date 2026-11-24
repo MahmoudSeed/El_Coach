@@ -155,22 +155,33 @@
     <main class="max-w-7xl mx-auto px-4 py-6">
 
         <!-- ============================================================= -->
-        <!-- شاشة تسجيل الدخول (AUTH VIEW) -->
+        <!-- شاشة تسجيل الدخول والاشتراك (AUTH & ONBOARDING VIEW) -->
         <!-- ============================================================= -->
-        <section id="authView" class="hidden min-h-[70vh] flex items-center justify-center py-10">
-            <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+        <section id="authView" class="hidden min-h-[70vh] flex items-center justify-center py-8">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
                 <div class="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl"></div>
-                <div class="text-center mb-8 relative z-10">
-                    <div class="brand-logo-frame w-40 sm:w-44 mx-auto flex items-center justify-center mb-4">
+                <div class="text-center mb-6 relative z-10">
+                    <div class="brand-logo-frame w-36 sm:w-40 mx-auto flex items-center justify-center mb-3">
                         <img src="LOGO.png" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⚡'">
                     </div>
                     <div class="inline-block text-[10px] font-black tracking-wider uppercase px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 mb-2">
                         Train Hard • Stay Focused • Be Strong
                     </div>
-                    <h2 class="text-2xl font-black text-white" data-i18n="login_title">تسجيل الدخول للمنصة</h2>
-                    <p class="text-xs text-gray-400 mt-1" data-i18n="login_subtitle">منصة الكوتش محمود للمشتركين ومتابعة الخطط والتغذية</p>
+                    <h2 id="authMainTitle" class="text-2xl font-black text-white" data-i18n="login_title">تسجيل الدخول للمنصة</h2>
+                    <p id="authMainSubtitle" class="text-xs text-gray-400 mt-1" data-i18n="login_subtitle">منصة الكوتش محمود للمشتركين ومتابعة الخطط والتغذية</p>
                 </div>
 
+                <!-- التبديل بين تسجيل الدخول والاشتراك الجديد -->
+                <div class="grid grid-cols-2 gap-1.5 bg-slate-950/90 p-1.5 rounded-2xl border border-slate-800 mb-6 relative z-10">
+                    <button type="button" id="authTabLogin" onclick="IronApp.switchAuthMode('login')" class="py-2.5 px-3 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 transition" data-i18n="auth_tab_login">
+                        تسجيل الدخول 🔑
+                    </button>
+                    <button type="button" id="authTabSignup" onclick="IronApp.switchAuthMode('signup')" class="py-2.5 px-3 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition" data-i18n="auth_tab_signup">
+                        اشتراك عميل جديد ✨
+                    </button>
+                </div>
+
+                <!-- 1. نموذج تسجيل الدخول الحالي -->
                 <form id="loginForm" onsubmit="IronApp.handleLogin(event)" class="space-y-4 relative z-10">
                     <div>
                         <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="login_username">اسم المستخدم (Username)</label>
@@ -191,31 +202,207 @@
                     </button>
                 </form>
 
-                <div class="mt-6 pt-6 border-t border-slate-800 text-center text-xs text-gray-400">
-                    <span data-i18n="login_footer">للاشتراك والحصول على حساب، تواصل مع الكوتش عبر واتساب.</span>
+                <!-- 2. واجهة اشتراك عميل جديد (Google / iCloud / Phone OTP) -->
+                <div id="signupContainer" class="hidden space-y-4 relative z-10">
+                    <div id="signupError" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold text-center"></div>
+
+                    <!-- الخطوة الأولى: اختيار طريقة الاشتراك -->
+                    <div id="signupStepMethod" class="space-y-4">
+                        <div id="signupButtonsWrapper" class="space-y-2.5">
+                            <!-- زر Google -->
+                            <button type="button" onclick="IronApp.startOAuthSignup('google')" class="w-full py-3 px-4 bg-white hover:bg-slate-100 text-slate-900 font-black text-xs rounded-xl border border-slate-200 shadow-sm transition flex items-center justify-center gap-2.5">
+                                <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
+                                    <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
+                                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
+                                </svg>
+                                <span data-i18n="signup_google">المتابعة بحساب Google</span>
+                            </button>
+
+                            <!-- زر iCloud / Apple -->
+                            <button type="button" onclick="IronApp.startOAuthSignup('icloud')" class="w-full py-3 px-4 bg-slate-950 hover:bg-slate-800 text-white font-black text-xs rounded-xl border border-slate-700 shadow-sm transition flex items-center justify-center gap-2.5">
+                                <svg class="w-4 h-4 flex-shrink-0 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.96 6.33c.67-.81 1.12-1.94 1-3.08-.96.04-2.13.64-2.82 1.45-.61.71-1.15 1.86-1 2.96 1.07.08 2.16-.52 2.82-1.33z"/>
+                                </svg>
+                                <span data-i18n="signup_icloud">المتابعة بحساب iCloud / Apple</span>
+                            </button>
+                        </div>
+
+                        <!-- بطاقة إكمال بيانات Google / iCloud -->
+                        <form id="oauthProviderCard" onsubmit="IronApp.submitOAuthStep(event)" class="hidden bg-slate-950/80 border border-emerald-500/30 rounded-2xl p-4 space-y-3">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                                <span id="oauthProviderBadge" class="text-xs font-black text-emerald-400"></span>
+                                <button type="button" onclick="IronApp.cancelOAuthSignup()" class="text-[11px] font-bold text-gray-400 hover:text-white underline" data-i18n="signup_change_method">تغيير طريقة التسجيل</button>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="signup_oauth_name">الاسم بالكامل *</label>
+                                <input type="text" id="regOauthName" required placeholder="اكتب اسمك كما سيظهر للكوتش..." data-i18n-placeholder="signup_oauth_name_ph" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label id="regOauthEmailLbl" class="block text-xs font-bold text-gray-300 mb-1"></label>
+                                <input type="email" id="regOauthEmail" required dir="ltr" placeholder="name@gmail.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="signup_oauth_phone_opt">رقم الهاتف / الواتساب (اختياري للمتابعة)</label>
+                                <input type="tel" id="regOauthPhone" dir="ltr" placeholder="+2010..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                            </div>
+                            <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-emerald-500/20 transition" data-i18n="signup_oauth_continue">
+                                متابعة لتحديد خطتك البدنية ←
+                            </button>
+                        </form>
+
+                        <!-- فاصل والتسجيل برقم الجوال OTP -->
+                        <div id="otpPhoneSection" class="space-y-3 pt-1">
+                            <div class="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                                <div class="h-px flex-1 bg-slate-800"></div>
+                                <span data-i18n="signup_or_otp">أو التسجيل برقم الجوال (OTP)</span>
+                                <div class="h-px flex-1 bg-slate-800"></div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="signup_phone_lbl">رقم الجوال مع كود الدولة *</label>
+                                <div class="flex gap-2">
+                                    <input type="tel" id="regPhoneInput" dir="ltr" placeholder="مثال: +201012345678" data-i18n-placeholder="signup_phone_ph"
+                                        class="flex-1 bg-slate-950/80 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold placeholder-gray-500 focus:border-emerald-500 outline-none">
+                                    <button type="button" id="sendOtpBtn" onclick="IronApp.sendSignupOtp()" class="px-3.5 py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/35 font-black text-xs rounded-xl whitespace-nowrap transition" data-i18n="signup_send_otp">
+                                        إرسال رمز التحقق (OTP) 📱
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- صندوق إدخال رمز التحقق OTP -->
+                            <div id="otpVerifyBox" class="hidden bg-slate-950/80 border border-emerald-500/30 rounded-2xl p-4 space-y-3">
+                                <div id="otpDemoBanner" class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs">
+                                    <span class="text-amber-300 font-bold text-[11px]" data-i18n="signup_demo_hint">وضع المعاينة الفورية — رمز التحقق التجريبي الخاص بك:</span>
+                                    <strong id="otpDemoCodeDisplay" class="text-emerald-400 font-mono text-sm font-black tracking-widest">0000</strong>
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="text-xs font-bold text-gray-300" data-i18n="signup_otp_lbl">أدخل رمز التحقق (4 أرقام) *</label>
+                                        <button type="button" id="resendOtpBtn" onclick="IronApp.sendSignupOtp()" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 underline" data-i18n="signup_resend_otp">إعادة إرسال الرمز</button>
+                                    </div>
+                                    <input type="text" id="regOtpCode" maxlength="6" inputmode="numeric" dir="ltr" placeholder="4829"
+                                        class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-center text-base text-emerald-400 font-mono font-black tracking-[0.4em] outline-none focus:border-emerald-500">
+                                </div>
+                                <button type="button" onclick="IronApp.verifySignupOtp()" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-emerald-500/20 transition" data-i18n="signup_otp_verify">
+                                    تأكيد الرمز والمتابعة ✅
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الخطوة الثانية: إكمال البيانات الجسدية وتحديد الهدف قبل فتح شاشة الدفع -->
+                    <form id="signupStepProfile" onsubmit="IronApp.handleCompleteClientSignup(event)" class="hidden space-y-3">
+                        <div class="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/25 rounded-xl px-3 py-2">
+                            <span id="signupVerifiedBadge" class="text-xs font-black text-emerald-400"></span>
+                            <button type="button" onclick="IronApp.backToSignupMethod()" class="text-[11px] font-bold text-gray-400 hover:text-white underline" data-i18n="signup_change_method">تغيير طريقة التسجيل</button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-300 mb-1" data-i18n="modal_tr_fullname">اسم المتدرب بالكامل *</label>
+                                <input type="text" id="regName" required placeholder="مثال: محمد السيد" data-i18n-placeholder="modal_tr_fullname_ph" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-300 mb-1" data-i18n="modal_tr_phone">رقم الهاتف / الواتساب</label>
+                                <input type="tel" id="regProfilePhone" dir="ltr" placeholder="+2010..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_gender">الجنس</label>
+                                <select id="regGender" onchange="IronApp.updateSignupCalPreview()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white font-bold outline-none">
+                                    <option value="male" data-i18n="calc_male">ذكر</option>
+                                    <option value="female" data-i18n="calc_female">أنثى</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_age">العمر</label>
+                                <input type="number" id="regAge" value="26" min="14" max="85" oninput="IronApp.updateSignupCalPreview()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_weight">الوزن (كجم)</label>
+                                <input type="number" step="0.5" id="regWeight" value="78" min="35" max="250" oninput="IronApp.updateSignupCalPreview()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_height">الطول (سم)</label>
+                                <input type="number" id="regHeight" value="175" min="120" max="230" oninput="IronApp.updateSignupCalPreview()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-center text-white font-bold outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_goal">الهدف التدريبي</label>
+                                <select id="regGoal" onchange="IronApp.updateSignupCalPreview()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white font-bold outline-none">
+                                    <option value="تنشيف وخسارة دهون" data-i18n="modal_tr_goal_cut">تنشيف وخسارة دهون</option>
+                                    <option value="نحت الجسم وتثبيت الوزن" data-i18n="modal_tr_goal_recomp">نحت الجسم وتثبيت الوزن</option>
+                                    <option value="تضخيم وبناء عضلات" data-i18n="modal_tr_goal_bulk">تضخيم وبناء عضلات</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400 font-bold mb-1" data-i18n="modal_tr_activity">مستوى النشاط</label>
+                                <select id="regActivity" onchange="IronApp.updateSignupCalPreview()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white font-bold outline-none">
+                                    <option value="1.2" data-i18n="modal_tr_act_12">خامل (قليل الحركة)</option>
+                                    <option value="1.375" data-i18n="modal_tr_act_1375">نشاط خفيف (1-3 أيام)</option>
+                                    <option value="1.55" selected data-i18n="modal_tr_act_155">نشاط متوسط (3-5 أيام)</option>
+                                    <option value="1.725" data-i18n="modal_tr_act_1725">نشاط عالي (6-7 أيام)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-300 mb-1" data-i18n="modal_tr_prog">البرنامج التدريبي المقترح</label>
+                            <select id="regProgram" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none">
+                                <option value="PPL (Push Pull Legs)">Push / Pull / Legs (PPL)</option>
+                                <option value="Upper / Lower Split">Upper / Lower Split</option>
+                                <option value="Arnold Split">Arnold Split</option>
+                                <option value="Bro Split">Bro Split</option>
+                                <option value="Anterior / Posterior">Anterior / Posterior</option>
+                                <option value="PPL × Upper / Lower">PPL × Upper / Lower</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs">
+                            <span class="text-gray-400 font-bold" data-i18n="signup_cal_preview">السعرات المحسوبة تلقائياً لهدفك:</span>
+                            <strong id="regCalPreview" class="text-emerald-400 font-black font-mono text-sm">2100 kcal</strong>
+                        </div>
+
+                        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition" data-i18n="signup_create_btn">
+                            إنشاء الحساب والانتقال للدفع وتفعيل الاشتراك 💳
+                        </button>
+                    </form>
+                </div>
+
+                <div class="mt-6 pt-5 border-t border-slate-800 text-center text-xs text-gray-400 relative z-10">
+                    <span data-i18n="login_footer">للاشتراك والحصول على حساب، اختر تبويب «اشتراك عميل جديد» بالأعلى أو تواصل مع الكوتش عبر واتساب.</span>
                 </div>
             </div>
         </section>
 
         <!-- ============================================================= -->
-        <!-- شاشة انتهاء الاشتراك والتجديد (EXPIRED SUBSCRIPTION SCREEN) -->
+        <!-- شاشة الدفع وتفعيل/تجديد الاشتراك (ACTIVATION & RENEWAL SCREEN) -->
         <!-- ============================================================= -->
         <section id="expiredView" class="hidden min-h-[70vh] flex items-center justify-center py-10">
             <div class="bg-slate-900/90 border border-rose-500/30 rounded-3xl p-8 max-w-xl w-full shadow-2xl relative text-center">
                 <div class="brand-logo-frame w-28 mx-auto mb-3 flex items-center justify-center">
                     <img src="LOGO.png" alt="شعار الكوتش محمود - Coach Mahmoud" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='⏳'">
                 </div>
-                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-black mb-3">
-                    <span data-i18n="expired_badge">⏳ انتهت مدة الاشتراك</span>
+                <div id="expiredBadgeWrap" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-black mb-3">
+                    <span id="expiredBadgeText" data-i18n="expired_badge">⏳ انتهت مدة الاشتراك</span>
                 </div>
-                <h2 class="text-2xl font-black text-white" data-i18n="expired_title">انتهت مدة اشتراكك (30 يوماً)</h2>
-                <p class="text-sm text-gray-300 mt-2 leading-relaxed" data-i18n="expired_desc">
+                <h2 id="expiredTitleText" class="text-2xl font-black text-white" data-i18n="expired_title">انتهت مدة اشتراكك (30 يوماً)</h2>
+                <p id="expiredDescText" class="text-sm text-gray-300 mt-2 leading-relaxed" data-i18n="expired_desc">
                     شكراً لالتزامك يا بطل! لتجديد خطتك التدريبية والغذائية ومواصلة المتابعة مع الكوتش، يرجى تجديد الاشتراك عبر إحدى وسائل الدفع المعتمدة أدناه.
                 </p>
 
+                <!-- ملخص خطة العميل الجديد بانتظار التفعيل -->
+                <div id="pendingPlanPreviewBox" class="hidden bg-emerald-500/10 border border-emerald-500/25 rounded-2xl p-3.5 mt-4 text-xs"></div>
+
                 <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 my-6 text-start space-y-3">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                        <span class="text-xs text-gray-400" data-i18n="expired_price_label">قيمة التجديد الشهري (30 يوماً):</span>
+                        <span class="text-xs text-gray-400" data-i18n="expired_price_label">قيمة الاشتراك الشهري (30 يوماً):</span>
                         <strong class="text-emerald-400 font-black text-base" id="expiredPriceDisplay">500 ج.م / ر.س</strong>
                     </div>
 
@@ -237,10 +424,10 @@
 
                 <div class="space-y-3">
                     <button onclick="IronApp.openRenewPaymentModal()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
-                        <span data-i18n="expired_renew_btn">💳 تجديد الآن ورفع إيصال التحويل</span>
+                        <span id="expiredRenewBtnText" data-i18n="expired_renew_btn">💳 الدفع الآن ورفع إيصال التحويل</span>
                     </button>
-                    <button onclick="IronApp.contactCoachWhatsapp()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition" data-i18n="expired_wa_btn">
-                        محادثة الكوتش مباشرة عبر واتساب 💬
+                    <button onclick="IronApp.contactCoachWhatsapp()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition">
+                        <span id="expiredWaBtnText" data-i18n="expired_wa_btn">محادثة الكوتش مباشرة عبر واتساب 💬</span>
                     </button>
                 </div>
             </div>
@@ -648,7 +835,7 @@
                 </div>
             </div>
             <div class="text-[11px] font-bold text-gray-400">
-                <span data-i18n="brand_footer_sub">منصة التدريب والتغذية الأونلاين المعتمدة</span> • v3.0
+                <span data-i18n="brand_footer_sub">منصة التدريب والتغذية الأونلاين المعتمدة</span> • v3.1
             </div>
         </footer>
 

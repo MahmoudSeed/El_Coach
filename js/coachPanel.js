@@ -17,6 +17,7 @@ const IronCoachPanel = {
 
         const activeCount = trainees.filter(t => t.status === "active").length;
         const expiringCount = trainees.filter(t => t.status === "expiring").length;
+        const pendingCount = trainees.filter(t => t.status === "pending").length;
         const expiredCount = trainees.filter(t => t.status === "expired").length;
 
         let filteredTrainees = trainees;
@@ -112,6 +113,7 @@ const IronCoachPanel = {
                         <button onclick="IronCoachPanel.setFilter('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'all' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-gray-300'}">${txt("coach_filter_all", { count: trainees.length })}</button>
                         <button onclick="IronCoachPanel.setFilter('active')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'active' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-gray-300'}">${txt("coach_filter_active", { count: activeCount })}</button>
                         <button onclick="IronCoachPanel.setFilter('expiring')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'expiring' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-gray-300'}">${txt("coach_filter_expiring", { count: expiringCount })}</button>
+                        <button onclick="IronCoachPanel.setFilter('pending')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'pending' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-gray-300'}">${txt("coach_filter_pending", { count: pendingCount })}</button>
                         <button onclick="IronCoachPanel.setFilter('expired')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'expired' ? 'bg-rose-500 text-white shadow-sm' : 'bg-slate-800 text-gray-300'}">${txt("coach_filter_expired", { count: expiredCount })}</button>
                     </div>
                 </div>
@@ -128,11 +130,16 @@ const IronCoachPanel = {
                                 ? `<span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">${txt("status_active", { days: t.daysLeft })}</span>`
                                 : t.status === 'expiring'
                                 ? `<span class="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px] font-bold">${txt("status_expiring", { days: t.daysLeft })}</span>`
+                                : t.status === 'pending'
+                                ? `<span class="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/25 text-[11px] font-bold">${txt("status_pending")}</span>`
                                 : `<span class="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[11px] font-bold">${txt("status_expired")}</span>`;
 
                             const checkinsCount = Array.isArray(t.history) ? t.history.length : 0;
                             const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(t) : t.name;
                             const dispGoal = typeof IronI18n !== "undefined" ? IronI18n.trGoal(t.goal || "تنشيف وخسارة دهون") : (t.goal || "تنشيف");
+                            const provLabel = t.authProvider && t.authProvider !== "manual"
+                                ? `<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-cyan-400 font-bold border border-slate-700">${t.authProvider === 'google' ? '🔵' : t.authProvider === 'icloud' ? '☁️' : '📱'} ${typeof IronI18n !== "undefined" ? IronI18n.trProvider(t.authProvider) : t.authProvider}</span>`
+                                : '';
                             const initial = (dispName || "U").trim().charAt(0).toUpperCase();
                             const avatarBadge = t.avatar
                                 ? `<img src="${t.avatar}" alt="${dispName}" class="w-10 h-10 rounded-full object-cover border-2 border-emerald-500/40 flex-shrink-0">`
@@ -145,7 +152,10 @@ const IronCoachPanel = {
                                             <div class="flex items-center gap-2.5 min-w-0">
                                                 ${avatarBadge}
                                                 <div class="min-w-0">
-                                                    <h4 class="font-black text-white text-base truncate">${dispName}</h4>
+                                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                                        <h4 class="font-black text-white text-base truncate">${dispName}</h4>
+                                                        ${provLabel}
+                                                    </div>
                                                     <span class="text-xs text-gray-400 font-mono truncate block">@${t.username} • ${t.phone || (isEn ? 'No phone' : 'بدون هاتف')}</span>
                                                 </div>
                                             </div>
