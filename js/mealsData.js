@@ -1221,34 +1221,30 @@ const defaultMealsData = [
     }
 ];
 
-// وظائف التخزين المحلي للوجبات المخصصة مع عزل بيانات كل مشترك
+// وظائف الوجبات المخصصة المتزامنة مع Supabase مع عزل بيانات كل مشترك
 function getMealsDatabase() {
-    const customMeals = localStorage.getItem("iron_custom_meals");
-    if (customMeals) {
-        try {
-            const parsed = JSON.parse(customMeals);
-            const currentUser = (typeof IronAuth !== "undefined" && IronAuth.getCurrentUser) ? IronAuth.getCurrentUser() : null;
-            const visibleCustom = parsed.filter(m => {
-                if (!m.ownerId || m.ownerId === "coach") return true;
-                if (currentUser && currentUser.role === "coach") return true;
-                return currentUser && currentUser.id && m.ownerId === currentUser.id;
-            });
-            return [...defaultMealsData, ...visibleCustom];
-        } catch (e) { }
-    }
-    return defaultMealsData;
+    const parsed = (typeof IronSupabase !== "undefined" && Array.isArray(IronSupabase.cache.customMeals))
+        ? IronSupabase.cache.customMeals
+        : [];
+    const currentUser = (typeof IronAuth !== "undefined" && IronAuth.getCurrentUser) ? IronAuth.getCurrentUser() : null;
+    const visibleCustom = parsed.filter(m => {
+        if (!m.ownerId || m.ownerId === "coach") return true;
+        if (currentUser && currentUser.role === "coach") return true;
+        return currentUser && currentUser.id && m.ownerId === currentUser.id;
+    });
+    return [...defaultMealsData, ...visibleCustom];
 }
 
-function saveCustomMeal(meal) {
-    const current = localStorage.getItem("iron_custom_meals");
-    let list = [];
-    if (current) {
-        try { list = JSON.parse(current); } catch (e) { }
-    }
+async function saveCustomMeal(meal) {
     const currentUser = (typeof IronAuth !== "undefined" && IronAuth.getCurrentUser) ? IronAuth.getCurrentUser() : null;
+    if (typeof IronSupabase !== "undefined" && IronSupabase.isAvailable()) {
+        const inserted = await IronSupabase.insertCustomMeal(meal, currentUser);
+        if (inserted) return inserted;
+    }
     meal.id = "custom_" + Date.now();
     meal.ownerId = currentUser && currentUser.role === "trainee" && currentUser.id ? currentUser.id : "coach";
-    list.push(meal);
-    localStorage.setItem("iron_custom_meals", JSON.stringify(list));
+    if (typeof IronSupabase !== "undefined") {
+        IronSupabase.cache.customMeals.push(meal);
+    }
     return meal;
 }

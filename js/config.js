@@ -125,25 +125,31 @@ const IronConfig = {
     ]
 };
 
-// حفظ واسترجاع الإعدادات من التخزين المحلي مع الترحيل التلقائي لحساب الأدمن
+// استرجاع وحفظ الإعدادات من ذاكرة الكلاود السحابية (Supabase app_settings) بدون تخزين كلمات مرور محلياً
 function getAppConfig() {
-    const saved = localStorage.getItem("iron_coach_config");
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            if (!parsed.coachInfo) parsed.coachInfo = { ...IronConfig.coachInfo };
-            if (!parsed.coachInfo.adminUsername || !parsed.coachInfo.adminPasswordHash) {
-                parsed.coachInfo.adminUsername = parsed.coachInfo.adminUsername || "El_Coach";
-                parsed.coachInfo.adminPasswordHash = parsed.coachInfo.adminPasswordHash || hashPassword("123123");
-                localStorage.setItem("iron_coach_config", JSON.stringify(parsed));
-            }
-            return parsed;
-        } catch (e) { }
+    if (typeof IronSupabase !== "undefined" && IronSupabase.cache && IronSupabase.cache.appConfig) {
+        return IronSupabase.cache.appConfig;
     }
-    localStorage.setItem("iron_coach_config", JSON.stringify(IronConfig));
-    return IronConfig;
+    return {
+        appName: IronConfig.appName,
+        appVersion: IronConfig.appVersion,
+        coachInfo: { ...IronConfig.coachInfo },
+        subscriptionPrice: { ...IronConfig.subscriptionPrice }
+    };
 }
 
-function saveAppConfig(newConfig) {
-    localStorage.setItem("iron_coach_config", JSON.stringify(newConfig));
+async function loadAppConfigFromCloud() {
+    if (typeof IronSupabase !== "undefined") {
+        const loaded = await IronSupabase.loadAppSettings();
+        if (loaded) return loaded;
+    }
+    return getAppConfig();
+}
+
+async function saveAppConfig(newConfig) {
+    if (typeof IronSupabase !== "undefined") {
+        IronSupabase.cache.appConfig = newConfig;
+        return await IronSupabase.saveAppSettings(newConfig);
+    }
+    return { data: newConfig, error: null };
 }

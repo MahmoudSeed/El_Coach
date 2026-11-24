@@ -237,7 +237,7 @@ const IronLiveGym = {
     },
 
     // إنهاء التمرين وحفظ البيانات في سجل المتدرب
-    finishWorkout() {
+    async finishWorkout() {
         if (!this.currentWorkout) return;
         this.stopRestTimer();
 
@@ -254,8 +254,7 @@ const IronLiveGym = {
             }, 0);
         }, 0);
 
-        const logs = JSON.parse(localStorage.getItem("iron_workout_logs") || "[]");
-        logs.unshift({
+        const entry = {
             id: "log_" + Date.now(),
             traineeId,
             date: new Date().toISOString(),
@@ -265,8 +264,12 @@ const IronLiveGym = {
             completedSets: completedSets || totalSets,
             totalSets,
             totalVolumeKg: Math.round(totalVolumeKg)
-        });
-        localStorage.setItem("iron_workout_logs", JSON.stringify(logs.slice(0, 100)));
+        };
+        if (typeof IronSupabase !== "undefined" && IronSupabase.isAvailable() && user?.id) {
+            await IronSupabase.insertWorkoutLog(entry, user.traineeData?.authUserId || null);
+        } else if (typeof IronSupabase !== "undefined") {
+            IronSupabase.cache.workoutLogs.unshift(entry);
+        }
 
         sessionStorage.removeItem("iron_active_workout");
         closeModal("liveGymModal");

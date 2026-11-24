@@ -51,26 +51,41 @@ const IronApp = {
         return typeof IronI18n !== "undefined" ? IronI18n.t(key, vars) : key;
     },
 
-    init() {
+    async init() {
         // 1. تهيئة النمط (الداكن / الفاتح) واللغة (العربية / الإنجليزية)
         this.initTheme();
         this.initLanguage();
-
-        // 2. تهيئة المشتركين الافتراضيين
-        IronAuth.getAllTrainees();
-
-        // 3. فحص الجلسة الحالية
-        const user = IronAuth.getCurrentUser();
-
-        this.renderUserHeader(user);
-        this.updateImpersonationBanner(user);
-        this.renderAppViews(user);
         this.initEventListeners();
 
+        // 2. تحميل إعدادات الكوتش والدفع من Supabase وجلب الجلسة السحابية
+        await loadAppConfigFromCloud();
+        const cloudState = await IronAuth.initFromCloud();
+
+        if (cloudState?.needsOnboarding && cloudState.oauthUser) {
+            const oauthUser = cloudState.oauthUser;
+            const prov = oauthUser.app_metadata?.provider === "apple" ? "icloud" : (oauthUser.app_metadata?.provider || "google");
+            this.renderUserHeader(null);
+            this.updateImpersonationBanner(null);
+            this.renderAppViews(null);
+            this.switchAuthMode("signup");
+            this.signupState.isOAuthOnboarding = true;
+            this.signupState.provider = prov;
+            this.signupState.verifiedName = oauthUser.user_metadata?.full_name || oauthUser.user_metadata?.name || "";
+            this.signupState.verifiedEmail = oauthUser.email || "";
+            this.signupState.verifiedPhone = oauthUser.phone || "";
+            this.enterSignupProfileStep();
+        } else {
+            const user = cloudState?.user || null;
+            this.renderUserHeader(user);
+            this.updateImpersonationBanner(user);
+            this.renderAppViews(user);
+        }
+
         // تحديث حالة الاشتراك عند العودة للتطبيق بعد غياب
-        document.addEventListener("visibilitychange", () => {
+        document.addEventListener("visibilitychange", async () => {
             if (!document.hidden) {
-                const currentUser = IronAuth.getCurrentUser();
+                const state = await IronAuth.initFromCloud();
+                const currentUser = state?.user || null;
                 if (currentUser && currentUser.role === "trainee") {
                     this.renderUserHeader(currentUser);
                     this.renderTraineeData(currentUser.traineeData);
@@ -296,6 +311,9 @@ const IronApp = {
         const desktopNav = document.getElementById("desktopNav");
         const mobileNav = document.querySelector(".mobile-bottom-nav");
 
+        const cloudLoader = document.getElementById("cloudLoadingState");
+        if (cloudLoader) cloudLoader.classList.add("hidden");
+
         authView.classList.add("hidden");
         expiredView.classList.add("hidden");
         coachDashboardView.classList.add("hidden");
@@ -361,6 +379,16 @@ const IronApp = {
                 if (renewBtnText) renewBtnText.innerText = this.t("expired_renew_btn");
                 if (waBtnText) waBtnText.innerText = this.t("expired_wa_btn");
                 if (previewBox) previewBox.classList.add("hidden");
+            }
+            const receiptNotice = document.getElementById("pendingReceiptNotice");
+            if (receiptNotice) {
+                const rec = user.traineeData?.lastRenewalReceipt;
+                if (rec && rec.status === "pending_review") {
+                    receiptNotice.innerText = this.t("receipt_pending_banner", { file: rec.fileName || "" });
+                    receiptNotice.classList.remove("hidden");
+                } else {
+                    receiptNotice.classList.add("hidden");
+                }
             }
             return;
         }
@@ -436,17 +464,33 @@ const IronApp = {
                 const sy = Math.max(0, (img.height - size) / 2);
                 ctx.drawImage(img, sx, sy, size, size, 0, 0, maxDim, maxDim);
 
-                const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
                 const user = IronAuth.getCurrentUser();
-                if (user && user.role === "trainee") {
-                    const updated = IronAuth.updateTrainee(user.id, { avatar: dataUrl });
-                    if (updated) {
-                        this.renderTraineeAvatar(updated);
-                        this.renderUserHeader(IronAuth.getCurrentUser());
-                        showToast(this.t("avatar_saved"), "success");
-                    }
+                if (!user || user.role !== "trainee") {
+                    input.value = "";
+                    return;
                 }
-                input.value = "";
+
+                canvas.toBlob(async (blob) => {
+                    try {
+                        let avatarUrl = canvas.toDataURL("image/jpeg", 0.82);
+                        const targetAuthId = user.traineeData?.authUserId;
+                        if (blob && targetAuthId && typeof IronSupabase !== "undefined") {
+                            const uploadedUrl = await IronSupabase.uploadAvatarBlob(targetAuthId, blob);
+                            if (uploadedUrl) avatarUrl = uploadedUrl;
+                        }
+                        const updated = IronAuth.updateTrainee(user.id, { avatar: avatarUrl });
+                        if (updated) {
+                            await IronAuth.persistTraineeFields(updated);
+                            this.renderTraineeAvatar(updated);
+                            this.renderUserHeader(IronAuth.getCurrentUser());
+                            showToast(this.t("avatar_saved"), "success");
+                        }
+                    } catch (err) {
+                        console.error("Avatar upload failed:", err);
+                    } finally {
+                        input.value = "";
+                    }
+                }, "image/jpeg", 0.82);
             };
             img.onerror = () => {
                 input.value = "";
@@ -456,11 +500,15 @@ const IronApp = {
         reader.readAsDataURL(file);
     },
 
-    removeTraineeAvatar() {
+    async removeTraineeAvatar() {
         const user = IronAuth.getCurrentUser();
         if (!user || user.role !== "trainee") return;
+        if (user.traineeData?.authUserId && typeof IronSupabase !== "undefined") {
+            await IronSupabase.removeAvatarFiles(user.traineeData.authUserId);
+        }
         const updated = IronAuth.updateTrainee(user.id, { avatar: "" });
         if (updated) {
+            await IronAuth.persistTraineeFields(updated).catch(() => {});
             this.renderTraineeAvatar(updated);
             this.renderUserHeader(IronAuth.getCurrentUser());
             showToast(this.t("avatar_removed"), "success");
@@ -578,7 +626,7 @@ const IronApp = {
         const box = document.getElementById("waterTrackerInteractiveBox");
         if (!box || !trainee) return;
 
-        const logs = JSON.parse(localStorage.getItem("iron_water_logs") || "{}");
+        const logs = (typeof IronSupabase !== "undefined" && IronSupabase.cache.waterLogs) ? IronSupabase.cache.waterLogs : {};
         const key = this.getTodayWaterKey(trainee.id);
         const cups = parseInt(logs[key]) || 0;
         const consumedLiters = (cups * 0.25).toFixed(2);
@@ -617,11 +665,15 @@ const IronApp = {
         const user = IronAuth.getCurrentUser();
         if (!user || !user.traineeData) return;
         const trainee = user.traineeData;
-        const logs = JSON.parse(localStorage.getItem("iron_water_logs") || "{}");
+        const logs = (typeof IronSupabase !== "undefined" && IronSupabase.cache.waterLogs) ? IronSupabase.cache.waterLogs : {};
         const key = this.getTodayWaterKey(trainee.id);
+        const todayStr = new Date().toISOString().split("T")[0];
         const nextCups = Math.max(0, (parseInt(logs[key]) || 0) + delta);
         logs[key] = nextCups;
-        localStorage.setItem("iron_water_logs", JSON.stringify(logs));
+
+        if (typeof IronSupabase !== "undefined") {
+            IronSupabase.saveWaterLog(trainee.id, trainee.authUserId, todayStr, nextCups);
+        }
 
         const targetLiters = parseFloat(((parseFloat(trainee.weight) || 75) * 0.035).toFixed(1));
         this.renderWaterTracker(trainee, targetLiters);
@@ -639,7 +691,9 @@ const IronApp = {
         const user = IronAuth.getCurrentUser();
         const traineeId = user && user.id ? user.id : null;
 
-        const allLogs = JSON.parse(localStorage.getItem("iron_workout_logs") || "[]");
+        const allLogs = (typeof IronSupabase !== "undefined" && Array.isArray(IronSupabase.cache.workoutLogs))
+            ? IronSupabase.cache.workoutLogs
+            : [];
         const myLogs = traineeId
             ? allLogs.filter(l => l.traineeId === traineeId)
             : [];
@@ -884,19 +938,19 @@ const IronApp = {
     saveDietPlanForCurrentUser(plan) {
         const user = IronAuth.getCurrentUser();
         if (!user || !user.id) return;
-        const allSaved = JSON.parse(localStorage.getItem("iron_saved_diets") || "{}");
-        allSaved[user.id] = {
-            ...plan,
-            targetCaloriesSnapshot: user.traineeData?.calories || 2000
-        };
-        localStorage.setItem("iron_saved_diets", JSON.stringify(allSaved));
+        const snap = user.traineeData?.calories || 2000;
+        if (typeof IronSupabase !== "undefined") {
+            IronSupabase.saveDietPlan(user.id, user.traineeData?.authUserId || null, plan, snap);
+        }
     },
 
     getSavedDietPlanForCurrentUser() {
         const user = IronAuth.getCurrentUser();
         if (!user || !user.id) return null;
-        const allSaved = JSON.parse(localStorage.getItem("iron_saved_diets") || "{}");
-        return allSaved[user.id] || null;
+        if (typeof IronSupabase !== "undefined" && IronSupabase.cache.savedDiets) {
+            return IronSupabase.cache.savedDiets[user.id] || null;
+        }
+        return null;
     },
 
     generateDayDiet(forceNew = false) {
@@ -1409,24 +1463,33 @@ const IronApp = {
     },
 
     // تسجيل الدخول
-    handleLogin(e) {
+    async handleLogin(e) {
         e.preventDefault();
         const u = document.getElementById("loginUsername").value;
         const p = document.getElementById("loginPassword").value;
         const err = document.getElementById("loginError");
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        if (err) err.classList.add("hidden");
+        if (submitBtn) submitBtn.disabled = true;
 
-        const res = IronAuth.login(u, p);
-        if (res.success) {
-            window.location.reload();
-        } else {
-            err.innerText = res.message || this.t("login_invalid");
-            err.classList.remove("hidden");
+        try {
+            const res = await IronAuth.login(u, p);
+            if (res.success) {
+                window.location.reload();
+            } else {
+                if (err) {
+                    err.innerText = res.message || this.t("login_invalid");
+                    err.classList.remove("hidden");
+                }
+            }
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
         }
     },
 
     // تسجيل دخول سريع للحسابات التجريبية للمعاينة
-    quickLogin(u, p) {
-        const res = IronAuth.login(u, p);
+    async quickLogin(u, p) {
+        const res = await IronAuth.login(u, p);
         if (res.success) {
             window.location.reload();
         }
@@ -1437,9 +1500,11 @@ const IronApp = {
     },
 
     // إضافة وجبة مخصصة
-    handleAddCustomMeal(e) {
+    async handleAddCustomMeal(e) {
         e.preventDefault();
         const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
         const newMeal = {
             name: form.mealName.value,
             category: form.mealCategory.value,
@@ -1451,12 +1516,16 @@ const IronApp = {
             img: form.mealImg.value || "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500"
         };
 
-        saveCustomMeal(newMeal);
-        closeModal("addCustomMealModal");
-        form.reset();
-        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
-        showToast(isEn ? "Meal added and saved to your library!" : "تمت إضافة الوجبة وحفظها في مكتبتك بنجاح!", "success");
-        this.renderMealsGrid();
+        try {
+            await saveCustomMeal(newMeal);
+            closeModal("addCustomMealModal");
+            form.reset();
+            const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+            showToast(isEn ? "Meal added and saved to your library!" : "تمت إضافة الوجبة وحفظها في مكتبتك بنجاح!", "success");
+            this.renderMealsGrid();
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
     },
 
     // حساب السعرات التلقائي عند إضافة متدرب جديد بواسطة الكوتش
@@ -1478,14 +1547,17 @@ const IronApp = {
     },
 
     // إضافة متدرب جديد
-    handleAddTrainee(e) {
+    async handleAddTrainee(e) {
         e.preventDefault();
         const form = e.target;
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+
         const trainee = {
             name: form.tName.value.trim(),
             username: form.tUsername.value.trim().toLowerCase(),
-            password: form.tPassword.value.trim() || "123",
+            password: form.tPassword.value.trim() || "123456",
             phone: form.tPhone.value.trim(),
             subscriptionDays: parseInt(form.tDays.value) || 30,
             weight: parseFloat(form.tWeight.value) || 75,
@@ -1499,12 +1571,18 @@ const IronApp = {
             coachNote: form.tCoachNote ? form.tCoachNote.value.trim() : ""
         };
 
-        const added = IronAuth.addTrainee(trainee);
-        closeModal("addTraineeModal");
-        form.reset();
-        const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(added || trainee) : trainee.name;
-        showToast(isEn ? `Client account created for ${dispName}!` : `تم إنشاء حساب المتدرب ${dispName} بنجاح!`, "success");
-        IronCoachPanel.renderCoachDashboard();
+        try {
+            const added = await IronAuth.addTrainee(trainee);
+            closeModal("addTraineeModal");
+            form.reset();
+            const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(added || trainee) : trainee.name;
+            showToast(isEn ? `Client account created for ${dispName}!` : `تم إنشاء حساب المتدرب ${dispName} بنجاح!`, "success");
+            IronCoachPanel.renderCoachDashboard();
+        } catch (err) {
+            showToast(err?.message || (isEn ? "Failed to add client" : "تعذر إنشاء حساب المشترك"), "error");
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
     },
 
     // حفظ إعدادات الكوتش
@@ -1561,8 +1639,8 @@ const IronApp = {
         openModal("renewModal");
     },
 
-    // تأكيد التجديد بعد التحقق من إرفاق إيصال الدفع الفعلي
-    confirmRenewalPayment() {
+    // رفع إيصال التحويل إلى التخزين السحابي وإرساله لمراجعة الكوتش
+    async confirmRenewalPayment() {
         const fileInput = document.getElementById("receiptUploadInput");
         const errorBox = document.getElementById("receiptUploadError");
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
@@ -1579,16 +1657,30 @@ const IronApp = {
 
         const receiptFile = fileInput.files[0];
         const user = IronAuth.getCurrentUser();
-        if (user && user.role === "trainee") {
-            const receiptInfo = {
-                fileName: receiptFile.name,
-                fileSize: receiptFile.size,
-                uploadedAt: new Date().toISOString()
-            };
-            IronAuth.renewSubscription(user.id, 30, receiptInfo);
+        if (!user || user.role !== "trainee") return;
+
+        const submitBtn = document.querySelector("#renewModal button[onclick*='confirmRenewalPayment']");
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            const authUid = user.traineeData?.authUserId || (await IronSupabase.initClient().auth.getUser()).data?.user?.id;
+            const { path, error } = await IronSupabase.uploadReceiptFile(authUid, receiptFile);
+            if (error || !path) {
+                throw new Error(error || "Upload failed");
+            }
+            await IronAuth.submitRenewalReceipt(path, receiptFile.name, receiptFile.size, user.id);
             closeModal("renewModal");
-            showToast(isEn ? `Receipt (${receiptFile.name}) received! Your 30-day subscription is renewed! 🔥` : `تم استلام الإيصال (${receiptFile.name}) وتجديد اشتراكك لـ 30 يوماً بنجاح! 🔥`, "success");
-            setTimeout(() => window.location.reload(), 1200);
+            showToast(this.t("receipt_sent_review", { file: receiptFile.name }), "success");
+            this.renderAppViews(IronAuth.getCurrentUser());
+        } catch (err) {
+            const msg = err?.message || (isEn ? "Failed to upload receipt" : "تعذر رفع الإيصال، حاول مرة أخرى");
+            if (errorBox) {
+                errorBox.innerText = msg;
+                errorBox.classList.remove("hidden");
+            }
+            showToast(msg, "error");
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
         }
     },
 
@@ -1611,16 +1703,18 @@ const IronApp = {
     },
 
     // =========================================================================
-    // تسجيل اشتراك العملاء الجدد من الصفحة الرئيسية (Google / iCloud / Phone OTP)
+    // تسجيل اشتراك العملاء الجدد من الصفحة الرئيسية (Google / iCloud / مباشر / Phone OTP)
     // =========================================================================
     signupState: {
         mode: "login",
         provider: null,
-        generatedOtp: null,
+        isOAuthOnboarding: false,
+        otpToken: null,
         otpTimerId: null,
         verifiedPhone: "",
         verifiedEmail: "",
-        verifiedName: ""
+        verifiedName: "",
+        verifiedPassword: ""
     },
 
     showSignupError(msg = "") {
@@ -1664,13 +1758,13 @@ const IronApp = {
 
     loginOtpState: {
         phone: "",
-        code: null,
         timerId: null
     },
 
-    sendLoginOtp() {
+    async sendLoginOtp() {
         const phoneInput = document.getElementById("loginPhoneInput");
         const errBox = document.getElementById("loginOtpError");
+        const sendBtn = document.getElementById("sendLoginOtpBtn");
         const phoneVal = (phoneInput?.value || "").trim();
         const digits = phoneVal.replace(/\D/g, "");
 
@@ -1683,58 +1777,73 @@ const IronApp = {
             return;
         }
 
-        const matched = IronAuth.findAccountByPhone(phoneVal);
-        if (!matched) {
-            if (errBox) {
-                errBox.innerHTML = `
-                    <div>${this.t("login_err_not_found")}</div>
-                    <button type="button" onclick="IronApp.switchToSignupWithPhone()" class="text-emerald-400 hover:text-emerald-300 font-black underline mt-1">
-                        ${this.t("login_switch_to_signup")}
-                    </button>
-                `;
-                errBox.classList.remove("hidden");
-            }
-            return;
-        }
-
-        const otp = String(Math.floor(1000 + Math.random() * 9000));
-        this.loginOtpState.phone = phoneVal;
-        this.loginOtpState.code = otp;
-
-        const verifyBox = document.getElementById("loginOtpVerifyBox");
-        const demoDisp = document.getElementById("loginOtpDemoCodeDisplay");
-        const codeInput = document.getElementById("loginOtpCode");
-        if (verifyBox) verifyBox.classList.remove("hidden");
-        if (demoDisp) demoDisp.innerText = otp;
-        if (codeInput) {
-            codeInput.value = "";
-            codeInput.focus();
-        }
-        showToast(this.t("signup_otp_sent", { phone: phoneVal }), "success");
-
-        clearInterval(this.loginOtpState.timerId);
-        const resendBtn = document.getElementById("resendLoginOtpBtn");
-        let sec = 30;
-        if (resendBtn) {
-            resendBtn.disabled = true;
-            resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
-            this.loginOtpState.timerId = setInterval(() => {
-                sec--;
-                if (sec <= 0) {
-                    clearInterval(this.loginOtpState.timerId);
-                    resendBtn.disabled = false;
-                    resendBtn.innerText = this.t("signup_resend_otp");
-                } else {
-                    resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
+        if (sendBtn) sendBtn.disabled = true;
+        try {
+            const res = await IronAuth.sendPhoneOtp(phoneVal, "login");
+            if (!res.ok) {
+                if (res.error === "SMS_NOT_CONFIGURED") {
+                    if (errBox) {
+                        errBox.innerText = this.t("sms_not_configured");
+                        errBox.classList.remove("hidden");
+                    }
+                    return;
                 }
-            }, 1000);
+                if (res.error === "NOT_FOUND") {
+                    if (errBox) {
+                        errBox.innerHTML = `
+                            <div>${this.t("login_err_not_found")}</div>
+                            <button type="button" onclick="IronApp.switchToSignupWithPhone()" class="text-emerald-400 hover:text-emerald-300 font-black underline mt-1">
+                                ${this.t("login_switch_to_signup")}
+                            </button>
+                        `;
+                        errBox.classList.remove("hidden");
+                    }
+                    return;
+                }
+                if (errBox) {
+                    errBox.innerText = res.error || this.t("signup_err_otp");
+                    errBox.classList.remove("hidden");
+                }
+                return;
+            }
+
+            this.loginOtpState.phone = phoneVal;
+            const verifyBox = document.getElementById("loginOtpVerifyBox");
+            const codeInput = document.getElementById("loginOtpCode");
+            if (verifyBox) verifyBox.classList.remove("hidden");
+            if (codeInput) {
+                codeInput.value = "";
+                codeInput.focus();
+            }
+            showToast(this.t("signup_otp_sent", { phone: phoneVal }), "success");
+
+            clearInterval(this.loginOtpState.timerId);
+            const resendBtn = document.getElementById("resendLoginOtpBtn");
+            let sec = 30;
+            if (resendBtn) {
+                resendBtn.disabled = true;
+                resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
+                this.loginOtpState.timerId = setInterval(() => {
+                    sec--;
+                    if (sec <= 0) {
+                        clearInterval(this.loginOtpState.timerId);
+                        resendBtn.disabled = false;
+                        resendBtn.innerText = this.t("signup_resend_otp");
+                    } else {
+                        resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
+                    }
+                }, 1000);
+            }
+        } finally {
+            if (sendBtn) sendBtn.disabled = false;
         }
     },
 
-    verifyLoginOtp() {
+    async verifyLoginOtp() {
         const errBox = document.getElementById("loginOtpError");
+        const verifyBtn = document.getElementById("verifyLoginOtpBtn");
         const code = (document.getElementById("loginOtpCode")?.value || "").trim();
-        if (!this.loginOtpState.code || code !== this.loginOtpState.code) {
+        if (!code || code.length < 4) {
             if (errBox) {
                 errBox.innerText = this.t("signup_err_otp");
                 errBox.classList.remove("hidden");
@@ -1742,32 +1851,34 @@ const IronApp = {
             return;
         }
 
-        clearInterval(this.loginOtpState.timerId);
-        const matched = IronAuth.findAccountByPhone(this.loginOtpState.phone);
-        if (!matched) {
-            if (errBox) {
-                errBox.innerText = this.t("login_err_not_found");
-                errBox.classList.remove("hidden");
+        if (verifyBtn) verifyBtn.disabled = true;
+        try {
+            const res = await IronAuth.verifyPhoneOtp(this.loginOtpState.phone, code, "login");
+            if (!res.ok) {
+                if (errBox) {
+                    errBox.innerText = this.t("signup_err_otp");
+                    errBox.classList.remove("hidden");
+                }
+                return;
             }
-            return;
+            clearInterval(this.loginOtpState.timerId);
+            window.location.reload();
+        } finally {
+            if (verifyBtn) verifyBtn.disabled = false;
         }
-
-        if (matched.type === "coach") {
-            IronAuth.loginCoachDirect();
-        } else {
-            IronAuth.loginTraineeDirect(matched.trainee);
-        }
-        window.location.reload();
     },
 
     switchToSignupWithPhone() {
         const phoneVal = (document.getElementById("loginPhoneInput")?.value || "").trim();
         this.switchAuthMode("signup");
-        this.cancelOAuthSignup();
+        this.startPasswordSignup();
+        const regOauthPhone = document.getElementById("regOauthPhone");
+        if (regOauthPhone && phoneVal) {
+            regOauthPhone.value = phoneVal;
+        }
         const regPhone = document.getElementById("regPhoneInput");
         if (regPhone && phoneVal) {
             regPhone.value = phoneVal;
-            regPhone.focus();
         }
     },
 
@@ -1780,36 +1891,57 @@ const IronApp = {
 
         const p = this.signupState.provider;
         if (p) {
-            const provName = this.t(p === "google" ? "provider_google" : p === "icloud" ? "provider_icloud" : "provider_phone");
+            const provName = p === "password"
+                ? this.t("signup_password_badge")
+                : this.t(p === "google" ? "provider_google" : p === "icloud" ? "provider_icloud" : "provider_phone");
+            const icon = p === "google" ? "🔵" : p === "icloud" ? "☁️" : p === "password" ? "🔑" : "📱";
             const badge = document.getElementById("oauthProviderBadge");
-            const lbl = document.getElementById("regOauthEmailLbl");
             const stepBadge = document.getElementById("signupVerifiedBadge");
-            if (badge) badge.innerText = `${p === "google" ? "🔵" : "☁️"} ${provName}`;
-            if (lbl) lbl.innerText = this.t("signup_oauth_email", { provider: provName });
+            if (badge) badge.innerText = `${icon} ${provName}`;
             if (stepBadge) stepBadge.innerText = `✅ ${provName}`;
         }
     },
 
-    startOAuthSignup(provider) {
+    async startOAuthSignup(provider) {
         this.signupState.provider = provider;
+        this.showSignupError("");
+
+        const { error } = await IronAuth.signInWithOAuth(provider);
+        if (error) {
+            const provName = this.t(provider === "icloud" ? "provider_icloud" : "provider_google");
+            const msg = (error.message || "").toLowerCase();
+            if (msg.includes("not enabled") || msg.includes("unsupported provider")) {
+                this.showSignupError(this.t("signup_err_oauth_disabled", { provider: provName }));
+            } else {
+                this.showSignupError(error.message);
+            }
+        }
+    },
+
+    startPasswordSignup() {
+        this.signupState.provider = "password";
+        this.signupState.isOAuthOnboarding = false;
+        this.signupState.otpToken = null;
         this.showSignupError("");
 
         const btnsWrap = document.getElementById("signupButtonsWrapper");
         const otpSec = document.getElementById("otpPhoneSection");
         const oauthCard = document.getElementById("oauthProviderCard");
-        const emailInput = document.getElementById("regOauthEmail");
+        const passWrap = document.getElementById("regOauthPassWrap");
+        const passInput = document.getElementById("regOauthPassword");
 
         if (btnsWrap) btnsWrap.classList.add("hidden");
         if (otpSec) otpSec.classList.add("hidden");
         if (oauthCard) oauthCard.classList.remove("hidden");
-        if (emailInput) {
-            emailInput.placeholder = provider === "icloud" ? "name@icloud.com" : "name@gmail.com";
-        }
+        if (passWrap) passWrap.classList.remove("hidden");
+        if (passInput) passInput.required = true;
         this.refreshSignupHeaderLabels();
     },
 
     cancelOAuthSignup() {
         this.signupState.provider = null;
+        this.signupState.isOAuthOnboarding = false;
+        this.signupState.otpToken = null;
         this.showSignupError("");
         document.getElementById("oauthProviderCard")?.classList.add("hidden");
         document.getElementById("signupButtonsWrapper")?.classList.remove("hidden");
@@ -1821,34 +1953,36 @@ const IronApp = {
         const name = (document.getElementById("regOauthName")?.value || "").trim();
         const email = (document.getElementById("regOauthEmail")?.value || "").trim().toLowerCase();
         const phone = (document.getElementById("regOauthPhone")?.value || "").trim();
+        const password = (document.getElementById("regOauthPassword")?.value || "").trim();
+        const phoneDigits = phone.replace(/\D/g, "");
 
         if (!name) {
             this.showSignupError(this.t("signup_err_name"));
             return;
         }
-        if (!email || !email.includes("@")) {
+        if (!email && phoneDigits.length < 8) {
+            this.showSignupError(this.t("signup_err_contact"));
+            return;
+        }
+        if (email && !email.includes("@")) {
             this.showSignupError(this.t("signup_err_email"));
             return;
         }
-
-        // إذا كان العميل مسجلاً مسبقاً بنفس البريد أو الهاتف يدخل مباشرة إلى حسابه
-        const existing = IronAuth.findExistingTrainee({ email, phone });
-        if (existing) {
-            IronAuth.loginTraineeDirect(existing);
-            const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(existing) : existing.name;
-            showToast(this.t("signup_existing_welcome", { name: dispName }), "success");
-            setTimeout(() => window.location.reload(), 600);
+        if (password.length < 6) {
+            this.showSignupError(this.t("signup_err_pass"));
             return;
         }
 
         this.signupState.verifiedName = name;
         this.signupState.verifiedEmail = email;
         this.signupState.verifiedPhone = phone;
+        this.signupState.verifiedPassword = password;
         this.enterSignupProfileStep();
     },
 
-    sendSignupOtp() {
+    async sendSignupOtp() {
         const phoneInput = document.getElementById("regPhoneInput");
+        const sendBtn = document.getElementById("sendOtpBtn");
         const phoneVal = (phoneInput?.value || "").trim();
         const digits = phoneVal.replace(/\D/g, "");
         if (digits.length < 8) {
@@ -1857,61 +1991,75 @@ const IronApp = {
         }
 
         this.showSignupError("");
-        this.signupState.provider = "phone";
-        this.signupState.verifiedPhone = phoneVal;
-        const otp = String(Math.floor(1000 + Math.random() * 9000));
-        this.signupState.generatedOtp = otp;
+        if (sendBtn) sendBtn.disabled = true;
 
-        const verifyBox = document.getElementById("otpVerifyBox");
-        const demoDisp = document.getElementById("otpDemoCodeDisplay");
-        const otpInput = document.getElementById("regOtpCode");
-        if (verifyBox) verifyBox.classList.remove("hidden");
-        if (demoDisp) demoDisp.innerText = otp;
-        if (otpInput) {
-            otpInput.value = "";
-            otpInput.focus();
-        }
-
-        showToast(this.t("signup_otp_sent", { phone: phoneVal }), "success");
-
-        clearInterval(this.signupState.otpTimerId);
-        const resendBtn = document.getElementById("resendOtpBtn");
-        let sec = 30;
-        if (resendBtn) {
-            resendBtn.disabled = true;
-            resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
-            this.signupState.otpTimerId = setInterval(() => {
-                sec--;
-                if (sec <= 0) {
-                    clearInterval(this.signupState.otpTimerId);
-                    resendBtn.disabled = false;
-                    resendBtn.innerText = this.t("signup_resend_otp");
+        try {
+            const res = await IronAuth.sendPhoneOtp(phoneVal, "signup");
+            if (!res.ok) {
+                if (res.error === "SMS_NOT_CONFIGURED") {
+                    this.showSignupError(this.t("sms_not_configured"));
                 } else {
-                    resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
+                    this.showSignupError(res.error || this.t("signup_err_otp"));
                 }
-            }, 1000);
+                return;
+            }
+
+            this.signupState.provider = "phone";
+            this.signupState.verifiedPhone = phoneVal;
+
+            const verifyBox = document.getElementById("otpVerifyBox");
+            const otpInput = document.getElementById("regOtpCode");
+            if (verifyBox) verifyBox.classList.remove("hidden");
+            if (otpInput) {
+                otpInput.value = "";
+                otpInput.focus();
+            }
+
+            showToast(this.t("signup_otp_sent", { phone: phoneVal }), "success");
+
+            clearInterval(this.signupState.otpTimerId);
+            const resendBtn = document.getElementById("resendOtpBtn");
+            let sec = 30;
+            if (resendBtn) {
+                resendBtn.disabled = true;
+                resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
+                this.signupState.otpTimerId = setInterval(() => {
+                    sec--;
+                    if (sec <= 0) {
+                        clearInterval(this.signupState.otpTimerId);
+                        resendBtn.disabled = false;
+                        resendBtn.innerText = this.t("signup_resend_otp");
+                    } else {
+                        resendBtn.innerText = `${this.t("signup_resend_otp")} (${sec}s)`;
+                    }
+                }, 1000);
+            }
+        } finally {
+            if (sendBtn) sendBtn.disabled = false;
         }
     },
 
-    verifySignupOtp() {
+    async verifySignupOtp() {
         const code = (document.getElementById("regOtpCode")?.value || "").trim();
-        if (!this.signupState.generatedOtp || code !== this.signupState.generatedOtp) {
+        if (!code || code.length < 4) {
             this.showSignupError(this.t("signup_err_otp"));
             return;
         }
 
         this.showSignupError("");
-        clearInterval(this.signupState.otpTimerId);
-
-        const existing = IronAuth.findExistingTrainee({ phone: this.signupState.verifiedPhone });
-        if (existing) {
-            IronAuth.loginTraineeDirect(existing);
-            const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(existing) : existing.name;
-            showToast(this.t("signup_existing_welcome", { name: dispName }), "success");
-            setTimeout(() => window.location.reload(), 600);
+        const res = await IronAuth.verifyPhoneOtp(this.signupState.verifiedPhone, code, "signup");
+        if (!res.ok) {
+            this.showSignupError(this.t("signup_err_otp"));
             return;
         }
 
+        clearInterval(this.signupState.otpTimerId);
+        if (res.data?.session) {
+            window.location.reload();
+            return;
+        }
+
+        this.signupState.otpToken = res.data?.otpToken || null;
         this.signupState.verifiedEmail = "";
         this.signupState.verifiedName = "";
         this.enterSignupProfileStep();
@@ -1935,6 +2083,7 @@ const IronApp = {
 
     backToSignupMethod() {
         this.showSignupError("");
+        this.signupState.isOAuthOnboarding = false;
         document.getElementById("signupStepProfile")?.classList.add("hidden");
         document.getElementById("signupStepMethod")?.classList.remove("hidden");
     },
@@ -1953,7 +2102,7 @@ const IronApp = {
         previewEl.innerText = `${calc.targetCalories} kcal`;
     },
 
-    handleCompleteClientSignup(e) {
+    async handleCompleteClientSignup(e) {
         e.preventDefault();
         const name = (document.getElementById("regName")?.value || "").trim();
         if (!name) {
@@ -1961,11 +2110,17 @@ const IronApp = {
             return;
         }
 
-        const res = IronAuth.registerClient({
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+        this.showSignupError("");
+
+        const payload = {
             name,
             email: this.signupState.verifiedEmail,
             phone: (document.getElementById("regProfilePhone")?.value || this.signupState.verifiedPhone || "").trim(),
-            authProvider: this.signupState.provider || "phone",
+            password: this.signupState.verifiedPassword || "",
+            otpToken: this.signupState.otpToken || "",
+            authProvider: this.signupState.provider || "password",
             gender: document.getElementById("regGender")?.value || "male",
             age: document.getElementById("regAge")?.value || 26,
             weight: document.getElementById("regWeight")?.value || 78,
@@ -1973,14 +2128,27 @@ const IronApp = {
             activity: document.getElementById("regActivity")?.value || 1.55,
             goal: document.getElementById("regGoal")?.value || "تنشيف وخسارة دهون",
             program: document.getElementById("regProgram")?.value || "PPL (Push Pull Legs)"
-        });
+        };
 
-        if (res && res.success) {
-            showToast(this.t("signup_created_toast"), "success");
-            this.renderUserHeader(res.user);
-            this.updateImpersonationBanner(res.user);
-            this.renderAppViews(res.user);
-            this.openRenewPaymentModal();
+        try {
+            const res = this.signupState.isOAuthOnboarding
+                ? await IronAuth.completeOAuthClientProfile(payload)
+                : await IronAuth.registerClient(payload);
+
+            if (res && res.success) {
+                showToast(this.t("signup_created_toast"), "success");
+                this.renderUserHeader(res.user);
+                this.updateImpersonationBanner(res.user);
+                this.renderAppViews(res.user);
+                this.openRenewPaymentModal();
+            } else {
+                const msg = res?.error === "ACCOUNT_EXISTS"
+                    ? this.t("signup_err_exists")
+                    : (res?.message || res?.error || "Failed to create account");
+                this.showSignupError(msg);
+            }
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
         }
     },
 

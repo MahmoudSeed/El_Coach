@@ -1,53 +1,24 @@
 /**
- * IronCoach Pro - Authentication & Multi-Tenant Subscription Manager
- * إدارة تسجيل الدخول، الصلاحيات (كوتش / متدرب)، وفحص عداد الـ 30 يوم والنسخ الاحتياطي
+ * IronCoach Pro - Cloud Authentication & Multi-Tenant Subscription Manager (Supabase)
+ * إدارة الجلسات والصلاحيات (كوتش / متدرب) واشتراكات الـ 30 يوم عبر Supabase
  */
 
 const IronAuth = {
     ADMIN_USERNAME: "el_coach",
-    ADMIN_PASSWORD: "123123",
     COACH_USERNAME: "coach",
-    COACH_PASSWORD: "admin", // كلمة سر الحساب التجريبي (يتم التحقق عبر التشفير أو الإعدادات)
+    IMPERSONATE_KEY: "iron_impersonate_client_id",
 
-    // جلب جميع المشتركين من التخزين المحلي مع تأمين كلمات المرور المشفرة
     getAllTrainees() {
-        const saved = localStorage.getItem("iron_trainees");
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                let migrated = false;
-                parsed.forEach(t => {
-                    if (t.password && !String(t.password).startsWith("h$")) {
-                        t.password = hashPassword(t.password);
-                        migrated = true;
-                    }
-                });
-                if (migrated) {
-                    localStorage.setItem("iron_trainees", JSON.stringify(parsed));
-                }
-                return parsed;
-            } catch (e) { }
+        if (typeof IronSupabase !== "undefined" && Array.isArray(IronSupabase.cache.trainees)) {
+            return IronSupabase.cache.trainees;
         }
-        const initial = IronConfig.defaultTrainees.map(t => ({
-            ...t,
-            password: hashPassword(t.password)
-        }));
-        localStorage.setItem("iron_trainees", JSON.stringify(initial));
-        return initial;
+        return [];
     },
 
-    saveAllTrainees(trainees) {
-        const secured = trainees.map(t => ({
-            ...t,
-            password: t.password ? hashPassword(t.password) : hashPassword("123")
-        }));
-        localStorage.setItem("iron_trainees", JSON.stringify(secured));
-    },
-
-    // فحص وتحديث حالة الاشتراك وتحديث العداد
     refreshSubscriptionStatus(trainee) {
+        if (!trainee) return trainee;
         const now = new Date();
-        const joined = new Date(trainee.joinedDate);
+        const joined = new Date(trainee.joinedDate || new Date().toISOString().split("T")[0]);
         const diffMs = Math.max(0, now - joined);
         const daysPassed = Math.floor(diffMs / (1000 * 60 * 60 * 24));
         const rawSubDays = parseInt(trainee.subscriptionDays);
@@ -83,349 +54,241 @@ const IronAuth = {
         }) || null;
     },
 
-    loginCoachDirect() {
-        const config = getAppConfig();
-        const coachUser = {
-            role: "coach",
-            name: config.coachInfo.name || IronConfig.coachInfo.name,
-            username: (config.coachInfo && config.coachInfo.adminUsername) || "El_Coach",
-            title: config.coachInfo.title || IronConfig.coachInfo.title
-        };
-        localStorage.setItem("iron_session", JSON.stringify(coachUser));
-        sessionStorage.removeItem("iron_active_workout");
-        return { success: true, user: coachUser };
+    getCurrentUser() {
+        return typeof IronSupabase !== "undefined" ? IronSupabase.cache.currentUser : null;
     },
 
-    findAccountByPhone(phone = "") {
-        const config = getAppConfig();
-        const coachPhones = [config.coachInfo?.phone, config.coachInfo?.whatsapp].filter(Boolean);
-        if (coachPhones.some(p => this.phonesMatch(p, phone))) {
-            return { type: "coach" };
-        }
-        const trainee = this.findExistingTrainee({ phone });
-        if (trainee) {
-            return { type: "trainee", trainee };
-        }
-        return null;
-    },
-
-    loginTraineeDirect(trainee) {
-        if (!trainee) return { success: false };
-        const refreshed = this.refreshSubscriptionStatus(trainee);
-        this.updateTrainee(refreshed);
-
-        const traineeUser = {
+    buildTraineeSessionUser(trainee, extra = {}) {
+        const refreshed = this.refreshSubscriptionStatus({ ...trainee });
+        return {
             role: "trainee",
             id: refreshed.id,
             name: refreshed.name,
             username: refreshed.username,
             status: refreshed.status,
             daysLeft: refreshed.daysLeft,
-            traineeData: refreshed
+            traineeData: refreshed,
+            ...extra
         };
-
-        localStorage.setItem("iron_session", JSON.stringify(traineeUser));
-        sessionStorage.removeItem("iron_active_workout");
-        return { success: true, user: traineeUser };
     },
 
-    // تسجيل الدخول (باسم المستخدم أو رقم الجوال + كلمة المرور)
-    login(usernameOrPhone, password) {
-        const rawInput = (usernameOrPhone || "").trim();
-        const username = rawInput.toLowerCase();
-        password = (password || "").trim();
+    async syncAllTrainees() {
+        const sb = typeof IronSupabase !== "undefined" ? IronSupabase.initClient() : null;
+        if (!sb) return [];
+        const { data, error } = await sb
+            .from("clients")
+            .select("*")
+            .order("created_at", { ascending: false });
+        if (error) {
+            console.error("syncAllTrainees error:", error);
+            return IronSupabase.cache.trainees || [];
+        }
+        const mapped = (data || []).map(row => this.refreshSubscriptionStatus(IronSupabase.mapClientFromDb(row)));
+        IronSupabase.cache.trainees = mapped;
+        return mapped;
+    },
+
+    async initFromCloud() {
+        const sb = typeof IronSupabase !== "undefined" ? IronSupabase.initClient() : null;
+        if (!sb) {
+            IronSupabase.cache.currentUser = null;
+            return { user: null, needsOnboarding: false, oauthUser: null };
+        }
+
+        const { data: sessRes, error: sessErr } = await sb.auth.getSession();
+        if (sessErr || !sessRes?.session?.user) {
+            IronSupabase.cache.currentUser = null;
+            return { user: null, needsOnboarding: false, oauthUser: null };
+        }
+
+        // Validate JWT against Auth server cleanly
+        const { data: userRes, error: userErr } = await sb.auth.getUser();
+        const authUser = (!userErr && userRes?.user) ? userRes.user : sessRes.session.user;
+        if (!authUser) {
+            IronSupabase.cache.currentUser = null;
+            return { user: null, needsOnboarding: false, oauthUser: null };
+        }
 
         const config = getAppConfig();
-        const adminUsername = (config.coachInfo && config.coachInfo.adminUsername) || "El_Coach";
-        const adminStoredHash = (config.coachInfo && config.coachInfo.adminPasswordHash) || hashPassword(this.ADMIN_PASSWORD);
-        const coachStoredHash = (config.coachInfo && config.coachInfo.passwordHash) || hashPassword(this.COACH_PASSWORD);
+        const role = authUser.app_metadata?.role;
 
-        const coachPhones = [config.coachInfo?.phone, config.coachInfo?.whatsapp].filter(Boolean);
-        const matchesCoachPhone = coachPhones.some(p => this.phonesMatch(p, rawInput));
+        if (role === "coach") {
+            const trainees = await this.syncAllTrainees();
+            await IronSupabase.loadCustomMeals();
 
-        // 1. فحص حساب الأدمن الرئيسي (El_Coach / رقم هاتف الكوتش) أو حساب الكوتش التجريبي (coach)
-        const isMainAdmin = (username === adminUsername.toLowerCase() || matchesCoachPhone) && verifyPassword(password, adminStoredHash);
-        const isDemoCoach = (username === this.COACH_USERNAME || matchesCoachPhone) && verifyPassword(password, coachStoredHash);
+            const impId = sessionStorage.getItem(this.IMPERSONATE_KEY);
+            if (impId) {
+                const target = trainees.find(t => t.id === impId);
+                if (target) {
+                    await IronSupabase.hydrateTraineeData(target.id);
+                    const impUser = this.buildTraineeSessionUser(target, {
+                        isImpersonating: true,
+                        impersonatedBy: authUser.app_metadata?.username || "El_Coach"
+                    });
+                    IronSupabase.cache.currentUser = impUser;
+                    return { user: impUser, needsOnboarding: false, oauthUser: null };
+                }
+                sessionStorage.removeItem(this.IMPERSONATE_KEY);
+            }
 
-        if (isMainAdmin || isDemoCoach) {
             const coachUser = {
                 role: "coach",
-                name: config.coachInfo.name || IronConfig.coachInfo.name,
-                username: isMainAdmin ? adminUsername : "coach",
-                title: config.coachInfo.title || IronConfig.coachInfo.title
+                id: authUser.id,
+                name: config.coachInfo?.name || IronConfig.coachInfo.name,
+                username: authUser.app_metadata?.username || "El_Coach",
+                title: config.coachInfo?.title || IronConfig.coachInfo.title
             };
-            localStorage.setItem("iron_session", JSON.stringify(coachUser));
-            return { success: true, user: coachUser };
+            IronSupabase.cache.currentUser = coachUser;
+            return { user: coachUser, needsOnboarding: false, oauthUser: null };
         }
 
-        // 2. فحص حسابات المشتركين (باسم المستخدم أو رقم الجوال)
-        const trainees = this.getAllTrainees();
-        let trainee = trainees.find(t =>
-            (t.username.toLowerCase() === username || (t.phone && this.phonesMatch(t.phone, rawInput))) &&
-            verifyPassword(password, t.password)
-        );
+        // Trainee or new OAuth user
+        const { data: clientRow, error: clientErr } = await sb
+            .from("clients")
+            .select("*")
+            .eq("auth_user_id", authUser.id)
+            .maybeSingle();
 
-        if (!trainee) {
-            const msg = typeof IronI18n !== "undefined" ? IronI18n.t("login_invalid") : "اسم المستخدم أو كلمة المرور غير صحيحة";
-            return { success: false, message: msg };
+        if (!clientErr && clientRow) {
+            const mapped = this.refreshSubscriptionStatus(IronSupabase.mapClientFromDb(clientRow));
+            IronSupabase.cache.trainees = [mapped];
+            await IronSupabase.hydrateTraineeData(mapped.id);
+            const traineeUser = this.buildTraineeSessionUser(mapped);
+            IronSupabase.cache.currentUser = traineeUser;
+            return { user: traineeUser, needsOnboarding: false, oauthUser: null };
         }
 
-        // تحديث حالة الاشتراك
-        trainee = this.refreshSubscriptionStatus(trainee);
-        this.updateTrainee(trainee);
+        // OAuth user signed in via Google/Apple without a clients profile yet
+        IronSupabase.cache.currentUser = null;
+        return { user: null, needsOnboarding: true, oauthUser: authUser };
+    },
 
-        const traineeUser = {
-            role: "trainee",
-            id: trainee.id,
-            name: trainee.name,
-            username: trainee.username,
-            status: trainee.status,
-            daysLeft: trainee.daysLeft,
-            traineeData: trainee
-        };
+    async login(usernameOrPhone, password) {
+        const identifier = String(usernameOrPhone || "").trim();
+        const cleanPass = String(password || "").trim();
+        const invalidMsg = typeof IronI18n !== "undefined" ? IronI18n.t("login_invalid") : "بيانات الدخول غير صحيحة";
 
-        localStorage.setItem("iron_session", JSON.stringify(traineeUser));
+        if (!identifier || !cleanPass) {
+            return { success: false, message: invalidMsg };
+        }
+
+        const sb = typeof IronSupabase !== "undefined" ? IronSupabase.initClient() : null;
+        if (!sb) {
+            return { success: false, message: "Supabase client is unavailable" };
+        }
+
+        const res = await IronSupabase.callFunction("auth-login", {
+            action: "login",
+            identifier,
+            password: cleanPass
+        });
+
+        if (!res.ok || !res.data?.session?.access_token) {
+            return { success: false, message: invalidMsg };
+        }
+
+        const { error: setErr } = await sb.auth.setSession({
+            access_token: res.data.session.access_token,
+            refresh_token: res.data.session.refresh_token
+        });
+        if (setErr) {
+            return { success: false, message: setErr.message || invalidMsg };
+        }
+
+        sessionStorage.removeItem(this.IMPERSONATE_KEY);
         sessionStorage.removeItem("iron_active_workout");
-        return { success: true, user: traineeUser };
+        const initState = await this.initFromCloud();
+        return { success: true, user: initState.user };
     },
 
-    // العودة السريعة للوحة الكوتش أثناء معاينة حساب المتدرب
-    returnToCoachDashboard() {
-        const config = getAppConfig();
-        const current = this.getCurrentUser();
-        const coachUser = {
-            role: "coach",
-            name: config.coachInfo.name || IronConfig.coachInfo.name,
-            username: (current && current.impersonatedBy) || (config.coachInfo && config.coachInfo.adminUsername) || "El_Coach",
-            title: config.coachInfo.title || IronConfig.coachInfo.title
-        };
-        sessionStorage.removeItem("iron_active_workout");
-        localStorage.setItem("iron_session", JSON.stringify(coachUser));
-        window.location.reload();
+    async sendPhoneOtp(phone, mode = "login") {
+        return await IronSupabase.callFunction("auth-otp", {
+            action: "send",
+            mode,
+            phone: String(phone || "").trim()
+        });
     },
 
-    // تسجيل الخروج
-    logout() {
-        localStorage.removeItem("iron_session");
-        sessionStorage.removeItem("iron_active_workout");
-        window.location.reload();
-    },
+    async verifyPhoneOtp(phone, code, mode = "login") {
+        const res = await IronSupabase.callFunction("auth-otp", {
+            action: "verify",
+            mode,
+            phone: String(phone || "").trim(),
+            code: String(code || "").trim()
+        });
 
-    // جلب المستخدم الحالي
-    getCurrentUser() {
-        const session = localStorage.getItem("iron_session");
-        if (session) {
-            try {
-                const user = JSON.parse(session);
-                if (user.role === "coach") {
-                    const config = getAppConfig();
-                    user.name = config.coachInfo.name || user.name;
-                    user.title = config.coachInfo.title || user.title;
-                }
-                // إذا كان متدرب، نحدث بياناته من قاعدة البيانات الخاصة به فقط
-                if (user.role === "trainee") {
-                    const trainees = this.getAllTrainees();
-                    const fresh = trainees.find(t => t.id === user.id);
-                    if (!fresh) {
-                        localStorage.removeItem("iron_session");
-                        return null;
-                    }
-                    const updated = this.refreshSubscriptionStatus(fresh);
-                    user.name = updated.name;
-                    user.username = updated.username;
-                    user.status = updated.status;
-                    user.daysLeft = updated.daysLeft;
-                    user.traineeData = updated;
-                }
-                return user;
-            } catch (e) { }
-        }
-        return null;
-    },
+        if (!res.ok) return res;
 
-    // تحديث بيانات متدرب (يدعم تمرير كائن كامل أو معرف + الحقول المعدلة مع مزامنة الجلسة)
-    updateTrainee(traineeOrId, patchFields = null) {
-        const trainees = this.getAllTrainees();
-        const targetId = typeof traineeOrId === "string" ? traineeOrId : traineeOrId?.id;
-        if (!targetId) return null;
-
-        const index = trainees.findIndex(t => t.id === targetId);
-        if (index === -1) return null;
-
-        const updated = typeof traineeOrId === "string"
-            ? { ...trainees[index], ...(patchFields || {}) }
-            : traineeOrId;
-
-        trainees[index] = updated;
-        this.saveAllTrainees(trainees);
-
-        // تحديث الجلسة النشطة إن كان المتدرب نفسه متصلاً الآن (بما فيها صورة البروفايل)
-        try {
-            const sessionStr = localStorage.getItem("iron_session");
-            if (sessionStr) {
-                const session = JSON.parse(sessionStr);
-                if (session && session.role === "trainee" && session.id === targetId) {
-                    session.name = updated.name;
-                    session.traineeData = updated;
-                    localStorage.setItem("iron_session", JSON.stringify(session));
-                }
-            }
-        } catch (e) {}
-
-        return updated;
-    },
-
-    // تعديل بيانات متدرب بواسطة الكوتش
-    editTrainee(traineeId, fields) {
-        const trainees = this.getAllTrainees();
-        const index = trainees.findIndex(t => t.id === traineeId);
-        if (index === -1) return null;
-
-        const existing = trainees[index];
-        existing.name = fields.name || existing.name;
-        existing.username = (fields.username || existing.username).trim().toLowerCase();
-        existing.phone = fields.phone !== undefined ? fields.phone : existing.phone;
-        existing.weight = parseFloat(fields.weight) || existing.weight;
-        existing.height = parseFloat(fields.height) || existing.height || 175;
-        existing.age = parseInt(fields.age) || existing.age || 26;
-        existing.gender = fields.gender || existing.gender || "male";
-        existing.activity = parseFloat(fields.activity) || existing.activity || 1.55;
-        existing.goal = fields.goal || existing.goal;
-        existing.calories = parseInt(fields.calories) || existing.calories || 2000;
-        existing.program = fields.program || existing.program;
-        if (fields.coachNote !== undefined) {
-            existing.coachNote = fields.coachNote.trim();
-        }
-
-        if (fields.newPassword && fields.newPassword.trim() !== "") {
-            existing.password = hashPassword(fields.newPassword.trim());
-        }
-
-        if (fields.daysLeft !== undefined && fields.daysLeft !== "") {
-            const targetDaysLeft = Math.max(0, parseInt(fields.daysLeft));
-            existing.joinedDate = new Date().toISOString().split('T')[0];
-            existing.subscriptionDays = targetDaysLeft;
-            existing.daysLeft = targetDaysLeft;
-        }
-
-        if (typeof IronCalculator !== "undefined") {
-            const proteinGrams = Math.round(existing.weight * 2.0);
-            const fatGrams = Math.round((existing.calories * 0.25) / 9);
-            const carbGrams = Math.max(0, Math.round((existing.calories - (proteinGrams * 4 + fatGrams * 9)) / 4));
-            existing.macros = {
-                protein: proteinGrams,
-                fats: fatGrams,
-                carbs: carbGrams
-            };
-        }
-
-        this.refreshSubscriptionStatus(existing);
-        trainees[index] = existing;
-        this.saveAllTrainees(trainees);
-        return existing;
-    },
-
-    // حذف متدرب من المنصة وتنظيف كافة بياناته المرتبطة
-    deleteTrainee(traineeId) {
-        const trainees = this.getAllTrainees();
-        const target = trainees.find(t => t.id === traineeId);
-        if (!target) return null;
-        const filtered = trainees.filter(t => t.id !== traineeId);
-        this.saveAllTrainees(filtered);
-
-        // تنظيف سجلات المتدرب المحذوف الخاصة بالدايت والماء والتمارين والوجبات المخصصة
-        try {
-            const diets = JSON.parse(localStorage.getItem("iron_saved_diets") || "{}");
-            if (diets[traineeId]) {
-                delete diets[traineeId];
-                localStorage.setItem("iron_saved_diets", JSON.stringify(diets));
-            }
-            const water = JSON.parse(localStorage.getItem("iron_water_logs") || "{}");
-            Object.keys(water).forEach(k => {
-                if (k.startsWith(`${traineeId}_`)) delete water[k];
+        if (res.data?.session?.access_token) {
+            const sb = IronSupabase.initClient();
+            await sb.auth.setSession({
+                access_token: res.data.session.access_token,
+                refresh_token: res.data.session.refresh_token
             });
-            localStorage.setItem("iron_water_logs", JSON.stringify(water));
-            const logs = JSON.parse(localStorage.getItem("iron_workout_logs") || "[]");
-            localStorage.setItem("iron_workout_logs", JSON.stringify(logs.filter(l => l.traineeId !== traineeId)));
-            const customMeals = JSON.parse(localStorage.getItem("iron_custom_meals") || "[]");
-            localStorage.setItem("iron_custom_meals", JSON.stringify(customMeals.filter(m => m.ownerId !== traineeId)));
-        } catch (e) {}
-
-        return target;
+            sessionStorage.removeItem(this.IMPERSONATE_KEY);
+            sessionStorage.removeItem("iron_active_workout");
+            await this.initFromCloud();
+        }
+        return res;
     },
 
-    // إضافة متدرب جديد بواسطة الكوتش
-    addTrainee(newTrainee) {
-        const trainees = this.getAllTrainees();
-        newTrainee.id = "tr_" + Date.now();
-        newTrainee.joinedDate = new Date().toISOString().split('T')[0];
-        newTrainee.subscriptionDays = parseInt(newTrainee.subscriptionDays) || 30;
-        newTrainee.daysLeft = newTrainee.subscriptionDays;
-        newTrainee.status = "active";
-        newTrainee.weight = parseFloat(newTrainee.weight) || 75;
-        newTrainee.height = parseFloat(newTrainee.height) || 175;
-        newTrainee.age = parseInt(newTrainee.age) || 26;
-        newTrainee.gender = newTrainee.gender || "male";
-        newTrainee.activity = parseFloat(newTrainee.activity) || 1.55;
-        newTrainee.goal = newTrainee.goal || "تنشيف وخسارة دهون";
-        newTrainee.password = hashPassword(newTrainee.password || "123");
-
-        if (typeof IronCalculator !== "undefined") {
-            const goalOffset = newTrainee.goal.includes("تضخيم") ? 350 : newTrainee.goal.includes("تثبيت") ? 0 : -500;
-            const calc = IronCalculator.calculate({
-                gender: newTrainee.gender,
-                age: newTrainee.age,
-                weight: newTrainee.weight,
-                height: newTrainee.height,
-                activity: newTrainee.activity,
-                goal: goalOffset
-            });
-            if (!newTrainee.calories) {
-                newTrainee.calories = calc.targetCalories;
-            }
-            newTrainee.macros = {
-                protein: calc.proteinGrams,
-                fats: calc.fatGrams,
-                carbs: calc.carbGrams
-            };
-        }
-
-        newTrainee.history = [
-            { date: newTrainee.joinedDate, weight: newTrainee.weight, waist: parseFloat(newTrainee.waist) || 80 }
-        ];
-
-        trainees.push(newTrainee);
-        this.saveAllTrainees(trainees);
-        return newTrainee;
+    async signInWithOAuth(provider) {
+        const sb = typeof IronSupabase !== "undefined" ? IronSupabase.initClient() : null;
+        if (!sb) return { error: { message: "Supabase unavailable" } };
+        const oauthProvider = provider === "icloud" ? "apple" : provider;
+        const redirectTo = `${window.location.origin}${window.location.pathname}`;
+        return await sb.auth.signInWithOAuth({
+            provider: oauthProvider,
+            options: { redirectTo }
+        });
     },
 
-    // تسجيل عميل جديد عبر Google أو iCloud أو رقم الجوال OTP (بحالة بانتظار الدفع حتى تفعيل الـ 30 يوماً)
-    registerClient(data) {
-        const trainees = this.getAllTrainees();
-        const existing = this.findExistingTrainee({ email: data.email, phone: data.phone });
-        if (existing) {
-            return this.loginTraineeDirect(existing);
+    async registerClient(data) {
+        const sb = typeof IronSupabase !== "undefined" ? IronSupabase.initClient() : null;
+        if (!sb) return { success: false, message: "Supabase unavailable" };
+
+        const res = await IronSupabase.callFunction("auth-register", data);
+        if (!res.ok || !res.data?.session?.access_token) {
+            return { success: false, error: res.error, status: res.status };
         }
 
-        const nowId = Date.now();
-        const emailBase = data.email ? data.email.split("@")[0].replace(/[^a-z0-9_]/gi, "").toLowerCase() : "";
-        const phoneDigits = String(data.phone || "").replace(/\D/g, "");
-        const baseHandle = emailBase || (phoneDigits ? `user_${phoneDigits.slice(-6)}` : `client_${nowId.toString().slice(-5)}`);
-        let uniqueUsername = baseHandle;
-        let suffix = 1;
-        while (trainees.some(t => t.username.toLowerCase() === uniqueUsername.toLowerCase())) {
-            uniqueUsername = `${baseHandle}_${suffix++}`;
-        }
+        const { error: setErr } = await sb.auth.setSession({
+            access_token: res.data.session.access_token,
+            refresh_token: res.data.session.refresh_token
+        });
+        if (setErr) return { success: false, error: setErr.message };
+
+        sessionStorage.removeItem(this.IMPERSONATE_KEY);
+        sessionStorage.removeItem("iron_active_workout");
+        const state = await this.initFromCloud();
+        return { success: true, user: state.user };
+    },
+
+    async completeOAuthClientProfile(data) {
+        const sb = typeof IronSupabase !== "undefined" ? IronSupabase.initClient() : null;
+        if (!sb) return { success: false, message: "Supabase unavailable" };
+
+        const { data: userRes } = await sb.auth.getUser();
+        const authUser = userRes?.user;
+        if (!authUser) return { success: false, message: "Not authenticated" };
+
+        const email = String(data.email || authUser.email || "").trim().toLowerCase();
+        const phone = String(data.phone || "").trim();
+        const phoneDigits = phone.replace(/\D/g, "");
+        const name = String(data.name || authUser.user_metadata?.full_name || email.split("@")[0] || "Client").trim();
+
+        const emailBase = email ? email.split("@")[0].replace(/[^a-z0-9_]/gi, "").toLowerCase() : "client";
+        const uniqueUsername = `${emailBase || "client"}_${String(Date.now()).slice(-4)}`;
 
         const weight = parseFloat(data.weight) || 75;
         const height = parseFloat(data.height) || 175;
         const age = parseInt(data.age) || 26;
-        const gender = data.gender || "male";
+        const gender = data.gender === "female" ? "female" : "male";
         const activity = parseFloat(data.activity) || 1.55;
         const goal = data.goal || "تنشيف وخسارة دهون";
         const goalOffset = goal.includes("تضخيم") ? 350 : (goal.includes("تثبيت") || goal.includes("نحت")) ? 0 : -500;
 
-        let targetCalories = parseInt(data.calories) || 2000;
+        let targetCalories = 2000;
         let macros = { protein: Math.round(weight * 2), fats: 55, carbs: 200 };
         if (typeof IronCalculator !== "undefined") {
             const calc = IronCalculator.calculate({ gender, age, weight, height, activity, goal: goalOffset });
@@ -434,19 +297,20 @@ const IronAuth = {
         }
 
         const todayStr = new Date().toISOString().split("T")[0];
-        const newTrainee = {
-            id: "tr_" + nowId,
-            name: (data.name || uniqueUsername).trim(),
+        const providerRaw = authUser.app_metadata?.provider || data.authProvider || "google";
+        const authProvider = providerRaw === "apple" ? "icloud" : providerRaw;
+
+        const { error } = await sb.from("clients").insert({
+            auth_user_id: authUser.id,
+            name,
             username: uniqueUsername,
-            email: (data.email || "").trim().toLowerCase(),
-            phone: (data.phone || "").trim(),
-            authProvider: data.authProvider || "phone",
-            password: hashPassword(data.password || ("otp_" + nowId)),
-            joinedDate: todayStr,
-            subscriptionDays: 0,
-            daysLeft: 0,
-            status: "pending",
-            hasActivatedOnce: false,
+            email,
+            phone,
+            phone_normalized: phoneDigits,
+            auth_provider: authProvider,
+            joined_date: todayStr,
+            subscription_days: 0,
+            has_activated_once: false,
             weight,
             height,
             age,
@@ -457,73 +321,312 @@ const IronAuth = {
             macros,
             program: data.program || "PPL (Push Pull Legs)",
             history: [{ date: todayStr, weight, waist: null }]
-        };
+        });
 
-        trainees.push(newTrainee);
-        this.saveAllTrainees(trainees);
-        return this.loginTraineeDirect(newTrainee);
+        if (error) {
+            return { success: false, message: error.message };
+        }
+
+        const state = await this.initFromCloud();
+        return { success: true, user: state.user };
     },
 
-    // تجديد اشتراك متدرب مع إضافة الأيام للرصيد المتبقي
-    renewSubscription(traineeId, additionalDays = 30, receiptInfo = null) {
+    async addTrainee(newTrainee) {
+        const res = await IronSupabase.callFunction("coach-admin", {
+            action: "create_client",
+            client: newTrainee
+        });
+        if (!res.ok || !res.data?.client) {
+            throw new Error(res.error || "Failed to add client");
+        }
+        const mapped = this.refreshSubscriptionStatus(IronSupabase.mapClientFromDb(res.data.client));
+        IronSupabase.cache.trainees.unshift(mapped);
+        return mapped;
+    },
+
+    async editTrainee(traineeId, fields) {
+        const sb = typeof IronSupabase !== "undefined" ? IronSupabase.initClient() : null;
+        if (!sb) return null;
+
+        const trainees = this.getAllTrainees();
+        const existing = trainees.find(t => t.id === traineeId);
+        if (!existing) return null;
+
+        const weight = parseFloat(fields.weight) || existing.weight;
+        const height = parseFloat(fields.height) || existing.height || 175;
+        const age = parseInt(fields.age) || existing.age || 26;
+        const gender = fields.gender || existing.gender || "male";
+        const activity = parseFloat(fields.activity) || existing.activity || 1.55;
+        const goal = fields.goal || existing.goal;
+        const calories = parseInt(fields.calories) || existing.calories || 2000;
+        const program = fields.program || existing.program;
+        const name = fields.name || existing.name;
+        const username = (fields.username || existing.username).trim().toLowerCase();
+        const phone = fields.phone !== undefined ? fields.phone : existing.phone;
+        const coachNote = fields.coachNote !== undefined ? fields.coachNote.trim() : (existing.coachNote || "");
+
+        const proteinGrams = Math.round(weight * 2.0);
+        const fatGrams = Math.round((calories * 0.25) / 9);
+        const carbGrams = Math.max(0, Math.round((calories - (proteinGrams * 4 + fatGrams * 9)) / 4));
+        const macros = { protein: proteinGrams, fats: fatGrams, carbs: carbGrams };
+
+        const updatePatch = {
+            name,
+            username,
+            phone,
+            phone_normalized: String(phone || "").replace(/\D/g, ""),
+            weight,
+            height,
+            age,
+            gender,
+            activity,
+            goal,
+            calories,
+            macros,
+            program,
+            coach_note: coachNote
+        };
+
+        if (fields.daysLeft !== undefined && fields.daysLeft !== "") {
+            const targetDaysLeft = Math.max(0, parseInt(fields.daysLeft));
+            updatePatch.joined_date = new Date().toISOString().split("T")[0];
+            updatePatch.subscription_days = targetDaysLeft;
+            if (targetDaysLeft > 0) updatePatch.has_activated_once = true;
+        }
+
+        const { data, error } = await sb
+            .from("clients")
+            .update(updatePatch)
+            .eq("id", traineeId)
+            .select("*")
+            .single();
+
+        if (error || !data) {
+            throw new Error(error?.message || "Failed to update client");
+        }
+
+        if (fields.newPassword && fields.newPassword.trim() !== "") {
+            const pwRes = await IronSupabase.callFunction("coach-admin", {
+                action: "update_client_password",
+                clientId: traineeId,
+                newPassword: fields.newPassword.trim()
+            });
+            if (!pwRes.ok) {
+                throw new Error(pwRes.error || "Failed to update client password");
+            }
+        }
+
+        const mapped = this.refreshSubscriptionStatus(IronSupabase.mapClientFromDb(data));
+        const idx = IronSupabase.cache.trainees.findIndex(t => t.id === traineeId);
+        if (idx !== -1) IronSupabase.cache.trainees[idx] = mapped;
+        return mapped;
+    },
+
+    async deleteTrainee(traineeId) {
+        const res = await IronSupabase.callFunction("coach-admin", {
+            action: "delete_client",
+            clientId: traineeId
+        });
+        if (!res.ok) {
+            throw new Error(res.error || "Failed to delete client");
+        }
+        const target = IronSupabase.cache.trainees.find(t => t.id === traineeId) || { id: traineeId };
+        IronSupabase.cache.trainees = IronSupabase.cache.trainees.filter(t => t.id !== traineeId);
+        return target;
+    },
+
+    async renewSubscription(traineeId, additionalDays = 30) {
+        const sb = typeof IronSupabase !== "undefined" ? IronSupabase.initClient() : null;
+        if (!sb) return null;
+
         const trainees = this.getAllTrainees();
         const trainee = trainees.find(t => t.id === traineeId);
-        if (trainee) {
-            this.refreshSubscriptionStatus(trainee);
-            const remaining = Math.max(0, parseInt(trainee.daysLeft) || 0);
-            const totalDays = remaining + (parseInt(additionalDays) || 30);
+        if (!trainee) return null;
 
-            trainee.joinedDate = new Date().toISOString().split('T')[0];
-            trainee.subscriptionDays = totalDays;
-            trainee.daysLeft = totalDays;
-            trainee.hasActivatedOnce = true;
-            trainee.status = "active";
-            if (receiptInfo) {
-                trainee.lastRenewalReceipt = receiptInfo;
-            }
-            this.saveAllTrainees(trainees);
-            return trainee;
+        this.refreshSubscriptionStatus(trainee);
+        const remaining = Math.max(0, parseInt(trainee.daysLeft) || 0);
+        const totalDays = remaining + (parseInt(additionalDays) || 30);
+
+        const patch = {
+            joined_date: new Date().toISOString().split("T")[0],
+            subscription_days: totalDays,
+            has_activated_once: true
+        };
+        if (trainee.lastRenewalReceipt && typeof trainee.lastRenewalReceipt === "object") {
+            patch.last_renewal_receipt = {
+                ...trainee.lastRenewalReceipt,
+                status: "approved",
+                approvedAt: new Date().toISOString()
+            };
+        }
+
+        const { data, error } = await sb
+            .from("clients")
+            .update(patch)
+            .eq("id", traineeId)
+            .select("*")
+            .single();
+
+        if (error || !data) {
+            throw new Error(error?.message || "Failed to renew subscription");
+        }
+
+        const mapped = this.refreshSubscriptionStatus(IronSupabase.mapClientFromDb(data));
+        const idx = IronSupabase.cache.trainees.findIndex(t => t.id === traineeId);
+        if (idx !== -1) IronSupabase.cache.trainees[idx] = mapped;
+        return mapped;
+    },
+
+    async submitRenewalReceipt(path, fileName, fileSize, clientId = null) {
+        const res = await IronSupabase.callFunction("client-submit-receipt", {
+            path,
+            fileName,
+            fileSize,
+            clientId
+        });
+        if (!res.ok || !res.data?.client) {
+            throw new Error(res.error || "Failed to submit receipt");
+        }
+        const mapped = this.refreshSubscriptionStatus(IronSupabase.mapClientFromDb(res.data.client));
+        this.syncLocalCachesWithTrainee(mapped);
+        return mapped;
+    },
+
+    syncLocalCachesWithTrainee(updated) {
+        if (!updated) return;
+        const idx = IronSupabase.cache.trainees.findIndex(t => t.id === updated.id);
+        if (idx !== -1) {
+            IronSupabase.cache.trainees[idx] = updated;
+        }
+        const cur = IronSupabase.cache.currentUser;
+        if (cur && cur.role === "trainee" && cur.id === updated.id) {
+            cur.name = updated.name;
+            cur.username = updated.username;
+            cur.status = updated.status;
+            cur.daysLeft = updated.daysLeft;
+            cur.traineeData = updated;
+        }
+    },
+
+    updateTrainee(traineeOrId, patchFields = null) {
+        const targetId = typeof traineeOrId === "string" ? traineeOrId : traineeOrId?.id;
+        if (!targetId) return null;
+
+        const trainees = this.getAllTrainees();
+        const existing = trainees.find(t => t.id === targetId)
+            || (IronSupabase.cache.currentUser?.id === targetId ? IronSupabase.cache.currentUser.traineeData : null);
+        if (!existing) return null;
+
+        const updated = typeof traineeOrId === "string"
+            ? { ...existing, ...(patchFields || {}) }
+            : { ...existing, ...traineeOrId };
+
+        this.refreshSubscriptionStatus(updated);
+        this.syncLocalCachesWithTrainee(updated);
+
+        // Persist allowed fields to Supabase clients table in background
+        this.persistTraineeFields(updated).catch(err => {
+            console.error("persistTraineeFields error:", err);
+        });
+
+        return updated;
+    },
+
+    async persistTraineeFields(trainee) {
+        const sb = typeof IronSupabase !== "undefined" ? IronSupabase.initClient() : null;
+        if (!sb || !trainee?.id) return null;
+
+        const { data, error } = await sb
+            .from("clients")
+            .update({
+                name: trainee.name,
+                phone: trainee.phone || "",
+                phone_normalized: String(trainee.phone || "").replace(/\D/g, ""),
+                weight: Number(trainee.weight) || 75,
+                height: Number(trainee.height) || 175,
+                age: Number(trainee.age) || 26,
+                gender: trainee.gender === "female" ? "female" : "male",
+                activity: Number(trainee.activity) || 1.55,
+                goal: trainee.goal || "تنشيف وخسارة دهون",
+                calories: parseInt(trainee.calories) || 2000,
+                macros: trainee.macros || { protein: 150, fats: 55, carbs: 200 },
+                program: trainee.program || "PPL (Push Pull Legs)",
+                avatar_url: trainee.avatar || "",
+                history: Array.isArray(trainee.history) ? trainee.history : []
+            })
+            .eq("id", trainee.id)
+            .select("*")
+            .single();
+
+        if (error) throw error;
+        if (data) {
+            const mapped = this.refreshSubscriptionStatus(IronSupabase.mapClientFromDb(data));
+            this.syncLocalCachesWithTrainee(mapped);
+            return mapped;
+        }
+        return trainee;
+    },
+
+    async changeCoachPassword(newPassword) {
+        const res = await IronSupabase.callFunction("coach-admin", {
+            action: "change_coach_password",
+            newPassword
+        });
+        if (!res.ok) throw new Error(res.error || "Failed to update password");
+        return true;
+    },
+
+    impersonateTrainee(id) {
+        if (!id) return;
+        sessionStorage.setItem(this.IMPERSONATE_KEY, id);
+        sessionStorage.removeItem("iron_active_workout");
+        window.location.reload();
+    },
+
+    returnToCoachDashboard() {
+        sessionStorage.removeItem(this.IMPERSONATE_KEY);
+        sessionStorage.removeItem("iron_active_workout");
+        window.location.reload();
+    },
+
+    async logout() {
+        sessionStorage.removeItem(this.IMPERSONATE_KEY);
+        sessionStorage.removeItem("iron_active_workout");
+        try {
+            const sb = typeof IronSupabase !== "undefined" ? IronSupabase.initClient() : null;
+            if (sb) await sb.auth.signOut();
+        } catch {}
+        if (typeof IronSupabase !== "undefined") {
+            IronSupabase.cache.currentUser = null;
+            IronSupabase.cache.trainees = [];
+            IronSupabase.cache.savedDiets = {};
+            IronSupabase.cache.waterLogs = {};
+            IronSupabase.cache.workoutLogs = [];
+        }
+        window.location.reload();
+    },
+
+    async exportBackupData() {
+        if (typeof IronSupabase !== "undefined") {
+            return await IronSupabase.exportAllCloudBackup();
         }
         return null;
     },
 
-    // تصدير نسخة احتياطية كاملة لبيانات المنصة (JSON)
-    exportBackupData() {
-        return {
-            app: "IronCoach Pro",
-            version: "2.2.0",
-            exportedAt: new Date().toISOString(),
-            config: getAppConfig(),
-            trainees: this.getAllTrainees(),
-            customMeals: JSON.parse(localStorage.getItem("iron_custom_meals") || "[]"),
-            workoutLogs: JSON.parse(localStorage.getItem("iron_workout_logs") || "[]"),
-            savedDiets: JSON.parse(localStorage.getItem("iron_saved_diets") || "{}"),
-            waterLogs: JSON.parse(localStorage.getItem("iron_water_logs") || "{}")
-        };
-    },
-
-    // استيراد واستعادة نسخة احتياطية
-    importBackupData(payload) {
+    async importBackupData(payload) {
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         if (!payload || !Array.isArray(payload.trainees)) {
             return { success: false, message: isEn ? "Invalid or corrupted backup JSON file" : "ملف النسخة الاحتياطية غير صالح أو تالف" };
         }
-        if (payload.config) {
-            saveAppConfig(payload.config);
+        const res = await IronSupabase.callFunction("coach-admin", {
+            action: "import_backup",
+            payload
+        });
+        if (!res.ok) {
+            return { success: false, message: res.error || (isEn ? "Backup restore failed" : "فشلت استعادة النسخة الاحتياطية") };
         }
-        this.saveAllTrainees(payload.trainees);
-        if (Array.isArray(payload.customMeals)) {
-            localStorage.setItem("iron_custom_meals", JSON.stringify(payload.customMeals));
-        }
-        if (Array.isArray(payload.workoutLogs)) {
-            localStorage.setItem("iron_workout_logs", JSON.stringify(payload.workoutLogs));
-        }
-        if (payload.savedDiets && typeof payload.savedDiets === "object") {
-            localStorage.setItem("iron_saved_diets", JSON.stringify(payload.savedDiets));
-        }
-        if (payload.waterLogs && typeof payload.waterLogs === "object") {
-            localStorage.setItem("iron_water_logs", JSON.stringify(payload.waterLogs));
-        }
-        return { success: true, count: payload.trainees.length };
+        await loadAppConfigFromCloud();
+        await this.syncAllTrainees();
+        return { success: true, count: res.data?.count ?? payload.trainees.length };
     }
 };

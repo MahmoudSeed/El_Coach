@@ -102,7 +102,19 @@ const IronI18n = {
             provider_google: "Google",
             provider_icloud: "iCloud / Apple",
             provider_phone: "رقم الجوال OTP",
+            provider_email: "تسجيل مباشر",
             provider_manual: "إضافة الكوتش",
+            signup_password_btn: "التسجيل برقم الجوال أو البريد + كلمة مرور 🔑",
+            signup_password_badge: "تسجيل حساب مباشر",
+            signup_pass_lbl: "كلمة المرور (6 أحرف على الأقل) *",
+            signup_oauth_email_opt: "البريد الإلكتروني (اختياري إذا أدخلت الجوال)",
+            signup_err_pass: "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
+            signup_err_contact: "يرجى إدخال رقم الجوال أو البريد الإلكتروني",
+            signup_err_exists: "هذا البريد أو رقم الجوال مسجل بالفعل — يرجى تسجيل الدخول",
+            signup_err_oauth_disabled: "تسجيل {provider} غير مفعّل بعد في لوحة Supabase. يمكنك التسجيل المباشر أو برقم الجوال.",
+            sms_not_configured: "خدمة رسائل OTP غير مفعّلة بعد — يمكنك الدخول أو التسجيل برقم الجوال وكلمة المرور الآن.",
+            receipt_sent_review: "تم رفع الإيصال ({file}) بنجاح! جاري المراجعة من الكوتش لتفعيل الـ 30 يوماً ✅",
+            receipt_pending_banner: "📩 تم استلام إيصالك ({file}) وهو قيد المراجعة الآن من الكوتش لتفعيل اشتراكك.",
             status_pending: "بانتظار الدفع ⏳",
             coach_filter_pending: "بانتظار الدفع ({count})",
             timer_title: "مؤقت الراحة النشط",
@@ -341,8 +353,8 @@ const IronI18n = {
             modal_renew_voda_lbl: "فودافون كاش:",
             modal_renew_insta_lbl: "انستاباي:",
             modal_renew_stc_lbl: "STC Pay:",
-            modal_renew_receipt: "رفع صورة إيصال التحويل لتأكيد التجديد فوري *:",
-            modal_renew_submit: "تأكيد إرسال الإيصال وتفعيل الـ 30 يوماً ✅"
+            modal_renew_receipt: "رفع صورة إيصال التحويل لمراجعة الكوتش وتفعيل الاشتراك *:",
+            modal_renew_submit: "إرسال الإيصال للمراجعة وتأكيد التحويل ✅"
         },
         en: {
             brand_name: "IronCoach",
@@ -432,7 +444,19 @@ const IronI18n = {
             provider_google: "Google",
             provider_icloud: "iCloud / Apple",
             provider_phone: "Phone OTP",
+            provider_email: "Direct Sign-Up",
             provider_manual: "Coach Added",
+            signup_password_btn: "Sign Up with Phone / Email & Password 🔑",
+            signup_password_badge: "Direct Account Sign-Up",
+            signup_pass_lbl: "Password (min 6 characters) *",
+            signup_oauth_email_opt: "Email Address (optional if phone entered)",
+            signup_err_pass: "Password must be at least 6 characters",
+            signup_err_contact: "Please enter a phone number or email address",
+            signup_err_exists: "This email or phone is already registered — please sign in",
+            signup_err_oauth_disabled: "{provider} sign-in is not enabled in Supabase yet. Please use direct sign-up below.",
+            sms_not_configured: "SMS OTP provider is not configured yet — sign in or register with Phone + Password instead.",
+            receipt_sent_review: "Receipt ({file}) uploaded! Sent to Coach for review & 30-day activation ✅",
+            receipt_pending_banner: "📩 Your receipt ({file}) has been received and is pending Coach review.",
             status_pending: "Pending Payment ⏳",
             coach_filter_pending: "Pending ({count})",
             timer_title: "Active Rest Timer",
@@ -671,8 +695,8 @@ const IronI18n = {
             modal_renew_voda_lbl: "Vodafone Cash:",
             modal_renew_insta_lbl: "InstaPay:",
             modal_renew_stc_lbl: "STC Pay:",
-            modal_renew_receipt: "Upload Transfer Receipt Screenshot for Instant Activation *:",
-            modal_renew_submit: "Confirm Receipt & Activate 30 Days ✅"
+            modal_renew_receipt: "Upload Transfer Receipt Screenshot for Coach Review *:",
+            modal_renew_submit: "Submit Receipt for Coach Review ✅"
         }
     },
 
@@ -743,6 +767,7 @@ const IronI18n = {
         if (p === "google") return this.t("provider_google");
         if (p === "icloud" || p === "apple") return this.t("provider_icloud");
         if (p === "phone" || p === "otp") return this.t("provider_phone");
+        if (p === "email" || p === "password") return this.t("provider_email");
         return this.t("provider_manual");
     },
 

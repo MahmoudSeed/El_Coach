@@ -138,8 +138,21 @@ const IronCoachPanel = {
                             const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(t) : t.name;
                             const dispGoal = typeof IronI18n !== "undefined" ? IronI18n.trGoal(t.goal || "تنشيف وخسارة دهون") : (t.goal || "تنشيف");
                             const provLabel = t.authProvider && t.authProvider !== "manual"
-                                ? `<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-cyan-400 font-bold border border-slate-700">${t.authProvider === 'google' ? '🔵' : t.authProvider === 'icloud' ? '☁️' : '📱'} ${typeof IronI18n !== "undefined" ? IronI18n.trProvider(t.authProvider) : t.authProvider}</span>`
+                                ? `<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-cyan-400 font-bold border border-slate-700">${t.authProvider === 'google' ? '🔵' : t.authProvider === 'icloud' ? '☁️' : t.authProvider === 'email' ? '✉️' : '📱'} ${typeof IronI18n !== "undefined" ? IronI18n.trProvider(t.authProvider) : t.authProvider}</span>`
                                 : '';
+                            const hasPendingReceipt = Boolean(t.lastRenewalReceipt && t.lastRenewalReceipt.path && t.lastRenewalReceipt.status === "pending_review");
+                            const hasAnyReceipt = Boolean(t.lastRenewalReceipt && t.lastRenewalReceipt.path);
+                            const receiptNotice = hasPendingReceipt
+                                ? `<div class="mt-2 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-2 text-[11px]">
+                                        <span class="text-amber-300 font-bold truncate">🧾 ${isEn ? 'Pending receipt:' : 'إيصال بانتظار المراجعة:'} ${t.lastRenewalReceipt.fileName || ''}</span>
+                                        <button type="button" onclick="IronCoachPanel.viewTraineeReceipt('${t.id}')" class="px-2 py-0.5 rounded-lg bg-amber-500 text-slate-950 font-black text-[10px] flex-shrink-0 hover:bg-amber-400 transition">${isEn ? 'View' : 'عرض'}</button>
+                                   </div>`
+                                : (hasAnyReceipt
+                                    ? `<div class="mt-2 px-2.5 py-1 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-2 text-[10px] text-gray-400">
+                                            <span class="truncate">🧾 ${t.lastRenewalReceipt.fileName || (isEn ? 'Last receipt' : 'آخر إيصال')}</span>
+                                            <button type="button" onclick="IronCoachPanel.viewTraineeReceipt('${t.id}')" class="text-emerald-400 font-bold hover:underline flex-shrink-0">${isEn ? 'View' : 'عرض'}</button>
+                                       </div>`
+                                    : '');
                             const initial = (dispName || "U").trim().charAt(0).toUpperCase();
                             const avatarBadge = t.avatar
                                 ? `<img src="${t.avatar}" alt="${dispName}" class="w-10 h-10 rounded-full object-cover border-2 border-emerald-500/40 flex-shrink-0">`
@@ -180,6 +193,7 @@ const IronCoachPanel = {
                                                 <div class="font-bold text-cyan-400 truncate">${t.program || 'PPL'}</div>
                                             </div>
                                         </div>
+                                        ${receiptNotice}
                                     </div>
 
                                     <div class="space-y-2 pt-3 border-t border-slate-800 mt-2">
@@ -227,14 +241,34 @@ const IronCoachPanel = {
         this.renderCoachDashboard();
     },
 
-    renewTrainee(id) {
-        const renewed = IronAuth.renewSubscription(id, 30);
-        if (renewed) {
-            const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
-            const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(renewed) : renewed.name;
-            showToast(isEn ? `Subscription renewed +30 days for ${dispName}!` : `تم تجديد اشتراك ${dispName} لمدة 30 يوماً إضافية بنجاح!`, "success");
-            this.renderCoachDashboard();
+    async renewTrainee(id) {
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        try {
+            const renewed = await IronAuth.renewSubscription(id, 30);
+            if (renewed) {
+                const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(renewed) : renewed.name;
+                showToast(isEn ? `Subscription renewed +30 days for ${dispName}!` : `تم تجديد اشتراك ${dispName} لمدة 30 يوماً إضافية بنجاح!`, "success");
+                this.renderCoachDashboard();
+            }
+        } catch (err) {
+            showToast(err?.message || (isEn ? "Failed to renew subscription" : "فشل تجديد الاشتراك"), "error");
         }
+    },
+
+    async viewTraineeReceipt(id) {
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const trainees = IronAuth.getAllTrainees();
+        const t = trainees.find(item => item.id === id);
+        if (!t?.lastRenewalReceipt?.path) {
+            showToast(isEn ? "No receipt file found" : "لا يوجد ملف إيصال لهذا المشترك", "error");
+            return;
+        }
+        const signedUrl = await IronSupabase.getSignedReceiptUrl(t.lastRenewalReceipt.path);
+        if (!signedUrl) {
+            showToast(isEn ? "Could not load receipt preview" : "تعذر فتح رابط الإيصال", "error");
+            return;
+        }
+        window.open(signedUrl, "_blank", "noopener,noreferrer");
     },
 
     openEditTraineeModal(id) {
@@ -265,38 +299,45 @@ const IronCoachPanel = {
         openModal("editTraineeModal");
     },
 
-    saveEditedTrainee(e) {
+    async saveEditedTrainee(e) {
         e.preventDefault();
-        const form = e.target;
         const id = document.getElementById("editTId")?.value;
         if (!id) return;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
 
-        const updated = IronAuth.editTrainee(id, {
-            name: document.getElementById("editTName")?.value.trim(),
-            phone: document.getElementById("editTPhone")?.value.trim(),
-            username: document.getElementById("editTUsername")?.value.trim(),
-            newPassword: document.getElementById("editTPassword")?.value.trim(),
-            weight: document.getElementById("editTWeight")?.value,
-            height: document.getElementById("editTHeight")?.value,
-            age: document.getElementById("editTAge")?.value,
-            gender: document.getElementById("editTGender")?.value,
-            goal: document.getElementById("editTGoal")?.value,
-            calories: document.getElementById("editTCalories")?.value,
-            daysLeft: document.getElementById("editTDaysLeft")?.value,
-            program: document.getElementById("editTProgram")?.value,
-            coachNote: document.getElementById("editTCoachNote")?.value
-        });
+        try {
+            const updated = await IronAuth.editTrainee(id, {
+                name: document.getElementById("editTName")?.value.trim(),
+                phone: document.getElementById("editTPhone")?.value.trim(),
+                username: document.getElementById("editTUsername")?.value.trim(),
+                newPassword: document.getElementById("editTPassword")?.value.trim(),
+                weight: document.getElementById("editTWeight")?.value,
+                height: document.getElementById("editTHeight")?.value,
+                age: document.getElementById("editTAge")?.value,
+                gender: document.getElementById("editTGender")?.value,
+                goal: document.getElementById("editTGoal")?.value,
+                calories: document.getElementById("editTCalories")?.value,
+                daysLeft: document.getElementById("editTDaysLeft")?.value,
+                program: document.getElementById("editTProgram")?.value,
+                coachNote: document.getElementById("editTCoachNote")?.value
+            });
 
-        if (updated) {
-            closeModal("editTraineeModal");
-            const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
-            const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(updated) : updated.name;
-            showToast(isEn ? `Updated ${dispName}'s profile & plan successfully! ✅` : `تم تحديث بيانات وخطة المشترك ${dispName} بنجاح! ✅`, "success");
-            this.renderCoachDashboard();
+            if (updated) {
+                closeModal("editTraineeModal");
+                const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(updated) : updated.name;
+                showToast(isEn ? `Updated ${dispName}'s profile & plan successfully! ✅` : `تم تحديث بيانات وخطة المشترك ${dispName} بنجاح! ✅`, "success");
+                this.renderCoachDashboard();
+            }
+        } catch (err) {
+            showToast(err?.message || (isEn ? "Failed to update client" : "فشل تحديث بيانات المشترك"), "error");
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
         }
     },
 
-    deleteTrainee(id) {
+    async deleteTrainee(id) {
         const trainees = IronAuth.getAllTrainees();
         const target = trainees.find(t => t.id === id);
         if (!target) return;
@@ -307,10 +348,14 @@ const IronCoachPanel = {
             return;
         }
 
-        const deleted = IronAuth.deleteTrainee(id);
-        if (deleted) {
-            showToast(isEn ? `Deleted client ${dispName} from platform` : `تم حذف حساب المشترك ${dispName} من المنصة`, "success");
-            this.renderCoachDashboard();
+        try {
+            const deleted = await IronAuth.deleteTrainee(id);
+            if (deleted) {
+                showToast(isEn ? `Deleted client ${dispName} from platform` : `تم حذف حساب المشترك ${dispName} من المنصة`, "success");
+                this.renderCoachDashboard();
+            }
+        } catch (err) {
+            showToast(err?.message || (isEn ? "Failed to delete client" : "فشل حذف حساب المشترك"), "error");
         }
     },
 
@@ -338,20 +383,25 @@ const IronCoachPanel = {
         window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
     },
 
-    exportBackup() {
-        const backup = IronAuth.exportBackupData();
-        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        const dateStr = new Date().toISOString().split("T")[0];
-        a.href = url;
-        a.download = `ironcoach-backup-${dateStr}.json`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+    async exportBackup() {
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
-        showToast(isEn ? "Platform backup JSON exported successfully! 📥" : "تم تصدير النسخة الاحتياطية لبيانات المنصة بنجاح! 📥", "success");
+        try {
+            const backup = await IronAuth.exportBackupData();
+            if (!backup) throw new Error("Export failed");
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            const dateStr = new Date().toISOString().split("T")[0];
+            a.href = url;
+            a.download = `ironcoach-backup-${dateStr}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            showToast(isEn ? "Platform backup JSON exported successfully! 📥" : "تم تصدير النسخة الاحتياطية لبيانات المنصة بنجاح! 📥", "success");
+        } catch (err) {
+            showToast(err?.message || (isEn ? "Failed to export backup" : "فشل تصدير النسخة الاحتياطية"), "error");
+        }
     },
 
     importBackup(input) {
@@ -359,10 +409,10 @@ const IronCoachPanel = {
         const file = input.files[0];
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const reader = new FileReader();
-        reader.onload = (ev) => {
+        reader.onload = async (ev) => {
             try {
                 const parsed = JSON.parse(ev.target.result);
-                const result = IronAuth.importBackupData(parsed);
+                const result = await IronAuth.importBackupData(parsed);
                 if (result.success) {
                     showToast(isEn ? `Backup restored successfully (${result.count} clients)! 🚀` : `تم استعادة النسخة الاحتياطية بنجاح (${result.count} مشتركين)! 🚀`, "success");
                     this.renderCoachDashboard();
@@ -378,24 +428,7 @@ const IronCoachPanel = {
     },
 
     impersonateTrainee(id) {
-        const trainees = IronAuth.getAllTrainees();
-        const trainee = trainees.find(t => t.id === id);
-        const currentCoach = IronAuth.getCurrentUser();
-        if (trainee) {
-            const traineeUser = {
-                role: "trainee",
-                id: trainee.id,
-                name: trainee.name,
-                username: trainee.username,
-                status: trainee.status,
-                daysLeft: trainee.daysLeft,
-                traineeData: trainee,
-                isImpersonating: true,
-                impersonatedBy: currentCoach ? currentCoach.username : "El_Coach"
-            };
-            localStorage.setItem("iron_session", JSON.stringify(traineeUser));
-            window.location.reload();
-        }
+        IronAuth.impersonateTrainee(id);
     },
 
     openSettingsModal() {
@@ -420,42 +453,50 @@ const IronCoachPanel = {
         openModal("coachSettingsModal");
     },
 
-    saveCoachSettings(form) {
-        const config = getAppConfig();
-        config.coachInfo.name = form.coachName.value.trim() || config.coachInfo.name;
-        config.coachInfo.title = form.coachTitle.value.trim() || config.coachInfo.title;
-        config.coachInfo.whatsapp = form.coachWhatsapp.value.trim();
-        config.coachInfo.vodafoneCash = form.coachVodafone.value.trim();
-        config.coachInfo.instapayUser = form.coachInstapay.value.trim();
-        config.coachInfo.stcPay = form.coachStc.value.trim();
-        config.coachInfo.bankIban = form.coachIban.value.trim();
-        config.coachInfo.paymentLink = form.coachPaymentLink.value.trim();
-
-        if (form.coachMonthlyPrice) {
-            config.subscriptionPrice.monthly = parseInt(form.coachMonthlyPrice.value) || 500;
-        }
-        if (form.coachCurrency && form.coachCurrency.value.trim()) {
-            config.subscriptionPrice.currency = form.coachCurrency.value.trim();
-        }
-        if (form.coachNewPassword && form.coachNewPassword.value.trim()) {
-            const newHash = hashPassword(form.coachNewPassword.value.trim());
-            const activeUser = IronAuth.getCurrentUser();
-            if (activeUser && activeUser.username && activeUser.username.toLowerCase() === "coach") {
-                config.coachInfo.passwordHash = newHash;
-            } else {
-                config.coachInfo.adminPasswordHash = newHash;
-            }
-        }
-
-        saveAppConfig(config);
-        closeModal("coachSettingsModal");
+    async saveCoachSettings(form) {
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
-        showToast(isEn ? "Coach settings & payment info saved!" : "تم حفظ إعدادات الكوتش وبيانات الدفع بنجاح!", "success");
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
 
-        const user = IronAuth.getCurrentUser();
-        if (user && typeof IronApp !== "undefined") {
-            IronApp.renderUserHeader(user);
+        try {
+            const config = getAppConfig();
+            config.coachInfo.name = form.coachName.value.trim() || config.coachInfo.name;
+            config.coachInfo.title = form.coachTitle.value.trim() || config.coachInfo.title;
+            config.coachInfo.whatsapp = form.coachWhatsapp.value.trim();
+            config.coachInfo.vodafoneCash = form.coachVodafone.value.trim();
+            config.coachInfo.instapayUser = form.coachInstapay.value.trim();
+            config.coachInfo.stcPay = form.coachStc.value.trim();
+            config.coachInfo.bankIban = form.coachIban.value.trim();
+            config.coachInfo.paymentLink = form.coachPaymentLink.value.trim();
+
+            if (form.coachMonthlyPrice) {
+                config.subscriptionPrice.monthly = parseInt(form.coachMonthlyPrice.value) || 500;
+            }
+            if (form.coachCurrency && form.coachCurrency.value.trim()) {
+                config.subscriptionPrice.currency = form.coachCurrency.value.trim();
+            }
+
+            const saveRes = await saveAppConfig(config);
+            if (saveRes?.error) {
+                throw new Error(saveRes.error.message || "Failed to save settings");
+            }
+
+            if (form.coachNewPassword && form.coachNewPassword.value.trim()) {
+                await IronAuth.changeCoachPassword(form.coachNewPassword.value.trim());
+            }
+
+            closeModal("coachSettingsModal");
+            showToast(isEn ? "Coach settings & payment info saved!" : "تم حفظ إعدادات الكوتش وبيانات الدفع بنجاح!", "success");
+
+            const user = IronAuth.getCurrentUser();
+            if (user && typeof IronApp !== "undefined") {
+                IronApp.renderUserHeader(user);
+            }
+            this.renderCoachDashboard();
+        } catch (err) {
+            showToast(err?.message || (isEn ? "Failed to save coach settings" : "تعذر حفظ الإعدادات"), "error");
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
         }
-        this.renderCoachDashboard();
     }
 };

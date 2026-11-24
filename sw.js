@@ -3,7 +3,7 @@
  * استراتيجية Network-First لضمان وصول التحديثات فوراً مع دعم العمل بدون إنترنت
  */
 
-const CACHE_NAME = 'ironcoach-pro-v3.2';
+const CACHE_NAME = 'ironcoach-pro-v3.3';
 const CORE_ASSETS = [
     './',
     './index.html',
@@ -13,6 +13,7 @@ const CORE_ASSETS = [
     './css/components.css',
     './js/i18nDataEn.js',
     './js/i18n.js',
+    './js/supabaseClient.js',
     './js/config.js',
     './js/mealsData.js',
     './js/exercisesData.js',
@@ -42,6 +43,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
+    if (event.request.url.includes('supabase.co')) return;
 
     const isSameOrigin = event.request.url.startsWith(self.location.origin);
 
