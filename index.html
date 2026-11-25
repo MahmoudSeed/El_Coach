@@ -490,10 +490,10 @@
 
                     <!-- وسائل التحويل المباشر المفعّلة (البنكي + انستاباي + المحفظة + STC Pay) -->
                     <div class="space-y-2.5 text-xs pt-1">
-                        <!-- 1. الحساب البنكي / الآيبان IBAN -->
-                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                        <!-- 1. الحساب البنكي / الآيبان IBAN (مصرف الراجحي) -->
+                        <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3 space-y-1.5">
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-gray-300 font-bold" data-i18n="expired_iban">🏦 التحويل البنكي (IBAN):</span>
+                                <span class="text-gray-200 font-bold" data-i18n="expired_iban">🏦 مصرف الراجحي (Al Rajhi IBAN):</span>
                                 <div class="flex items-center gap-1.5">
                                     <button type="button" onclick="IronApp.triggerDirectTransfer('iban')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
                                     <button type="button" onclick="IronApp.copyPaymentValue('iban')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
@@ -1404,10 +1404,10 @@
                 <div class="border-t border-slate-800 pt-3">
                     <h5 class="text-xs font-bold text-white mb-2" data-i18n="modal_renew_wallets">أو اضغط للتحويل الفوري المباشر عبر الحساب البنكي والمحافظ:</h5>
                     <div class="space-y-2 text-xs">
-                        <!-- الحساب البنكي / الآيبان -->
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                        <!-- الحساب البنكي / الآيبان (مصرف الراجحي) -->
+                        <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/30 space-y-1">
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-gray-300 font-bold" data-i18n="modal_renew_iban_lbl">🏦 الحساب البنكي (IBAN):</span>
+                                <span class="text-gray-200 font-bold" data-i18n="modal_renew_iban_lbl">🏦 مصرف الراجحي (Al Rajhi IBAN):</span>
                                 <div class="flex items-center gap-1.5">
                                     <button type="button" onclick="IronApp.triggerDirectTransfer('iban')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
                                     <button type="button" onclick="IronApp.copyPaymentValue('iban')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>

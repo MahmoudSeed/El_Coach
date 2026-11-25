@@ -2278,9 +2278,9 @@ const IronApp = {
 
         const map = {
             iban: {
-                label: isEn ? "Bank Transfer (IBAN)" : "التحويل البنكي (IBAN)",
+                label: isEn ? "Al Rajhi Bank (IBAN)" : "مصرف الراجحي (IBAN)",
                 value: ci.bankIban || "SA4180000644608017933823",
-                bankName: ci.bankName || (isEn ? "Al Rajhi / SNB Bank" : "البنك الأهلي / الراجحي"),
+                bankName: ci.bankName || (isEn ? "Al Rajhi Bank" : "مصرف الراجحي"),
                 amount,
                 currencyTxt
             },
@@ -2435,7 +2435,9 @@ const IronApp = {
             return;
         }
 
-        // 2. محاولة فتح نافذة الدفع الأصلية للمتصفح (Apple Pay / PaymentRequest API على أجهزة Apple والمتصفحات الداعمة)
+        // 2. محاولة فتح نافذة الدفع الأصلية للمتصفح (Apple Pay / PaymentRequest API المرتبطة بحساب مصرف الراجحي)
+        const ibanNum = config.coachInfo?.bankIban || "SA4180000644608017933823";
+        const stcNum = config.coachInfo?.stcPay || "966563055827";
         if (typeof window !== "undefined" && "PaymentRequest" in window) {
             try {
                 const supportedInstruments = [
@@ -2443,22 +2445,18 @@ const IronApp = {
                         supportedMethods: "https://apple.com/apple-pay",
                         data: {
                             version: 3,
-                            merchantIdentifier: "merchant.com.ironcoach.pro",
+                            merchantIdentifier: "merchant.com.ironcoach.alrajhi",
                             merchantCapabilities: ["supports3DS"],
                             supportedNetworks: ["mada", "visa", "masterCard"],
                             countryCode: "SA"
-                        }
-                    },
-                    {
-                        supportedMethods: "basic-card",
-                        data: {
-                            supportedNetworks: ["visa", "mastercard", "mada"]
                         }
                     }
                 ];
                 const details = {
                     total: {
-                        label: isEn ? "IronCoach Pro - 30-Day Subscription" : "اشتراك أيرون كوتش الشهري (30 يوماً)",
+                        label: isEn
+                            ? `IronCoach Pro (${tier.title}) -> Al Rajhi ${ibanNum}`
+                            : `أيرون كوتش (${tier.title}) - مصرف الراجحي ${ibanNum}`,
                         amount: { currency: "SAR", value: amount.toFixed(2) }
                     }
                 };
@@ -2467,18 +2465,16 @@ const IronApp = {
                 if (canMake) {
                     const response = await request.show();
                     await response.complete("success");
-                    showToast(isEn ? "Apple Pay authorized! Please attach confirmation to activate immediately." : "تم تفويض Apple Pay! يرجى تأكيد الإيصال لتفعيل الاشتراك فوراً.", "success");
+                    showToast(isEn ? "Apple Pay authorized! Please attach confirmation to activate immediately." : "تم تفويض Apple Pay! يرجى إرفاق الإيصال لتفعيل الاشتراك فوراً.", "success");
                     return;
                 }
             } catch {}
         }
 
-        // 3. تفعيل وضع الدفع السريع عبر Apple Pay / STC Pay / الآيبان البنكي المباشر داخل نافذة الاشتراك
-        const stcNum = config.coachInfo?.stcPay || "966563055827";
-        const ibanNum = config.coachInfo?.bankIban || "SA4180000644608017933823";
+        // 3. ربط ونسخ آيبان مصرف الراجحي (SA4180000644608017933823) مباشرة عند الضغط على Apple Pay
         try {
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(stcNum);
+                await navigator.clipboard.writeText(ibanNum);
             }
         } catch {}
 
@@ -2486,20 +2482,30 @@ const IronApp = {
         if (activeBox) {
             activeBox.innerHTML = `
                 <div class="font-black text-white flex items-center justify-between">
-                    <span class="flex items-center gap-1.5">🍎 ${isEn ? "Apple Pay / STC Pay & Instant Bank Checkout" : "الدفع عبر Apple Pay / STC Pay والتحويل البنكي الفوري"}</span>
+                    <span class="flex items-center gap-1.5">🍎 ${isEn ? "Apple Pay — Linked to Al Rajhi Bank" : "الدفع عبر Apple Pay — مربوط بحساب مصرف الراجحي"}</span>
                     <span class="font-mono text-emerald-400">${amount} ${currencyTxt}</span>
                 </div>
-                <p class="text-gray-200 leading-relaxed">
+                <div class="bg-slate-950/90 border border-amber-500/35 rounded-xl p-2.5 text-xs space-y-1 my-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">${isEn ? "Bank:" : "البنك المستفيد:"}</span>
+                        <strong class="text-white">${isEn ? "Al Rajhi Bank (مصرف الراجحي)" : "مصرف الراجحي (Al Rajhi Bank)"}</strong>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">${isEn ? "IBAN (Copied ✅):" : "رقم الآيبان (تم نسخه تلقائياً ✅):"}</span>
+                        <strong class="text-amber-400 font-mono select-all" dir="ltr">${ibanNum}</strong>
+                    </div>
+                </div>
+                <p class="text-gray-200 leading-relaxed text-[11px]">
                     ${isEn
-                        ? `You can top up or pay directly using <strong>Apple Pay</strong> via <strong>STC Pay (${stcNum})</strong> or instant bank transfer to IBAN <strong class="text-amber-400 font-mono">${ibanNum}</strong>, then attach the confirmation screenshot below for immediate 30-day activation.`
-                        : `يمكنك الدفع فوراً باستخدام <strong>Apple Pay</strong> عبر شحن/تحويل <strong>STC Pay (${stcNum} — تم نسخه تلقائياً ✅)</strong> أو التحويل الفوري لحساب الآيبان <strong class="text-amber-400 font-mono">${ibanNum}</strong>، ثم إرفاق صورة الإيصال بالأسفل لتفعيل اشتراكك (30 يوماً) مباشرة.`}
+                        ? `Al Rajhi IBAN <strong class="text-amber-400 font-mono">${ibanNum}</strong> has been copied! Complete the transfer of <strong class="text-emerald-400">${amount} ${currencyTxt}</strong> via Al Rajhi / Apple Pay (or STC Pay ${stcNum}) and attach the receipt screenshot below.`
+                        : `تم نسخ آيبان مصرف الراجحي <strong class="text-amber-400 font-mono">${ibanNum}</strong> تلقائياً! حوّل مبلغ <strong class="text-emerald-400">${amount} ${currencyTxt}</strong> إلى الحساب المرفق (أو عبر Apple Pay في STC Pay / تطبيق الراجحي) ثم ارفع صورة الإيصال بالأسفل للتفعيل الفوري.`}
                 </p>
                 <div class="pt-1 flex flex-wrap items-center gap-2">
-                    <button type="button" onclick="IronApp.copyPaymentValue('stc')" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition">
-                        🇸🇦 ${isEn ? `Copy STC Pay (${stcNum})` : `نسخ رقم STC Pay (${stcNum})`}
-                    </button>
                     <button type="button" onclick="IronApp.copyPaymentValue('iban')" class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400 transition">
-                        🏦 ${isEn ? "Copy Bank IBAN" : "نسخ الآيبان البنكي (IBAN)"}
+                        🏦 ${isEn ? `Copy Al Rajhi IBAN` : `نسخ آيبان مصرف الراجحي`}
+                    </button>
+                    <button type="button" onclick="IronApp.copyPaymentValue('stc')" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition">
+                        🇸🇦 ${isEn ? `Copy STC Pay (${stcNum})` : `نسخ STC Pay (${stcNum})`}
                     </button>
                     <button type="button" onclick="document.getElementById('receiptUploadInput')?.click()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold text-xs transition">
                         📸 ${isEn ? "Attach Payment Receipt" : "إرفاق صورة الإيصال"}
@@ -2510,8 +2516,8 @@ const IronApp = {
         }
         showToast(
             isEn
-                ? `Apple Pay / STC Pay number (${stcNum}) copied for instant checkout! 🍎`
-                : `تم تجهيز الدفع عبر Apple Pay / STC Pay ونسخ الرقم (${stcNum}) للتحويل الفوري! 🍎`,
+                ? `Al Rajhi Bank IBAN (${ibanNum}) copied for Apple Pay / Instant Transfer! 🏦`
+                : `تم نسخ آيبان مصرف الراجحي (${ibanNum}) المربوط بالدفع الفوري! 🏦`,
             "success"
         );
     },
