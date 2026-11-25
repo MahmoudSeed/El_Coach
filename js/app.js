@@ -683,8 +683,102 @@ const IronApp = {
     },
 
     // =========================================================================
-    // سجل التمارين المكتملة (Workout History Renderer)
+    // سجل التمارين المكتملة والتحكم في ريسيت الجولات (Workout History & Reset)
     // =========================================================================
+    resolveLogExercisesList(log) {
+        if (Array.isArray(log.completedExercises) && log.completedExercises.length > 0) {
+            return log.completedExercises;
+        }
+        // توافق تلقائي للسجلات القديمة التي حُفظت قبل إضافة أسماء التمارين التفصيلية
+        if (typeof getProgramById === "function" && log.programId) {
+            const prog = getProgramById(log.programId);
+            const day = prog?.days?.find(d => d.title === log.dayTitle);
+            if (day && Array.isArray(day.exercises)) {
+                let remaining = parseInt(log.completedSets) || 0;
+                const list = [];
+                for (const item of day.exercises) {
+                    if (remaining <= 0) break;
+                    const ex = typeof getExerciseById === "function" ? getExerciseById(item.exerciseId) : null;
+                    const take = Math.min(item.sets, remaining);
+                    remaining -= take;
+                    list.push({
+                        exerciseId: item.exerciseId,
+                        name: item.displayNameEn || ex?.nameEn || item.exerciseId,
+                        completedSets: take,
+                        totalSets: item.sets,
+                        isFull: take >= item.sets,
+                        maxWeightKg: 0
+                    });
+                }
+                return list;
+            }
+        }
+        return [];
+    },
+
+    async deleteWorkoutLog(logId) {
+        if (!logId) return;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const confirmMsg = this.t("logs_reset_one_confirm");
+        if (!window.confirm(confirmMsg)) return;
+
+        if (typeof IronSupabase !== "undefined") {
+            await IronSupabase.deleteWorkoutLog(logId);
+        }
+        showToast(this.t("logs_reset_one_toast"), "success");
+        this.renderWorkoutLogs();
+        this.selectProgram(this.selectedProgramId);
+    },
+
+    async resetAllWorkoutLogs() {
+        const user = IronAuth.getCurrentUser();
+        const traineeId = user && user.id ? user.id : null;
+        if (!traineeId) return;
+
+        const confirmMsg = this.t("logs_reset_all_confirm");
+        if (!window.confirm(confirmMsg)) return;
+
+        sessionStorage.removeItem("iron_active_workout");
+        if (typeof IronLiveGym !== "undefined") {
+            IronLiveGym.currentWorkout = null;
+        }
+        if (typeof IronSupabase !== "undefined") {
+            await IronSupabase.resetClientWorkoutLogs(traineeId);
+        }
+        showToast(this.t("logs_reset_all_toast"), "success");
+        this.renderWorkoutLogs();
+        this.selectProgram(this.selectedProgramId);
+    },
+
+    async resetWorkoutDay(programId, dayId) {
+        const user = IronAuth.getCurrentUser();
+        const traineeId = user && user.id ? user.id : null;
+        const prog = typeof getProgramById === "function" ? getProgramById(programId) : null;
+        const day = prog?.days?.find(d => d.dayId === dayId);
+        if (!day) return;
+
+        const confirmMsg = this.t("wo_reset_day_confirm", { day: day.title });
+        if (!window.confirm(confirmMsg)) return;
+
+        try {
+            const savedRaw = sessionStorage.getItem("iron_active_workout");
+            if (savedRaw) {
+                const parsed = JSON.parse(savedRaw);
+                if (parsed?.workout?.dayId === dayId) {
+                    sessionStorage.removeItem("iron_active_workout");
+                    if (typeof IronLiveGym !== "undefined") IronLiveGym.currentWorkout = null;
+                }
+            }
+        } catch {}
+
+        if (traineeId && typeof IronSupabase !== "undefined") {
+            await IronSupabase.resetClientWorkoutLogs(traineeId, day.title);
+        }
+        showToast(this.t("wo_reset_day_toast"), "success");
+        this.renderWorkoutLogs();
+        this.selectProgram(this.selectedProgramId);
+    },
+
     renderWorkoutLogs() {
         const overviewContainer = document.getElementById("overviewWorkoutLogsContainer");
         const workoutsTabContainer = document.getElementById("workoutsTabLogsContainer");
@@ -711,27 +805,60 @@ const IronApp = {
 
             return `
                 <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-                    <div class="flex items-center justify-between mb-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                         <h4 class="text-sm font-black text-white flex items-center gap-2">
                             <span>${this.t("logs_title", { count: myLogs.length })}</span>
                         </h4>
-                        <span class="text-[11px] text-emerald-400 font-bold">${this.t("logs_recent", { count: Math.min(limit, myLogs.length) })}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] text-emerald-400 font-bold">${this.t("logs_recent", { count: Math.min(limit, myLogs.length) })}</span>
+                            <button type="button" onclick="IronApp.resetAllWorkoutLogs()" class="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 text-[11px] font-bold transition">
+                                ${this.t("logs_reset_all_btn")}
+                            </button>
+                        </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                         ${myLogs.slice(0, limit).map(log => {
                             const dateFormatted = new Date(log.date).toLocaleDateString(isEn ? "en-US" : "ar-EG", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+                            const completedExList = this.resolveLogExercisesList(log);
+                            const setsText = log.totalSets
+                                ? `${log.completedSets}/${log.totalSets}`
+                                : `${log.completedSets}`;
                             return `
-                                <div class="flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs">
-                                    <div>
-                                        <div class="font-black text-white">${log.dayTitle}</div>
-                                        <div class="text-[10px] text-gray-400">${log.programName} • ${dateFormatted}</div>
+                                <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5 text-xs space-y-2.5">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="min-w-0">
+                                            <div class="font-black text-white truncate">${log.dayTitle}</div>
+                                            <div class="text-[10px] text-gray-400">${log.programName} • ${dateFormatted}</div>
+                                        </div>
+                                        <div class="flex items-center gap-1.5 flex-shrink-0">
+                                            <div class="text-end">
+                                                <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px]">
+                                                    ${this.t("logs_sets", { sets: setsText })}
+                                                </span>
+                                                ${log.totalVolumeKg > 0 ? `<div class="text-[10px] text-amber-400 font-mono mt-0.5">${this.t("logs_volume", { vol: log.totalVolumeKg })}</div>` : ''}
+                                            </div>
+                                            <button type="button" onclick="IronApp.deleteWorkoutLog('${log.id}')" title="${this.t("logs_reset_one_btn")}"
+                                                class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-rose-500/20 text-gray-400 hover:text-rose-400 border border-slate-800 hover:border-rose-500/30 text-[10px] font-bold transition">
+                                                🔄
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="text-end">
-                                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px]">
-                                            ${this.t("logs_sets", { sets: log.completedSets })}
-                                        </span>
-                                        ${log.totalVolumeKg > 0 ? `<div class="text-[10px] text-amber-400 font-mono mt-0.5">${this.t("logs_volume", { vol: log.totalVolumeKg })}</div>` : ''}
-                                    </div>
+                                    ${completedExList.length > 0 ? `
+                                        <div class="pt-2 border-t border-slate-800/80">
+                                            <div class="text-[10px] font-bold text-emerald-400 mb-1.5">${this.t("logs_completed_exercises_lbl", { count: completedExList.length })}</div>
+                                            <div class="flex flex-wrap gap-1.5" dir="ltr">
+                                                ${completedExList.map(exItem => {
+                                                    const isFull = exItem.isFull !== undefined ? exItem.isFull : (exItem.completedSets >= exItem.totalSets);
+                                                    const weightTag = exItem.maxWeightKg > 0 ? ` • ${exItem.maxWeightKg}kg` : '';
+                                                    return `
+                                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${isFull ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25' : 'bg-amber-500/10 text-amber-300 border-amber-500/25'}">
+                                                            ${isFull ? '✓' : '⚡'} ${exItem.name} (${exItem.completedSets}/${exItem.totalSets}${weightTag})
+                                                        </span>
+                                                    `;
+                                                }).join("")}
+                                            </div>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             `;
                         }).join("")}
@@ -1254,18 +1381,71 @@ const IronApp = {
                 </div>
             </div>
 
-            <!-- قائمة الأيام التدريبية داخل البرنامج (التمارين بالإنجليزية ومطابقة لصور التصميم) -->
+            <!-- قائمة الأيام التدريبية داخل البرنامج (التمارين بالإنجليزية ومطابقة لصور التصميم مع إبراز التمارين المنجزة وزر الريسيت) -->
             <div class="space-y-4">
-                ${program.days.map((day) => `
+                ${program.days.map((day) => {
+                    const traineeId = user && user.id ? user.id : null;
+                    const allLogs = (typeof IronSupabase !== "undefined" && Array.isArray(IronSupabase.cache.workoutLogs))
+                        ? IronSupabase.cache.workoutLogs
+                        : [];
+                    const latestDayLog = traineeId
+                        ? allLogs.find(l => l.traineeId === traineeId && l.dayTitle === day.title)
+                        : null;
+
+                    const exStatusMap = {};
+                    if (latestDayLog) {
+                        const resolvedList = this.resolveLogExercisesList(latestDayLog);
+                        resolvedList.forEach(item => {
+                            if (item.exerciseId) exStatusMap[item.exerciseId] = item;
+                            if (item.name) exStatusMap[item.name] = item;
+                        });
+                    }
+
+                    // فحص المسودة الجارية في الجيم إن وُجدت لنفس اليوم
+                    let hasActiveDraftForDay = false;
+                    try {
+                        const savedRaw = sessionStorage.getItem("iron_active_workout");
+                        if (savedRaw) {
+                            const parsed = JSON.parse(savedRaw);
+                            if (parsed?.version === 2 && parsed.traineeId === traineeId && parsed.workout?.programId === program.id && parsed.workout?.dayId === day.dayId) {
+                                parsed.workout.exercises.forEach(dEx => {
+                                    const doneCount = (dEx.sets || []).filter(s => s.completed).length;
+                                    if (doneCount > 0) {
+                                        hasActiveDraftForDay = true;
+                                        const st = {
+                                            exerciseId: dEx.exerciseId,
+                                            name: dEx.displayNameEn || dEx.exerciseId,
+                                            completedSets: doneCount,
+                                            totalSets: (dEx.sets || []).length,
+                                            isFull: doneCount === (dEx.sets || []).length
+                                        };
+                                        exStatusMap[dEx.exerciseId] = st;
+                                        if (dEx.displayNameEn) exStatusMap[dEx.displayNameEn] = st;
+                                    }
+                                });
+                            }
+                        }
+                    } catch {}
+
+                    const hasAnyProgress = Boolean(latestDayLog || hasActiveDraftForDay);
+
+                    return `
                     <div class="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-5">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3 mb-4">
                             <div dir="ltr" class="text-left">
                                 <h4 class="font-black text-white text-base">${day.title}</h4>
                                 <div class="text-xs text-emerald-400 font-bold mt-0.5">${day.targetMuscles} • ${day.exercises.length} Exercises</div>
                             </div>
-                            <button onclick="IronApp.startLiveWorkout('${program.id}', '${day.dayId}')" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition flex items-center justify-center gap-1.5">
-                                <span>${this.t("wo_start_btn")}</span>
-                            </button>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                ${hasAnyProgress ? `
+                                    <button type="button" onclick="IronApp.resetWorkoutDay('${program.id}', '${day.dayId}')" class="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1">
+                                        <span>${this.t("wo_reset_day_btn")}</span>
+                                    </button>
+                                ` : ''}
+                                <button onclick="IronApp.startLiveWorkout('${program.id}', '${day.dayId}')" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition flex items-center justify-center gap-1.5">
+                                    <span>${this.t("wo_start_btn")}</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3" dir="ltr">
@@ -1275,14 +1455,31 @@ const IronApp = {
                                 const exLabel = item.displayNameEn || ex.nameEn;
                                 const safeExLabel = exLabel.replace(/'/g, "\\'");
                                 const badgeNum = item.pair || `${idx + 1}`;
+                                const exProg = exStatusMap[exLabel] || exStatusMap[item.exerciseId] || null;
+                                const isFullDone = exProg && exProg.completedSets >= exProg.totalSets;
+                                const isPartDone = exProg && exProg.completedSets > 0 && exProg.completedSets < exProg.totalSets;
+                                const cardBorder = isFullDone
+                                    ? 'bg-emerald-950/20 border-emerald-500/45'
+                                    : isPartDone
+                                    ? 'bg-amber-950/20 border-amber-500/45'
+                                    : 'bg-slate-900/80 border-slate-800/80';
+                                const doneBadge = isFullDone
+                                    ? `<span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black">✓ ${exProg.completedSets}/${exProg.totalSets}</span>`
+                                    : isPartDone
+                                    ? `<span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-black">⚡ ${exProg.completedSets}/${exProg.totalSets}</span>`
+                                    : '';
+
                                 return `
-                                    <div onclick="IronApp.openExerciseDetail('${ex.id}', '${safeExLabel}')" class="bg-slate-900/80 border border-slate-800/80 rounded-xl p-3 flex items-center gap-3 hover:border-emerald-500/40 cursor-pointer transition text-left">
-                                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 font-black text-xs flex-shrink-0">
-                                            ${badgeNum}
+                                    <div onclick="IronApp.openExerciseDetail('${ex.id}', '${safeExLabel}')" class="${cardBorder} border rounded-xl p-3 flex items-center gap-3 hover:border-emerald-500/40 cursor-pointer transition text-left">
+                                        <div class="w-8 h-8 rounded-lg ${isFullDone ? 'bg-emerald-500 text-slate-950' : 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-400'} flex items-center justify-center font-black text-xs flex-shrink-0">
+                                            ${isFullDone ? '✓' : badgeNum}
                                         </div>
                                         <img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${exLabel}')" class="w-14 h-14 rounded-lg object-contain bg-slate-950 border border-slate-800 flex-shrink-0" alt="${exLabel}" loading="lazy">
                                         <div class="flex-1 min-w-0">
-                                            <h5 class="font-black text-white text-xs truncate">${exLabel}</h5>
+                                            <div class="flex items-center justify-between gap-1.5">
+                                                <h5 class="font-black text-white text-xs truncate">${exLabel}</h5>
+                                                ${doneBadge}
+                                            </div>
                                             <div class="flex items-center gap-2 text-[11px] font-bold mt-1">
                                                 <span class="text-emerald-400">${item.sets} × ${item.reps}</span>
                                                 <span class="text-gray-400">• Rest ${item.restSec}s</span>
@@ -1294,7 +1491,8 @@ const IronApp = {
                             }).join('')}
                         </div>
                     </div>
-                `).join('')}
+                `;
+                }).join('')}
             </div>
         `;
     },

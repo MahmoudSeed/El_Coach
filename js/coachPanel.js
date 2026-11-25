@@ -209,7 +209,10 @@ const IronCoachPanel = {
                                             <button onclick="IronCoachPanel.openEditTraineeModal('${t.id}')" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-200 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1">
                                                 <span>${txt("coach_edit_btn")}</span>
                                             </button>
-                                            <button onclick="IronCoachPanel.messageTraineeWhatsapp('${t.id}')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 rounded-xl text-[11px] font-bold transition">
+                                            <button onclick="IronCoachPanel.resetTraineeWorkouts('${t.id}')" class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/25 rounded-xl text-[11px] font-bold transition" title="${txt("coach_reset_wo_btn")}">
+                                                <span>${txt("coach_reset_wo_btn")}</span>
+                                            </button>
+                                            <button onclick="IronCoachPanel.messageTraineeWhatsapp('${t.id}')" class="px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 rounded-xl text-[11px] font-bold transition">
                                                 <span>${txt("coach_wa_btn")}</span>
                                             </button>
                                             <button onclick="IronCoachPanel.deleteTrainee('${t.id}')" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 rounded-xl text-[11px] font-bold transition">
@@ -356,6 +359,36 @@ const IronCoachPanel = {
             }
         } catch (err) {
             showToast(err?.message || (isEn ? "Failed to delete client" : "فشل حذف حساب المشترك"), "error");
+        }
+    },
+
+    async resetTraineeWorkouts(id) {
+        const trainees = IronAuth.getAllTrainees();
+        const target = trainees.find(t => t.id === id);
+        if (!target) return;
+
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const txt = (k, vars = {}) => typeof IronI18n !== "undefined" ? IronI18n.t(k, vars) : k;
+        const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(target) : target.name;
+
+        if (!window.confirm(txt("coach_reset_wo_confirm", { name: dispName }))) {
+            return;
+        }
+
+        try {
+            await IronSupabase.resetClientWorkoutLogs(id);
+            try {
+                const rawDraft = sessionStorage.getItem("iron_active_workout");
+                if (rawDraft) {
+                    const draft = JSON.parse(rawDraft);
+                    if (!draft.traineeId || draft.traineeId === id) {
+                        sessionStorage.removeItem("iron_active_workout");
+                    }
+                }
+            } catch (e) {}
+            showToast(txt("coach_reset_wo_toast", { name: dispName }), "success");
+        } catch (err) {
+            showToast(err?.message || (isEn ? "Failed to reset client workout sets" : "فشل عمل ريسيت لجولات المشترك"), "error");
         }
     },
 

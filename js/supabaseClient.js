@@ -294,7 +294,8 @@ const IronSupabase = {
                 dayTitle: row.day_title,
                 completedSets: Number(row.completed_sets) || 0,
                 totalSets: Number(row.total_sets) || 0,
-                totalVolumeKg: Number(row.total_volume_kg) || 0
+                totalVolumeKg: Number(row.total_volume_kg) || 0,
+                completedExercises: Array.isArray(row.completed_exercises) ? row.completed_exercises : []
             }));
         }
 
@@ -335,22 +336,63 @@ const IronSupabase = {
         const sb = this.initClient();
         if (!sb || !entry?.traineeId) return;
         this.cache.workoutLogs.unshift(entry);
+        let resolvedAuthId = authUserId || null;
+        if (!resolvedAuthId) {
+            try {
+                const { data: uData } = await sb.auth.getUser();
+                resolvedAuthId = uData?.user?.id || null;
+            } catch {}
+        }
         const { data, error } = await sb.from("workout_logs").insert({
             client_id: entry.traineeId,
-            auth_user_id: authUserId || null,
+            auth_user_id: resolvedAuthId,
             logged_at: entry.date || new Date().toISOString(),
             program_id: entry.programId || "",
             program_name: entry.programName || "",
             day_title: entry.dayTitle || "",
             completed_sets: parseInt(entry.completedSets) || 0,
             total_sets: parseInt(entry.totalSets) || 0,
-            total_volume_kg: Number(entry.totalVolumeKg) || 0
+            total_volume_kg: Number(entry.totalVolumeKg) || 0,
+            completed_exercises: Array.isArray(entry.completedExercises) ? entry.completedExercises : []
         }).select("*").single();
         if (!error && data) {
             entry.id = data.id;
         } else if (error) {
             console.error("insertWorkoutLog error:", error);
         }
+    },
+
+    async deleteWorkoutLog(logId) {
+        const sb = this.initClient();
+        this.cache.workoutLogs = this.cache.workoutLogs.filter(l => l.id !== logId);
+        if (!sb || !logId || String(logId).startsWith("log_")) return true;
+        const { error } = await sb.from("workout_logs").delete().eq("id", logId);
+        if (error) {
+            console.error("deleteWorkoutLog error:", error);
+            return false;
+        }
+        return true;
+    },
+
+    async resetClientWorkoutLogs(clientId, dayTitle = null) {
+        const sb = this.initClient();
+        if (!clientId) return false;
+        if (dayTitle) {
+            this.cache.workoutLogs = this.cache.workoutLogs.filter(l => !(l.traineeId === clientId && l.dayTitle === dayTitle));
+        } else {
+            this.cache.workoutLogs = this.cache.workoutLogs.filter(l => l.traineeId !== clientId);
+        }
+        if (!sb) return true;
+        let query = sb.from("workout_logs").delete().eq("client_id", clientId);
+        if (dayTitle) {
+            query = query.eq("day_title", dayTitle);
+        }
+        const { error } = await query;
+        if (error) {
+            console.error("resetClientWorkoutLogs error:", error);
+            return false;
+        }
+        return true;
     },
 
     async uploadAvatarBlob(authUserId, blob) {
@@ -432,7 +474,8 @@ const IronSupabase = {
             dayTitle: w.day_title,
             completedSets: Number(w.completed_sets) || 0,
             totalSets: Number(w.total_sets) || 0,
-            totalVolumeKg: Number(w.total_volume_kg) || 0
+            totalVolumeKg: Number(w.total_volume_kg) || 0,
+            completedExercises: Array.isArray(w.completed_exercises) ? w.completed_exercises : []
         }));
         const customMeals = (mealsRes.data || []).map(m => ({
             id: m.id,

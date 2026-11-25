@@ -189,6 +189,50 @@ const IronLiveGym = {
         this.renderLiveGymModal();
     },
 
+    // ريسيت (تصفير) جولات التمرين الحالي فقط
+    resetExerciseSets(exerciseIdx) {
+        if (!this.currentWorkout || !this.currentWorkout.exercises[exerciseIdx]) return;
+        const ex = this.currentWorkout.exercises[exerciseIdx];
+        ex.sets.forEach(s => {
+            s.completed = false;
+            s.weight = "";
+            s.actualReps = "";
+        });
+        this.stopRestTimer();
+        this.saveDraftSession();
+        this.renderLiveGymModal();
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const msg = typeof IronI18n !== "undefined"
+            ? IronI18n.t("gym_reset_ex_toast")
+            : (isEn ? "Exercise sets reset successfully 🔄" : "تم عمل ريسيت لجولات هذا التمرين بنجاح 🔄");
+        showToast(msg, "success");
+    },
+
+    // ريسيت (تصفير) جميع جولات وتمارين الجلسة الحالية بالكامل
+    resetAllWorkoutSets() {
+        if (!this.currentWorkout) return;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const confirmMsg = typeof IronI18n !== "undefined"
+            ? IronI18n.t("gym_reset_all_confirm")
+            : (isEn ? "Reset all exercise sets and weights in this workout session?" : "هل تريد عمل ريسيت (تصفير) لجميع جولات وأوزان هذه الجلسة؟");
+        if (!window.confirm(confirmMsg)) return;
+
+        this.currentWorkout.exercises.forEach(ex => {
+            ex.sets.forEach(s => {
+                s.completed = false;
+                s.weight = "";
+                s.actualReps = "";
+            });
+        });
+        this.stopRestTimer();
+        this.saveDraftSession();
+        this.renderLiveGymModal();
+        const toastMsg = typeof IronI18n !== "undefined"
+            ? IronI18n.t("gym_reset_all_toast")
+            : (isEn ? "All sets in this session have been reset 🔄" : "تم عمل ريسيت لجميع جولات الجلسة بنجاح 🔄");
+        showToast(toastMsg, "success");
+    },
+
     // استبدال التمرين الحالي بتمرين بديل فوري
     swapCurrentExercise(exerciseIdx, newExerciseId) {
         if (!this.currentWorkout) return;
@@ -236,16 +280,27 @@ const IronLiveGym = {
         openModal("altExercisesModal");
     },
 
-    // إنهاء التمرين وحفظ البيانات في سجل المتدرب
+    // إنهاء التمرين وحفظ البيانات وأسماء التمارين المنجزة في سجل المتدرب
     async finishWorkout() {
         if (!this.currentWorkout) return;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+
+        const totalSets = this.currentWorkout.exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
+        const completedSets = this.currentWorkout.exercises.reduce((acc, ex) => acc + ex.sets.filter(s => s.completed).length, 0);
+
+        if (completedSets === 0) {
+            const errMsg = typeof IronI18n !== "undefined"
+                ? IronI18n.t("gym_err_no_sets")
+                : (isEn ? "Please mark at least one set as Complete (✓) before saving the workout" : "يرجى إتمام جولة واحدة على الأقل (الضغط على Complete) قبل حفظ التمرين");
+            showToast(errMsg, "error");
+            return;
+        }
+
         this.stopRestTimer();
 
         const user = IronAuth.getCurrentUser();
         const traineeId = user && user.id ? user.id : "guest";
 
-        const totalSets = this.currentWorkout.exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
-        const completedSets = this.currentWorkout.exercises.reduce((acc, ex) => acc + ex.sets.filter(s => s.completed).length, 0);
         const totalVolumeKg = this.currentWorkout.exercises.reduce((acc, ex) => {
             return acc + ex.sets.reduce((sAcc, s) => {
                 const w = parseFloat(s.weight) || 0;
@@ -254,6 +309,23 @@ const IronLiveGym = {
             }, 0);
         }, 0);
 
+        // استخراج أسماء التمارين التي تم إنجازها (كلياً أو جزئياً) مع عدد الجولات وأعلى وزن
+        const completedExercises = this.currentWorkout.exercises
+            .map(ex => {
+                const doneSets = ex.sets.filter(s => s.completed);
+                if (doneSets.length === 0) return null;
+                const maxWeightKg = doneSets.reduce((max, s) => Math.max(max, parseFloat(s.weight) || 0), 0);
+                return {
+                    exerciseId: ex.exerciseId,
+                    name: ex.displayNameEn || (ex.details ? ex.details.nameEn : ex.exerciseId),
+                    completedSets: doneSets.length,
+                    totalSets: ex.sets.length,
+                    isFull: doneSets.length === ex.sets.length,
+                    maxWeightKg: Math.round(maxWeightKg * 10) / 10
+                };
+            })
+            .filter(Boolean);
+
         const entry = {
             id: "log_" + Date.now(),
             traineeId,
@@ -261,9 +333,10 @@ const IronLiveGym = {
             programId: this.currentWorkout.programId,
             programName: this.currentWorkout.programName,
             dayTitle: this.currentWorkout.dayTitle,
-            completedSets: completedSets || totalSets,
+            completedSets,
             totalSets,
-            totalVolumeKg: Math.round(totalVolumeKg)
+            totalVolumeKg: Math.round(totalVolumeKg),
+            completedExercises
         };
         if (typeof IronSupabase !== "undefined" && IronSupabase.isAvailable() && user?.id) {
             await IronSupabase.insertWorkoutLog(entry, user.traineeData?.authUserId || null);
@@ -273,12 +346,12 @@ const IronLiveGym = {
 
         sessionStorage.removeItem("iron_active_workout");
         closeModal("liveGymModal");
-        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
-        showToast(isEn ? "Great workout! 🔥 Session saved to your history" : "عاش يا وحش! 🔥 تم إنهاء التمرين وحفظ الجلسة في سجلك بنجاح", "success");
+        showToast(isEn ? "Great workout! 🔥 Session & completed exercises saved" : "عاش يا وحش! 🔥 تم حفظ الجلسة وأسماء التمارين المنجزة في سجلك", "success");
         this.currentWorkout = null;
 
-        if (typeof IronApp !== "undefined" && IronApp.renderWorkoutLogs) {
-            IronApp.renderWorkoutLogs();
+        if (typeof IronApp !== "undefined") {
+            if (IronApp.renderWorkoutLogs) IronApp.renderWorkoutLogs();
+            if (IronApp.selectProgram) IronApp.selectProgram(IronApp.selectedProgramId);
         }
     },
 
@@ -294,14 +367,29 @@ const IronLiveGym = {
         const exerciseTitleEn = ex.displayNameEn || details.nameEn;
 
         const txt = (k, v) => typeof IronI18n !== "undefined" ? IronI18n.t(k, v) : k;
+        const doneExercisesInSession = w.exercises
+            .map(item => {
+                const dCount = item.sets.filter(s => s.completed).length;
+                if (dCount === 0) return null;
+                return {
+                    name: item.displayNameEn || item.details?.nameEn || item.exerciseId,
+                    done: dCount,
+                    total: item.sets.length,
+                    full: dCount === item.sets.length
+                };
+            })
+            .filter(Boolean);
 
         modal.innerHTML = `
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
                 <div dir="ltr" class="text-left">
                     <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${w.programName}</span>
                     <h3 class="text-lg font-black text-white mt-1">${w.dayTitle}</h3>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="IronLiveGym.resetAllWorkoutSets()" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs rounded-lg transition">
+                        ${txt("gym_reset_all_btn")}
+                    </button>
                     <button onclick="IronLiveGym.finishWorkout()" class="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-lg shadow-lg shadow-emerald-500/20 hover:opacity-90">
                         ${txt("gym_finish")}
                     </button>
@@ -310,19 +398,42 @@ const IronLiveGym = {
             </div>
 
             <!-- مؤشر التنقل بين تمارين اليوم (بالإنجليزية ومطابق لترتيب التصميم) -->
-            <div class="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-thin" dir="ltr">
+            <div class="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-thin" dir="ltr">
                 ${w.exercises.map((item, idx) => {
                     const label = item.displayNameEn || item.details?.nameEn || `Exercise ${idx + 1}`;
                     const prefix = item.pair ? `${item.pair}.` : `${idx + 1}.`;
+                    const doneSetsCount = item.sets.filter(s => s.completed).length;
+                    const totalSetsCount = item.sets.length;
+                    const isAllDone = doneSetsCount === totalSetsCount && totalSetsCount > 0;
+                    const isPartialDone = doneSetsCount > 0 && doneSetsCount < totalSetsCount;
+                    const isActive = idx === this.activeExerciseIndex;
+                    const progressBadge = isAllDone
+                        ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-black ${isActive ? 'bg-slate-950/30 text-slate-950' : 'bg-emerald-500/20 text-emerald-400'}">✓ ${doneSetsCount}/${totalSetsCount}</span>`
+                        : isPartialDone
+                        ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-black ${isActive ? 'bg-slate-950/30 text-slate-950' : 'bg-amber-500/20 text-amber-400'}">⚡ ${doneSetsCount}/${totalSetsCount}</span>`
+                        : '';
                     return `
                         <button onclick="IronLiveGym.activeExerciseIndex = ${idx}; IronLiveGym.saveDraftSession(); IronLiveGym.renderLiveGymModal();" 
-                            class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${idx === this.activeExerciseIndex ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : 'bg-slate-800 text-gray-300 hover:bg-slate-700'}">
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${isActive ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : isAllDone ? 'bg-emerald-950/50 text-emerald-300 border border-emerald-500/30' : isPartialDone ? 'bg-amber-950/40 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-gray-300 hover:bg-slate-700'}">
                             <span>${prefix} ${label}</span>
-                            ${item.sets.every(s => s.completed) ? '<span class="text-xs">✓</span>' : ''}
+                            ${progressBadge}
                         </button>
                     `;
                 }).join('')}
             </div>
+
+            ${doneExercisesInSession.length > 0 ? `
+                <div class="bg-emerald-950/20 border border-emerald-500/25 rounded-xl p-2.5 mb-4">
+                    <div class="text-[11px] font-black text-emerald-400 mb-1.5">${txt("gym_done_exercises_bar", { count: doneExercisesInSession.length, total: w.exercises.length })}</div>
+                    <div class="flex flex-wrap gap-1.5" dir="ltr">
+                        ${doneExercisesInSession.map(d => `
+                            <span class="px-2 py-0.5 rounded-lg text-[11px] font-bold border ${d.full ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/15 text-amber-300 border-amber-500/30'}">
+                                ${d.full ? '✓' : '⚡'} ${d.name} (${d.done}/${d.total})
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
 
             <!-- بطاقة التمرين الحالي النشط -->
             <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 mb-4">
@@ -374,11 +485,17 @@ const IronLiveGym = {
 
             <!-- جدول الجولات وتسجيل الأوزان -->
             <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-                <div class="flex justify-between items-center mb-3">
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
                     <h4 class="font-black text-sm text-white flex items-center gap-2">
                         <span>${txt("gym_log_title")} (${ex.setsTarget} × ${ex.repsTarget})</span>
                     </h4>
-                    <span class="text-xs text-gray-400">${txt("gym_log_hint")}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400 hidden sm:inline">${txt("gym_log_hint")}</span>
+                        <button type="button" onclick="IronLiveGym.resetExerciseSets(${this.activeExerciseIndex})"
+                            class="px-2.5 py-1 bg-slate-800 hover:bg-rose-500/20 text-gray-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/30 rounded-lg text-[11px] font-bold transition">
+                            ${txt("gym_reset_ex_btn")}
+                        </button>
+                    </div>
                 </div>
 
                 <div class="space-y-2 max-h-[38vh] overflow-y-auto pr-1">
