@@ -342,7 +342,7 @@ const IronApp = {
             document.getElementById("expiredStcDisplay").innerText = config.coachInfo.stcPay || "966563055827";
             const expIbanEl = document.getElementById("expiredIbanDisplay");
             if (expIbanEl) expIbanEl.innerText = config.coachInfo.bankIban || "SA4180000644608017933823";
-            this.selectSubscriptionTier(this.selectedSubscriptionMonths || 1);
+            this.selectSubscriptionTier(this.selectedSubscriptionMonths !== undefined ? this.selectedSubscriptionMonths : 1);
 
             const badgeWrap = document.getElementById("expiredBadgeWrap");
             const badgeText = document.getElementById("expiredBadgeText");
@@ -2170,13 +2170,22 @@ const IronApp = {
     selectedSubscriptionMonths: 1,
 
     getSubscriptionTierInfo(months = this.selectedSubscriptionMonths) {
-        const m = Number(months) || 1;
+        const m = months !== undefined && months !== null ? Number(months) : 1;
         const config = getAppConfig();
         const currencyTxt = typeof IronI18n !== "undefined"
             ? IronI18n.trCurrency(config.subscriptionPrice?.currency || "ر.س")
             : (config.subscriptionPrice?.currency || "ر.س");
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
 
+        if (m === 0) {
+            return {
+                months: 0,
+                days: 1,
+                price: 1,
+                currencyTxt,
+                title: isEn ? "1-Day Trial (1 Day)" : "باقة تجربة يوم واحد (1 يوم)"
+            };
+        }
         if (m === 3) {
             return {
                 months: 3,
@@ -2209,7 +2218,8 @@ const IronApp = {
         this.selectedSubscriptionMonths = tier.months;
 
         document.querySelectorAll(".sub-tier-card").forEach(btn => {
-            const btnMonths = Number(btn.getAttribute("data-tier-months")) || 1;
+            const rawAttr = btn.getAttribute("data-tier-months");
+            const btnMonths = rawAttr !== null ? Number(rawAttr) : 1;
             if (btnMonths === tier.months) {
                 btn.className = "sub-tier-card p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-500/20 text-center transition shadow-md shadow-emerald-500/15";
             } else {
@@ -2240,7 +2250,7 @@ const IronApp = {
         const errorBox = document.getElementById("receiptUploadError");
         const activeBox = document.getElementById("activeTransferActionBox");
 
-        this.selectSubscriptionTier(this.selectedSubscriptionMonths || 1);
+        this.selectSubscriptionTier(this.selectedSubscriptionMonths !== undefined ? this.selectedSubscriptionMonths : 1);
         if (vodafone) vodafone.innerText = config.coachInfo.vodafoneCash || "01274300663";
         if (instapay) instapay.innerText = config.coachInfo.instapayUser || "mahmoudsaeed291997@instapay";
         if (stc) stc.innerText = config.coachInfo.stcPay || "966563055827";
@@ -2261,7 +2271,7 @@ const IronApp = {
     getPaymentMethodDetails(method) {
         const config = getAppConfig();
         const ci = config.coachInfo || {};
-        const tier = this.getSubscriptionTierInfo(this.selectedSubscriptionMonths || 1);
+        const tier = this.getSubscriptionTierInfo(this.selectedSubscriptionMonths !== undefined ? this.selectedSubscriptionMonths : 1);
         const amount = tier.price;
         const currencyTxt = tier.currencyTxt;
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
@@ -2410,7 +2420,7 @@ const IronApp = {
         const config = getAppConfig();
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const link = (config.coachInfo?.paymentLink || "").trim();
-        const tier = this.getSubscriptionTierInfo(this.selectedSubscriptionMonths || 1);
+        const tier = this.getSubscriptionTierInfo(this.selectedSubscriptionMonths !== undefined ? this.selectedSubscriptionMonths : 1);
         const amount = tier.price;
         const currencyTxt = tier.currencyTxt;
 
@@ -2535,7 +2545,7 @@ const IronApp = {
             if (error || !path) {
                 throw new Error(error || "Upload failed");
             }
-            const tier = this.getSubscriptionTierInfo(this.selectedSubscriptionMonths || 1);
+            const tier = this.getSubscriptionTierInfo(this.selectedSubscriptionMonths !== undefined ? this.selectedSubscriptionMonths : 1);
             await IronAuth.submitRenewalReceipt(path, receiptFile.name, receiptFile.size, user.id, tier);
             closeModal("renewModal");
             showToast(this.t("receipt_sent_review", { file: receiptFile.name }), "success");

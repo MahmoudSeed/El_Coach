@@ -483,7 +483,7 @@ const IronAuth = {
             fileName,
             fileSize,
             clientId,
-            planMonths: Number(planInfo.months) || 1,
+            planMonths: planInfo.months !== undefined ? Number(planInfo.months) : 1,
             planDays: Number(planInfo.days) || 30,
             planPrice: Number(planInfo.price) || 139
         });

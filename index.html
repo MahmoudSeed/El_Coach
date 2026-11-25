@@ -448,10 +448,15 @@
                 <div id="pendingReceiptNotice" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 mt-4 text-xs text-amber-300 font-bold"></div>
 
                 <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 my-6 text-start space-y-3">
-                    <!-- اختيار باقة العضوية (1 شهر 139 | 2 شهر 239 | 3 شهور 299) -->
+                    <!-- اختيار باقة العضوية (تجربة يوم 1 | 1 شهر 139 | 2 شهر 239 | 3 شهور 299) -->
                     <div>
                         <label class="block text-xs font-black text-gray-300 mb-2" data-i18n="tier_select_label">🎯 اختر باقة العضوية والتجديد:</label>
-                        <div class="grid grid-cols-3 gap-2" id="expiredTierSelector">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="expiredTierSelector">
+                            <button type="button" data-tier-months="0" onclick="IronApp.selectSubscriptionTier(0)" class="sub-tier-card p-2.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 text-center transition">
+                                <div class="text-xs font-black text-cyan-400" data-i18n="tier_trial_title">تجربة يوم ⚡</div>
+                                <div class="text-base font-black text-emerald-400 mt-0.5">1 <span class="text-[10px]">ر.س</span></div>
+                                <div class="text-[10px] text-gray-400" data-i18n="tier_trial_sub">يوم واحد تجريبي</div>
+                            </button>
                             <button type="button" data-tier-months="1" onclick="IronApp.selectSubscriptionTier(1)" class="sub-tier-card p-2.5 rounded-xl border border-emerald-500 bg-emerald-500/15 text-center transition">
                                 <div class="text-xs font-black text-white" data-i18n="tier_1m_title">1 شهر</div>
                                 <div class="text-base font-black text-emerald-400 mt-0.5">139 <span class="text-[10px]">ر.س</span></div>
@@ -1346,10 +1351,15 @@
                 <button onclick="closeModal('renewModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
             </div>
             <div class="space-y-4">
-                <!-- اختيار باقة تجديد العضوية (1 شهر 139 | 2 شهر 239 | 3 شهور 299) -->
+                <!-- اختيار باقة تجديد العضوية (تجربة يوم 1 | 1 شهر 139 | 2 شهر 239 | 3 شهور 299) -->
                 <div>
                     <label class="block text-xs font-black text-gray-300 mb-2" data-i18n="tier_select_label">🎯 اختر باقة العضوية المطلوب تفعيلها:</label>
-                    <div class="grid grid-cols-3 gap-2" id="modalTierSelector">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="modalTierSelector">
+                        <button type="button" data-tier-months="0" onclick="IronApp.selectSubscriptionTier(0)" class="sub-tier-card p-2.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 text-center transition">
+                            <div class="text-xs font-black text-cyan-400" data-i18n="tier_trial_title">تجربة يوم ⚡</div>
+                            <div class="text-base font-black text-emerald-400 mt-0.5">1 <span class="text-[10px]">ر.س</span></div>
+                            <div class="text-[10px] text-gray-400" data-i18n="tier_trial_sub">يوم واحد تجريبي</div>
+                        </button>
                         <button type="button" data-tier-months="1" onclick="IronApp.selectSubscriptionTier(1)" class="sub-tier-card p-2.5 rounded-xl border border-emerald-500 bg-emerald-500/15 text-center transition">
                             <div class="text-xs font-black text-white" data-i18n="tier_1m_title">1 شهر</div>
                             <div class="text-base font-black text-emerald-400 mt-0.5">139 <span class="text-[10px]">ر.س</span></div>
