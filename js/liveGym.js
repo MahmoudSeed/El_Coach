@@ -397,8 +397,8 @@ const IronLiveGym = {
                 </div>
             </div>
 
-            <!-- مؤشر التنقل بين تمارين اليوم (بالإنجليزية ومطابق لترتيب التصميم) -->
-            <div class="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-thin" dir="ltr">
+            <!-- مؤشر التنقل بين تمارين اليوم (على صفين بدون شريط تمرير) -->
+            <div class="grid gap-2 mb-3" dir="ltr" style="grid-template-columns: repeat(${Math.max(2, Math.ceil(w.exercises.length / 2))}, minmax(0, 1fr));">
                 ${w.exercises.map((item, idx) => {
                     const label = item.displayNameEn || item.details?.nameEn || `Exercise ${idx + 1}`;
                     const prefix = item.pair ? `${item.pair}.` : `${idx + 1}.`;
@@ -408,14 +408,14 @@ const IronLiveGym = {
                     const isPartialDone = doneSetsCount > 0 && doneSetsCount < totalSetsCount;
                     const isActive = idx === this.activeExerciseIndex;
                     const progressBadge = isAllDone
-                        ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-black ${isActive ? 'bg-slate-950/30 text-slate-950' : 'bg-emerald-500/20 text-emerald-400'}">✓ ${doneSetsCount}/${totalSetsCount}</span>`
+                        ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-black shrink-0 ${isActive ? 'bg-slate-950/30 text-slate-950' : 'bg-emerald-500/20 text-emerald-400'}">✓ ${doneSetsCount}/${totalSetsCount}</span>`
                         : isPartialDone
-                        ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-black ${isActive ? 'bg-slate-950/30 text-slate-950' : 'bg-amber-500/20 text-amber-400'}">⚡ ${doneSetsCount}/${totalSetsCount}</span>`
+                        ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-black shrink-0 ${isActive ? 'bg-slate-950/30 text-slate-950' : 'bg-amber-500/20 text-amber-400'}">⚡ ${doneSetsCount}/${totalSetsCount}</span>`
                         : '';
                     return `
                         <button onclick="IronLiveGym.activeExerciseIndex = ${idx}; IronLiveGym.saveDraftSession(); IronLiveGym.renderLiveGymModal();" 
-                            class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${isActive ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : isAllDone ? 'bg-emerald-950/50 text-emerald-300 border border-emerald-500/30' : isPartialDone ? 'bg-amber-950/40 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-gray-300 hover:bg-slate-700'}">
-                            <span>${prefix} ${label}</span>
+                            class="px-2.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-between gap-1.5 text-left min-w-0 ${isActive ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : isAllDone ? 'bg-emerald-950/50 text-emerald-300 border border-emerald-500/30' : isPartialDone ? 'bg-amber-950/40 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-gray-300 hover:bg-slate-700'}">
+                            <span class="truncate" title="${prefix} ${label}">${prefix} ${label}</span>
                             ${progressBadge}
                         </button>
                     `;
