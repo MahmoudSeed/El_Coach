@@ -566,6 +566,8 @@ const IronApp = {
         this.renderWaterTracker(trainee, parseFloat(waterTargetLiters));
         this.runCalculator();
         this.generateDayDiet(false);
+        this.renderMealsTracker(trainee);
+        this.startWaterReminderLoop();
         this.renderMealsGrid();
         this.selectProgram(this.selectedProgramId);
         this.renderWorkoutLogs();
@@ -615,11 +617,186 @@ const IronApp = {
     },
 
     // =========================================================================
-    // متتبع شرب الماء اليومي التفاعلي (Interactive Daily Water Tracker)
+    // متتبع شرب الماء اليومي التفاعلي + إشعار تذكير كل ساعتين
     // =========================================================================
+    WATER_REMINDER_INTERVAL_MS: 2 * 60 * 60 * 1000, // ساعتان (2 Hours)
+    waterReminderTimerId: null,
+    waterReminderDueNow: false,
+
     getTodayWaterKey(traineeId) {
         const today = new Date().toISOString().split("T")[0];
         return `${traineeId || "guest"}_${today}`;
+    },
+
+    isWaterReminderEnabled() {
+        const raw = localStorage.getItem("iron_water_reminder_enabled");
+        return raw === null ? true : raw === "true";
+    },
+
+    getLastWaterReminderTime(traineeId) {
+        const key = `iron_water_last_ts_${traineeId || "guest"}`;
+        const val = parseInt(localStorage.getItem(key), 10);
+        if (!val || Number.isNaN(val)) {
+            const now = Date.now();
+            localStorage.setItem(key, String(now));
+            return now;
+        }
+        return val;
+    },
+
+    setLastWaterReminderTime(traineeId, ts = Date.now()) {
+        const key = `iron_water_last_ts_${traineeId || "guest"}`;
+        localStorage.setItem(key, String(ts));
+    },
+
+    formatRemainingTime(ms) {
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const totalMin = Math.max(1, Math.ceil(ms / 60000));
+        const hours = Math.floor(totalMin / 60);
+        const mins = totalMin % 60;
+        if (hours > 0 && mins > 0) {
+            return isEn ? `${hours}h ${mins}m` : `${hours} س و ${mins} د`;
+        }
+        if (hours > 0) {
+            return isEn ? `${hours}h` : `${hours} ساعة`;
+        }
+        return isEn ? `${mins}m` : `${mins} دقيقة`;
+    },
+
+    async requestWaterNotificationPermission() {
+        if (typeof window === "undefined" || !("Notification" in window)) return false;
+        if (Notification.permission === "granted") return true;
+        if (Notification.permission === "denied") return false;
+        try {
+            const perm = await Notification.requestPermission();
+            return perm === "granted";
+        } catch {
+            return false;
+        }
+    },
+
+    playWaterReminderSound() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            const now = ctx.currentTime;
+            [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(freq, now + idx * 0.14);
+                gain.gain.setValueAtTime(0.08, now + idx * 0.14);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.14 + 0.35);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now + idx * 0.14);
+                osc.stop(now + idx * 0.14 + 0.36);
+            });
+        } catch {}
+    },
+
+    async triggerWaterReminderNotification(isManualTest = false) {
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        if (!user || user.role !== "trainee" || !user.traineeData) return;
+
+        const trainee = user.traineeData;
+        const targetLiters = parseFloat(((parseFloat(trainee.weight) || 75) * 0.035).toFixed(1));
+        const logs = (typeof IronSupabase !== "undefined" && IronSupabase.cache.waterLogs) ? IronSupabase.cache.waterLogs : {};
+        const key = this.getTodayWaterKey(trainee.id);
+        const cups = parseInt(logs[key]) || 0;
+        const consumedLiters = (cups * 0.25).toFixed(2);
+
+        const title = this.t("water_notif_title");
+        const body = this.t("water_notif_body", { consumed: consumedLiters, target: targetLiters });
+
+        this.waterReminderDueNow = true;
+        this.setLastWaterReminderTime(trainee.id, Date.now());
+        this.playWaterReminderSound();
+        showToast(body, "success");
+        this.renderWaterTracker(trainee, targetLiters);
+
+        const hasPerm = await this.requestWaterNotificationPermission();
+        if (hasPerm) {
+            try {
+                if ("serviceWorker" in navigator) {
+                    const reg = await navigator.serviceWorker.getRegistration();
+                    if (reg && typeof reg.showNotification === "function") {
+                        await reg.showNotification(title, {
+                            body,
+                            icon: "./LOGO.png",
+                            badge: "./LOGO.png",
+                            tag: "ironcoach-water-reminder",
+                            renotify: true
+                        });
+                        return;
+                    }
+                }
+                new Notification(title, {
+                    body,
+                    icon: "./LOGO.png",
+                    tag: "ironcoach-water-reminder"
+                });
+            } catch {}
+        } else if (isManualTest && typeof window !== "undefined" && "Notification" in window && Notification.permission === "denied") {
+            const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+            showToast(isEn ? "In-app water alert shown! (Enable browser notifications in site settings for background alerts)" : "تم عرض تنبيه الماء داخل التطبيق! (يمكنك السماح بإشعارات المتصفح من إعدادات الموقع للتنبيه بالخلفية)", "success");
+        }
+    },
+
+    async toggleWaterReminder() {
+        const nextState = !this.isWaterReminderEnabled();
+        localStorage.setItem("iron_water_reminder_enabled", String(nextState));
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        const trainee = user?.traineeData;
+        if (nextState) {
+            if (trainee?.id) this.setLastWaterReminderTime(trainee.id, Date.now());
+            this.waterReminderDueNow = false;
+            await this.requestWaterNotificationPermission();
+            showToast(this.t("water_rem_on_toast"), "success");
+        } else {
+            this.waterReminderDueNow = false;
+            showToast(this.t("water_rem_off_toast"), "success");
+        }
+        if (trainee) {
+            const targetLiters = parseFloat(((parseFloat(trainee.weight) || 75) * 0.035).toFixed(1));
+            this.renderWaterTracker(trainee, targetLiters);
+        }
+    },
+
+    startWaterReminderLoop() {
+        if (this.waterReminderTimerId) {
+            clearInterval(this.waterReminderTimerId);
+        }
+        const checkFn = () => {
+            const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+            if (!user || user.role !== "trainee" || !user.traineeData) return;
+            if (!this.isWaterReminderEnabled()) return;
+
+            const trainee = user.traineeData;
+            const targetLiters = parseFloat(((parseFloat(trainee.weight) || 75) * 0.035).toFixed(1));
+            const targetCups = Math.max(6, Math.round(targetLiters / 0.25));
+            const logs = (typeof IronSupabase !== "undefined" && IronSupabase.cache.waterLogs) ? IronSupabase.cache.waterLogs : {};
+            const cups = parseInt(logs[this.getTodayWaterKey(trainee.id)]) || 0;
+
+            // إذا لم يكتمل هدف الماء اليومي ومرت ساعتان منذ آخر تذكير أو آخر كوب ماء
+            const lastTs = this.getLastWaterReminderTime(trainee.id);
+            const elapsed = Date.now() - lastTs;
+            if (cups < targetCups && elapsed >= this.WATER_REMINDER_INTERVAL_MS) {
+                this.triggerWaterReminderNotification(false);
+            } else {
+                const countdownEl = document.getElementById("waterNextReminderCountdown");
+                if (countdownEl) {
+                    const remaining = Math.max(0, this.WATER_REMINDER_INTERVAL_MS - elapsed);
+                    countdownEl.innerText = cups >= targetCups
+                        ? this.t("water_goal_done")
+                        : this.t("water_rem_next", { time: this.formatRemainingTime(remaining) });
+                }
+            }
+        };
+
+        checkFn();
+        this.waterReminderTimerId = setInterval(checkFn, 30000);
     },
 
     renderWaterTracker(trainee, targetLiters = 3.0) {
@@ -633,30 +810,68 @@ const IronApp = {
         const targetCups = Math.max(6, Math.round(targetLiters / 0.25));
         const pct = Math.min(100, Math.round((cups / targetCups) * 100));
 
+        const remEnabled = this.isWaterReminderEnabled();
+        const lastTs = this.getLastWaterReminderTime(trainee.id);
+        const remainingMs = Math.max(0, this.WATER_REMINDER_INTERVAL_MS - (Date.now() - lastTs));
+        const nextText = cups >= targetCups
+            ? this.t("water_goal_done")
+            : this.t("water_rem_next", { time: this.formatRemainingTime(remainingMs) });
+
         box.innerHTML = `
-            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="flex-1">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-xs font-black text-white flex items-center gap-1.5">
-                            <span>${this.t("water_title")}</span>
-                            <span class="text-[11px] text-cyan-400 font-mono">(${consumedLiters} / ${targetLiters} ${this.t("liter")})</span>
-                        </span>
-                        <span class="text-xs font-black text-cyan-400">${this.t("water_cups", { cups, target: targetCups, pct })}</span>
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-xs font-black text-white flex items-center gap-1.5">
+                                <span>${this.t("water_title")}</span>
+                                <span class="text-[11px] text-cyan-400 font-mono">(${consumedLiters} / ${targetLiters} ${this.t("liter")})</span>
+                            </span>
+                            <span class="text-xs font-black text-cyan-400">${this.t("water_cups", { cups, target: targetCups, pct })}</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                            <div class="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-300" style="width: ${pct}%"></div>
+                        </div>
                     </div>
-                    <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                        <div class="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-300" style="width: ${pct}%"></div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="IronApp.addWaterCup(1)" class="water-cup-btn px-3.5 py-2 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 rounded-xl text-xs font-black flex items-center gap-1">
-                        <span>${this.t("water_add_btn")}</span>
-                    </button>
-                    ${cups > 0 ? `
-                        <button onclick="IronApp.addWaterCup(-1)" class="px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-xl text-xs font-bold">
-                            -
+                    <div class="flex items-center gap-2">
+                        <button onclick="IronApp.addWaterCup(1)" class="water-cup-btn px-3.5 py-2 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 rounded-xl text-xs font-black flex items-center gap-1">
+                            <span>${this.t("water_add_btn")}</span>
                         </button>
-                    ` : ''}
+                        ${cups > 0 ? `
+                            <button onclick="IronApp.addWaterCup(-1)" class="px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-xl text-xs font-bold">
+                                -
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
+
+                <!-- شريط تذكير شرب المياه كل ساعتين -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-slate-800/80 text-[11px]">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button type="button" onclick="IronApp.toggleWaterReminder()"
+                            class="px-2.5 py-1 rounded-lg font-bold border transition flex items-center gap-1 ${remEnabled ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/25' : 'bg-slate-800 text-gray-400 border-slate-700 hover:bg-slate-700'}">
+                            <span>${remEnabled ? this.t("water_rem_on_btn") : this.t("water_rem_off_btn")}</span>
+                        </button>
+                        ${remEnabled ? `
+                            <span id="waterNextReminderCountdown" class="text-gray-400 font-bold">${nextText}</span>
+                        ` : ''}
+                    </div>
+                    <button type="button" onclick="IronApp.triggerWaterReminderNotification(true)"
+                        class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 font-bold transition">
+                        ${this.t("water_rem_test_btn")}
+                    </button>
+                </div>
+
+                ${this.waterReminderDueNow && cups < targetCups ? `
+                    <div class="bg-cyan-500/15 border border-cyan-400/40 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 animate-pulse">
+                        <div class="text-xs font-black text-cyan-300 flex items-center gap-1.5">
+                            <span>💧</span>
+                            <span>${this.t("water_due_banner")}</span>
+                        </div>
+                        <button type="button" onclick="IronApp.addWaterCup(1)" class="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs rounded-lg transition">
+                            ${this.t("water_due_drink_btn")}
+                        </button>
+                    </div>
+                ` : ''}
             </div>
         `;
     },
@@ -671,6 +886,11 @@ const IronApp = {
         const nextCups = Math.max(0, (parseInt(logs[key]) || 0) + delta);
         logs[key] = nextCups;
 
+        if (delta > 0) {
+            this.waterReminderDueNow = false;
+            this.setLastWaterReminderTime(trainee.id, Date.now());
+        }
+
         if (typeof IronSupabase !== "undefined") {
             IronSupabase.saveWaterLog(trainee.id, trainee.authUserId, todayStr, nextCups);
         }
@@ -679,6 +899,154 @@ const IronApp = {
         this.renderWaterTracker(trainee, targetLiters);
         if (delta > 0) {
             showToast(this.t("water_toast", { liters: (nextCups * 0.25).toFixed(2) }), "success");
+        }
+    },
+
+    // =========================================================================
+    // متتبع الوجبات اليومية التفاعلي (تحت خانة المياه)
+    // =========================================================================
+    MEAL_SLOTS_ORDER: ["breakfast", "lunch", "dinner", "snack"],
+
+    getCompletedMealsForToday(traineeId) {
+        const key = this.getTodayWaterKey(traineeId);
+        const mealLogs = (typeof IronSupabase !== "undefined" && IronSupabase.cache.mealLogs) ? IronSupabase.cache.mealLogs : {};
+        return Array.isArray(mealLogs[key]) ? mealLogs[key] : [];
+    },
+
+    renderMealsTracker(trainee) {
+        const box = document.getElementById("mealsTrackerInteractiveBox");
+        if (!box) return;
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        const activeTrainee = trainee || user?.traineeData;
+        if (!activeTrainee) return;
+
+        const completedSlots = this.getCompletedMealsForToday(activeTrainee.id);
+        const plan = this.currentDayDiet || this.getSavedDietPlanForCurrentUser();
+        const targetCal = activeTrainee.calories || plan?.totalCalories || 2000;
+
+        const slotMeta = [
+            { key: "breakfast", icon: "🍳", label: this.t("meal_slot_breakfast"), meal: plan?.breakfast },
+            { key: "lunch", icon: "🍗", label: this.t("meal_slot_lunch"), meal: plan?.lunch },
+            { key: "dinner", icon: "🥣", label: this.t("meal_slot_dinner"), meal: plan?.dinner },
+            { key: "snack", icon: "🥜", label: this.t("meal_slot_snack"), meal: plan?.snack }
+        ];
+
+        const totalMealsCount = slotMeta.length;
+        const doneCount = completedSlots.length;
+        const pct = Math.min(100, Math.round((doneCount / totalMealsCount) * 100));
+
+        const consumedCal = slotMeta.reduce((acc, s) => {
+            if (!completedSlots.includes(s.key)) return acc;
+            return acc + (Number(s.meal?.calories) || Math.round(targetCal / 4));
+        }, 0);
+
+        box.innerHTML = `
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-xs font-black text-white flex items-center gap-1.5">
+                                <span>${this.t("meals_tracker_title")}</span>
+                                <span class="text-[11px] text-emerald-400 font-mono">(${consumedCal} / ${targetCal} kcal)</span>
+                            </span>
+                            <span class="text-xs font-black text-emerald-400">${this.t("meals_tracker_count", { done: doneCount, total: totalMealsCount, pct })}</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                            <div class="h-full bg-gradient-to-r from-emerald-500 to-amber-400 transition-all duration-300" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="IronApp.stepDailyMeals(1)" class="px-3.5 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-black flex items-center gap-1 transition">
+                            <span>${this.t("meals_add_btn")}</span>
+                        </button>
+                        ${doneCount > 0 ? `
+                            <button onclick="IronApp.stepDailyMeals(-1)" class="px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-xl text-xs font-bold transition">
+                                -
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- أزرار الوجبات الـ 4 اليومية لتحديد الوجبة التي تم تناولها -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-slate-800/80">
+                    ${slotMeta.map(s => {
+                        const isDone = completedSlots.includes(s.key);
+                        const trMeal = (s.meal && typeof IronI18n !== "undefined") ? IronI18n.trMeal(s.meal) : s.meal;
+                        const mealName = trMeal?.name || s.label;
+                        const mealCal = trMeal?.calories ? `${trMeal.calories} kcal` : "";
+                        return `
+                            <button type="button" onclick="IronApp.toggleMealSlot('${s.key}')"
+                                class="p-2 rounded-xl border text-start transition flex items-center justify-between gap-1.5 min-w-0 ${isDone ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-slate-950/70 border-slate-800 text-gray-400 hover:border-slate-700 hover:text-gray-200'}">
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-[11px] font-black flex items-center gap-1">
+                                        <span>${s.icon}</span>
+                                        <span class="truncate">${s.label}</span>
+                                    </div>
+                                    <div class="text-[10px] truncate opacity-80">${mealName} ${mealCal ? `• ${mealCal}` : ''}</div>
+                                </div>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-black shrink-0 ${isDone ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-gray-400'}">
+                                    ${isDone ? '✓' : '+'}
+                                </span>
+                            </button>
+                        `;
+                    }).join("")}
+                </div>
+            </div>
+        `;
+    },
+
+    toggleMealSlot(slotKey) {
+        const user = IronAuth.getCurrentUser();
+        if (!user || !user.traineeData) return;
+        const trainee = user.traineeData;
+        const key = this.getTodayWaterKey(trainee.id);
+        const todayStr = new Date().toISOString().split("T")[0];
+        const current = [...this.getCompletedMealsForToday(trainee.id)];
+
+        const idx = current.indexOf(slotKey);
+        let added = false;
+        if (idx >= 0) {
+            current.splice(idx, 1);
+        } else {
+            current.push(slotKey);
+            added = true;
+        }
+
+        if (typeof IronSupabase !== "undefined") {
+            IronSupabase.saveMealLog(trainee.id, trainee.authUserId, todayStr, current);
+        }
+
+        this.renderMealsTracker(trainee);
+        if (added) {
+            showToast(this.t("meals_toast_done", { done: current.length, total: this.MEAL_SLOTS_ORDER.length }), "success");
+        }
+    },
+
+    stepDailyMeals(delta = 1) {
+        const user = IronAuth.getCurrentUser();
+        if (!user || !user.traineeData) return;
+        const trainee = user.traineeData;
+        const todayStr = new Date().toISOString().split("T")[0];
+        const current = [...this.getCompletedMealsForToday(trainee.id)];
+
+        if (delta > 0) {
+            const nextSlot = this.MEAL_SLOTS_ORDER.find(s => !current.includes(s));
+            if (nextSlot) {
+                current.push(nextSlot);
+            } else {
+                return;
+            }
+        } else if (delta < 0 && current.length > 0) {
+            current.pop();
+        }
+
+        if (typeof IronSupabase !== "undefined") {
+            IronSupabase.saveMealLog(trainee.id, trainee.authUserId, todayStr, current);
+        }
+
+        this.renderMealsTracker(trainee);
+        if (delta > 0) {
+            showToast(this.t("meals_toast_done", { done: current.length, total: this.MEAL_SLOTS_ORDER.length }), "success");
         }
     },
 
@@ -1208,6 +1576,7 @@ const IronApp = {
 
     generateDayDietWithPlan(plan) {
         this.currentDayDiet = plan;
+        this.renderMealsTracker();
         const container = document.getElementById("generatedDayPlanContainer");
         if (!container) return;
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();

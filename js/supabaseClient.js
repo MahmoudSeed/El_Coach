@@ -17,6 +17,7 @@ const IronSupabase = {
         currentUser: null,
         savedDiets: {},
         waterLogs: {},
+        mealLogs: {},
         workoutLogs: [],
         customMeals: []
     },
@@ -280,8 +281,10 @@ const IronSupabase = {
         const waterKey = `${clientId}_${today}`;
         if (!waterRes.error && waterRes.data) {
             this.cache.waterLogs[waterKey] = Number(waterRes.data.cups) || 0;
+            this.cache.mealLogs[waterKey] = Array.isArray(waterRes.data.completed_meals) ? waterRes.data.completed_meals : [];
         } else {
             this.cache.waterLogs[waterKey] = 0;
+            this.cache.mealLogs[waterKey] = [];
         }
 
         if (!workoutRes.error && Array.isArray(workoutRes.data)) {
@@ -321,15 +324,35 @@ const IronSupabase = {
     async saveWaterLog(clientId, authUserId, dateStr, cups) {
         const sb = this.initClient();
         if (!sb || !clientId) return;
+        const key = `${clientId}_${dateStr}`;
         const cleanCups = Math.max(0, parseInt(cups) || 0);
-        this.cache.waterLogs[`${clientId}_${dateStr}`] = cleanCups;
+        this.cache.waterLogs[key] = cleanCups;
+        const completedMeals = Array.isArray(this.cache.mealLogs[key]) ? this.cache.mealLogs[key] : [];
         const { error } = await sb.from("water_logs").upsert({
             client_id: clientId,
             auth_user_id: authUserId || null,
             log_date: dateStr,
-            cups: cleanCups
+            cups: cleanCups,
+            completed_meals: completedMeals
         }, { onConflict: "client_id,log_date" });
         if (error) console.error("saveWaterLog error:", error);
+    },
+
+    async saveMealLog(clientId, authUserId, dateStr, completedMeals) {
+        const sb = this.initClient();
+        if (!sb || !clientId) return;
+        const key = `${clientId}_${dateStr}`;
+        const cleanMeals = Array.isArray(completedMeals) ? completedMeals : [];
+        this.cache.mealLogs[key] = cleanMeals;
+        const cleanCups = Math.max(0, parseInt(this.cache.waterLogs[key]) || 0);
+        const { error } = await sb.from("water_logs").upsert({
+            client_id: clientId,
+            auth_user_id: authUserId || null,
+            log_date: dateStr,
+            cups: cleanCups,
+            completed_meals: cleanMeals
+        }, { onConflict: "client_id,log_date" });
+        if (error) console.error("saveMealLog error:", error);
     },
 
     async insertWorkoutLog(entry, authUserId) {
