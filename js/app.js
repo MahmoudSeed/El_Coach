@@ -341,9 +341,11 @@ const IronApp = {
             const isPending = user.status === "pending";
             const currencyTxt = typeof IronI18n !== "undefined" ? IronI18n.trCurrency(config.subscriptionPrice.currency) : config.subscriptionPrice.currency;
             document.getElementById("expiredPriceDisplay").innerText = `${config.subscriptionPrice.monthly} ${currencyTxt}`;
-            document.getElementById("expiredVodafoneDisplay").innerText = config.coachInfo.vodafoneCash;
-            document.getElementById("expiredInstapayDisplay").innerText = config.coachInfo.instapayUser;
-            document.getElementById("expiredStcDisplay").innerText = config.coachInfo.stcPay;
+            document.getElementById("expiredVodafoneDisplay").innerText = config.coachInfo.vodafoneCash || "01274300663";
+            document.getElementById("expiredInstapayDisplay").innerText = config.coachInfo.instapayUser || "mahmoudsaeed291997@instapay";
+            document.getElementById("expiredStcDisplay").innerText = config.coachInfo.stcPay || "966563055827";
+            const expIbanEl = document.getElementById("expiredIbanDisplay");
+            if (expIbanEl) expIbanEl.innerText = config.coachInfo.bankIban || "SA4180000644608017933823";
 
             const badgeWrap = document.getElementById("expiredBadgeWrap");
             const badgeText = document.getElementById("expiredBadgeText");
@@ -2174,24 +2176,279 @@ const IronApp = {
         const vodafone = document.getElementById("renewModalVodafone");
         const instapay = document.getElementById("renewModalInstapay");
         const stc = document.getElementById("renewModalStc");
+        const iban = document.getElementById("renewModalIban");
         const stripe = document.getElementById("renewStripeLink");
         const fileInput = document.getElementById("receiptUploadInput");
         const previewBox = document.getElementById("receiptPreviewBox");
         const errorBox = document.getElementById("receiptUploadError");
+        const activeBox = document.getElementById("activeTransferActionBox");
 
         if (priceEl && config.subscriptionPrice) {
             const currencyTxt = typeof IronI18n !== "undefined" ? IronI18n.trCurrency(config.subscriptionPrice.currency) : config.subscriptionPrice.currency;
             priceEl.innerText = `${config.subscriptionPrice.monthly} ${currencyTxt}`;
         }
-        if (vodafone) vodafone.innerText = config.coachInfo.vodafoneCash;
-        if (instapay) instapay.innerText = config.coachInfo.instapayUser;
-        if (stc) stc.innerText = config.coachInfo.stcPay;
-        if (stripe) stripe.href = config.coachInfo.paymentLink;
+        if (vodafone) vodafone.innerText = config.coachInfo.vodafoneCash || "01274300663";
+        if (instapay) instapay.innerText = config.coachInfo.instapayUser || "mahmoudsaeed291997@instapay";
+        if (stc) stc.innerText = config.coachInfo.stcPay || "966563055827";
+        if (iban) iban.innerText = config.coachInfo.bankIban || "SA4180000644608017933823";
+        if (stripe) {
+            const link = (config.coachInfo.paymentLink || "").trim();
+            const isValidGateway = link && !link.includes("buy.stripe.com/demo");
+            stripe.href = isValidGateway ? link : "#";
+        }
         if (fileInput) fileInput.value = "";
         if (previewBox) previewBox.classList.add("hidden");
         if (errorBox) errorBox.classList.add("hidden");
+        if (activeBox) activeBox.classList.add("hidden");
 
         openModal("renewModal");
+    },
+
+    getPaymentMethodDetails(method) {
+        const config = getAppConfig();
+        const ci = config.coachInfo || {};
+        const sp = config.subscriptionPrice || {};
+        const amount = sp.monthly || 129;
+        const currencyTxt = typeof IronI18n !== "undefined" ? IronI18n.trCurrency(sp.currency || "ر.س") : (sp.currency || "ر.س");
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+
+        const map = {
+            iban: {
+                label: isEn ? "Bank Transfer (IBAN)" : "التحويل البنكي (IBAN)",
+                value: ci.bankIban || "SA4180000644608017933823",
+                bankName: ci.bankName || (isEn ? "Al Rajhi / SNB Bank" : "البنك الأهلي / الراجحي"),
+                amount,
+                currencyTxt
+            },
+            instapay: {
+                label: "InstaPay",
+                value: ci.instapayUser || "mahmoudsaeed291997@instapay",
+                amount,
+                currencyTxt
+            },
+            vodafone: {
+                label: isEn ? "Mobile Wallet / Vodafone Cash" : "محفظة فودافون كاش",
+                value: ci.vodafoneCash || "01274300663",
+                amount,
+                currencyTxt
+            },
+            stc: {
+                label: "STC Pay",
+                value: ci.stcPay || "966563055827",
+                amount,
+                currencyTxt
+            }
+        };
+        return map[method] || map.iban;
+    },
+
+    async copyPaymentValue(method) {
+        const info = this.getPaymentMethodDetails(method);
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(info.value);
+            } else {
+                const ta = document.createElement("textarea");
+                ta.value = info.value;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                ta.remove();
+            }
+            showToast(
+                isEn
+                    ? `Copied ${info.label}: ${info.value} ✅`
+                    : `تم نسخ بيانات ${info.label}: (${info.value}) بنجاح ✅`,
+                "success"
+            );
+        } catch {
+            showToast(info.value, "success");
+        }
+        return info;
+    },
+
+    async triggerDirectTransfer(method) {
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const renewModal = document.getElementById("renewModal");
+        if (renewModal && !renewModal.classList.contains("active")) {
+            this.openRenewPaymentModal();
+        }
+
+        const info = await this.copyPaymentValue(method);
+        const activeBox = document.getElementById("activeTransferActionBox");
+
+        let actionButtonHtml = "";
+        let instructionHtml = "";
+
+        if (method === "vodafone") {
+            const cleanDigits = info.value.replace(/\D/g, "");
+            const ussdUri = `tel:*9*7*${cleanDigits}*${info.amount}%23`;
+            instructionHtml = isEn
+                ? `Wallet number <strong class="text-white font-mono">${info.value}</strong> copied! Tap below on mobile to dial the instant Vodafone Cash transfer code (*9*7#) for <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong>, then attach the receipt below.`
+                : `تم نسخ رقم المحفظة <strong class="text-white font-mono">${info.value}</strong> تلقائياً! اضغط الزر أدناه على الجوال لطلب كود التحويل الفوري (*9*7#) أو حوّل من تطبيق المحفظة ثم ارفع صورة الإيصال بالأسفل.`;
+            actionButtonHtml = `
+                <a href="${ussdUri}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition">
+                    <span>📲 ${isEn ? `Dial Instant Transfer (*9*7*${cleanDigits}#)` : `اتصال كود التحويل الفوري (*9*7#)`}</span>
+                </a>
+            `;
+        } else if (method === "instapay") {
+            const isAndroid = /Android/i.test(navigator.userAgent || "");
+            const instapayHref = isAndroid
+                ? "intent://ipn#Intent;scheme=instapay;package=com.egyptianbanks.instapay;end"
+                : "https://www.instapay.eg/";
+            instructionHtml = isEn
+                ? `InstaPay address <strong class="text-white font-mono">${info.value}</strong> copied! Open InstaPay, paste the address to send <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong>, then attach your receipt screenshot below.`
+                : `تم نسخ عنوان الدفع <strong class="text-white font-mono">${info.value}</strong> في الحافظة! افتح تطبيق InstaPay والصق العنوان لتحويل <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong> ثم ارفع صورة الإيصال بالأسفل.`;
+            actionButtonHtml = `
+                <a href="${instapayHref}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition">
+                    <span>⚡ ${isEn ? "Open InstaPay & Paste Address" : "فتح تطبيق InstaPay للتحويل"}</span>
+                </a>
+            `;
+        } else if (method === "stc") {
+            const cleanDigits = info.value.replace(/\D/g, "");
+            instructionHtml = isEn
+                ? `STC Pay number <strong class="text-white font-mono">${info.value}</strong> copied! Open STC Pay and transfer <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong> to this number, then attach the transfer receipt below.`
+                : `تم نسخ رقم STC Pay <strong class="text-white font-mono">${info.value}</strong> تلقائياً! افتح تطبيق STC Pay وحوّل مبلغ <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong> للرقم المنسوخ ثم ارفع صورة الإيصال بالأسفل.`;
+            actionButtonHtml = `
+                <button type="button" onclick="document.getElementById('receiptUploadInput')?.click()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition">
+                    <span>📸 ${isEn ? `Attach STC Pay Receipt (${cleanDigits})` : "إرفاق إيصال تحويل STC Pay الآن"}</span>
+                </button>
+            `;
+        } else {
+            instructionHtml = isEn
+                ? `Bank IBAN <strong class="text-amber-400 font-mono">${info.value}</strong> (${info.bankName}) copied! Paste the IBAN in your banking app to transfer <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong>, then attach the transfer receipt below.`
+                : `تم نسخ رقم الآيبان البنكي <strong class="text-amber-400 font-mono">${info.value}</strong> (${info.bankName}) تلقائياً! الصق الآيبان في تطبيق البنك لتحويل <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong> ثم ارفع صورة الإيصال بالأسفل.`;
+            actionButtonHtml = `
+                <button type="button" onclick="document.getElementById('receiptUploadInput')?.click()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition">
+                    <span>📸 ${isEn ? "Attach Bank Transfer Receipt" : "إرفاق صورة إيصال التحويل البنكي"}</span>
+                </button>
+            `;
+        }
+
+        if (activeBox) {
+            activeBox.innerHTML = `
+                <div class="font-black text-emerald-400 flex items-center justify-between">
+                    <span>✅ ${isEn ? `Active Transfer: ${info.label}` : `تحويل نشط: ${info.label}`}</span>
+                    <span class="font-mono text-white">${info.amount} ${info.currencyTxt}</span>
+                </div>
+                <p class="text-gray-200 leading-relaxed">${instructionHtml}</p>
+                <div class="pt-1 flex flex-wrap items-center gap-2">
+                    ${actionButtonHtml}
+                </div>
+            `;
+            activeBox.classList.remove("hidden");
+        }
+    },
+
+    handleCardPaymentLinkClick(event) {
+        const config = getAppConfig();
+        const link = (config.coachInfo?.paymentLink || "").trim();
+        if (link && !link.includes("buy.stripe.com/demo")) {
+            return true;
+        }
+        if (event) event.preventDefault();
+        this.startApplePayCheckout();
+        return false;
+    },
+
+    async startApplePayCheckout() {
+        const config = getAppConfig();
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const link = (config.coachInfo?.paymentLink || "").trim();
+        const amount = Number(config.subscriptionPrice?.monthly) || 129;
+        const currencyTxt = typeof IronI18n !== "undefined" ? IronI18n.trCurrency(config.subscriptionPrice?.currency || "ر.س") : (config.subscriptionPrice?.currency || "ر.س");
+
+        const renewModal = document.getElementById("renewModal");
+        if (renewModal && !renewModal.classList.contains("active")) {
+            this.openRenewPaymentModal();
+        }
+
+        // 1. إذا كان الكوتش قد أضاف رابط بوابة دفع خارجية تدعم Apple Pay (مثل Tap أو Moyasar أو Stripe)
+        if (link && !link.includes("buy.stripe.com/demo")) {
+            window.open(link, "_blank", "noopener,noreferrer");
+            return;
+        }
+
+        // 2. محاولة فتح نافذة الدفع الأصلية للمتصفح (Apple Pay / PaymentRequest API على أجهزة Apple والمتصفحات الداعمة)
+        if (typeof window !== "undefined" && "PaymentRequest" in window) {
+            try {
+                const supportedInstruments = [
+                    {
+                        supportedMethods: "https://apple.com/apple-pay",
+                        data: {
+                            version: 3,
+                            merchantIdentifier: "merchant.com.ironcoach.pro",
+                            merchantCapabilities: ["supports3DS"],
+                            supportedNetworks: ["mada", "visa", "masterCard"],
+                            countryCode: "SA"
+                        }
+                    },
+                    {
+                        supportedMethods: "basic-card",
+                        data: {
+                            supportedNetworks: ["visa", "mastercard", "mada"]
+                        }
+                    }
+                ];
+                const details = {
+                    total: {
+                        label: isEn ? "IronCoach Pro - 30-Day Subscription" : "اشتراك أيرون كوتش الشهري (30 يوماً)",
+                        amount: { currency: "SAR", value: amount.toFixed(2) }
+                    }
+                };
+                const request = new PaymentRequest(supportedInstruments, details);
+                const canMake = await request.canMakePayment().catch(() => false);
+                if (canMake) {
+                    const response = await request.show();
+                    await response.complete("success");
+                    showToast(isEn ? "Apple Pay authorized! Please attach confirmation to activate immediately." : "تم تفويض Apple Pay! يرجى تأكيد الإيصال لتفعيل الاشتراك فوراً.", "success");
+                    return;
+                }
+            } catch {}
+        }
+
+        // 3. تفعيل وضع الدفع السريع عبر Apple Pay / STC Pay / الآيبان البنكي المباشر داخل نافذة الاشتراك
+        const stcNum = config.coachInfo?.stcPay || "966563055827";
+        const ibanNum = config.coachInfo?.bankIban || "SA4180000644608017933823";
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(stcNum);
+            }
+        } catch {}
+
+        const activeBox = document.getElementById("activeTransferActionBox");
+        if (activeBox) {
+            activeBox.innerHTML = `
+                <div class="font-black text-white flex items-center justify-between">
+                    <span class="flex items-center gap-1.5">🍎 ${isEn ? "Apple Pay / STC Pay & Instant Bank Checkout" : "الدفع عبر Apple Pay / STC Pay والتحويل البنكي الفوري"}</span>
+                    <span class="font-mono text-emerald-400">${amount} ${currencyTxt}</span>
+                </div>
+                <p class="text-gray-200 leading-relaxed">
+                    ${isEn
+                        ? `You can top up or pay directly using <strong>Apple Pay</strong> via <strong>STC Pay (${stcNum})</strong> or instant bank transfer to IBAN <strong class="text-amber-400 font-mono">${ibanNum}</strong>, then attach the confirmation screenshot below for immediate 30-day activation.`
+                        : `يمكنك الدفع فوراً باستخدام <strong>Apple Pay</strong> عبر شحن/تحويل <strong>STC Pay (${stcNum} — تم نسخه تلقائياً ✅)</strong> أو التحويل الفوري لحساب الآيبان <strong class="text-amber-400 font-mono">${ibanNum}</strong>، ثم إرفاق صورة الإيصال بالأسفل لتفعيل اشتراكك (30 يوماً) مباشرة.`}
+                </p>
+                <div class="pt-1 flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="IronApp.copyPaymentValue('stc')" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition">
+                        🇸🇦 ${isEn ? `Copy STC Pay (${stcNum})` : `نسخ رقم STC Pay (${stcNum})`}
+                    </button>
+                    <button type="button" onclick="IronApp.copyPaymentValue('iban')" class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400 transition">
+                        🏦 ${isEn ? "Copy Bank IBAN" : "نسخ الآيبان البنكي (IBAN)"}
+                    </button>
+                    <button type="button" onclick="document.getElementById('receiptUploadInput')?.click()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold text-xs transition">
+                        📸 ${isEn ? "Attach Payment Receipt" : "إرفاق صورة الإيصال"}
+                    </button>
+                </div>
+            `;
+            activeBox.classList.remove("hidden");
+        }
+        showToast(
+            isEn
+                ? `Apple Pay / STC Pay number (${stcNum}) copied for instant checkout! 🍎`
+                : `تم تجهيز الدفع عبر Apple Pay / STC Pay ونسخ الرقم (${stcNum}) للتحويل الفوري! 🍎`,
+            "success"
+        );
     },
 
     // رفع إيصال التحويل إلى التخزين السحابي وإرساله لمراجعة الكوتش

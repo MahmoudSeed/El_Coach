@@ -393,7 +393,13 @@ const IronI18n = {
             meal_slot_breakfast: "فطار",
             meal_slot_lunch: "غداء",
             meal_slot_dinner: "عشاء",
-            meal_slot_snack: "سناك"
+            meal_slot_snack: "سناك",
+            pay_apple_pay_btn: "Pay — الدفع السريع عبر Apple Pay",
+            expired_iban: "🏦 التحويل البنكي (IBAN):",
+            modal_renew_iban_lbl: "🏦 الحساب البنكي (IBAN):",
+            pay_action_transfer: "تحويل الآن 🚀",
+            pay_action_ussd: "تحويل فوري 📲",
+            pay_action_copy: "📋 نسخ"
         },
         en: {
             brand_name: "IronCoach",
@@ -774,7 +780,13 @@ const IronI18n = {
             meal_slot_breakfast: "Breakfast",
             meal_slot_lunch: "Lunch",
             meal_slot_dinner: "Dinner",
-            meal_slot_snack: "Snack"
+            meal_slot_snack: "Snack",
+            pay_apple_pay_btn: "Pay — Fast Checkout with Apple Pay",
+            expired_iban: "🏦 Bank Transfer (IBAN):",
+            modal_renew_iban_lbl: "🏦 Bank Account (IBAN):",
+            pay_action_transfer: "Transfer Now 🚀",
+            pay_action_ussd: "Instant Dial 📲",
+            pay_action_copy: "📋 Copy"
         }
     },
 

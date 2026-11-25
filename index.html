@@ -448,23 +448,67 @@
                 <div id="pendingReceiptNotice" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 mt-4 text-xs text-amber-300 font-bold"></div>
 
                 <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 my-6 text-start space-y-3">
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
                         <span class="text-xs text-gray-400" data-i18n="expired_price_label">قيمة الاشتراك الشهري (30 يوماً):</span>
-                        <strong class="text-emerald-400 font-black text-base" id="expiredPriceDisplay">500 ج.م / ر.س</strong>
+                        <strong class="text-emerald-400 font-black text-lg" id="expiredPriceDisplay">129 ر.س</strong>
                     </div>
 
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between">
-                            <span class="text-gray-400" data-i18n="expired_vodafone">📱 فودافون كاش / محفظة الهاتف:</span>
-                            <strong class="text-white font-mono" id="expiredVodafoneDisplay">01000000000</strong>
+                    <!-- زر الدفع الفوري عبر Apple Pay -->
+                    <button type="button" onclick="IronApp.startApplePayCheckout()" class="w-full py-3 px-4 bg-black hover:bg-neutral-900 text-white font-black text-sm rounded-xl border border-white/25 shadow-lg flex items-center justify-center gap-2 transition">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.96 6.33c.67-.81 1.12-1.94 1-3.08-.96.04-2.13.64-2.82 1.45-.61.71-1.15 1.86-1 2.96 1.07.08 2.16-.52 2.82-1.33z"/>
+                        </svg>
+                        <span data-i18n="pay_apple_pay_btn">Pay — الدفع السريع عبر Apple Pay</span>
+                    </button>
+
+                    <!-- وسائل التحويل المباشر المفعّلة (البنكي + انستاباي + المحفظة + STC Pay) -->
+                    <div class="space-y-2.5 text-xs pt-1">
+                        <!-- 1. الحساب البنكي / الآيبان IBAN -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-gray-300 font-bold" data-i18n="expired_iban">🏦 التحويل البنكي (IBAN):</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="IronApp.triggerDirectTransfer('iban')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                    <button type="button" onclick="IronApp.copyPaymentValue('iban')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                                </div>
+                            </div>
+                            <strong class="text-amber-400 font-mono text-xs block break-all select-all" dir="ltr" id="expiredIbanDisplay">SA4180000644608017933823</strong>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400" data-i18n="expired_instapay">⚡ تطبيق انستاباي (InstaPay):</span>
-                            <strong class="text-white font-mono" id="expiredInstapayDisplay">coach@instapay</strong>
+
+                        <!-- 2. انستاباي InstaPay -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-gray-300 font-bold" data-i18n="expired_instapay">⚡ تطبيق انستاباي (InstaPay):</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="IronApp.triggerDirectTransfer('instapay')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                    <button type="button" onclick="IronApp.copyPaymentValue('instapay')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                                </div>
+                            </div>
+                            <strong class="text-white font-mono text-xs block break-all select-all" dir="ltr" id="expiredInstapayDisplay">mahmoudsaeed291997@instapay</strong>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400" data-i18n="expired_stc">🇸🇦 STC Pay / تحويل بنكي:</span>
-                            <strong class="text-white font-mono" id="expiredStcDisplay">0500000000</strong>
+
+                        <!-- 3. محفظة الهاتف / فودافون كاش -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-gray-300 font-bold" data-i18n="expired_vodafone">📱 المحفظة الإلكترونية / فودافون كاش:</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="IronApp.triggerDirectTransfer('vodafone')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_ussd">تحويل فوري 📲</button>
+                                    <button type="button" onclick="IronApp.copyPaymentValue('vodafone')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                                </div>
+                            </div>
+                            <strong class="text-white font-mono text-xs block select-all" dir="ltr" id="expiredVodafoneDisplay">01274300663</strong>
+                        </div>
+
+                        <!-- 4. STC Pay -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-gray-300 font-bold" data-i18n="expired_stc">🇸🇦 محفظة STC Pay:</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="IronApp.triggerDirectTransfer('stc')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                    <button type="button" onclick="IronApp.copyPaymentValue('stc')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                                </div>
+                            </div>
+                            <strong class="text-white font-mono text-xs block select-all" dir="ltr" id="expiredStcDisplay">966563055827</strong>
                         </div>
                     </div>
                 </div>
@@ -1269,35 +1313,91 @@
         </div>
     </div>
 
-    <!-- 8. نافذة تجديد الاشتراك والدفع الهجين -->
+    <!-- 8. نافذة تجديد الاشتراك والدفع الفعلي (Apple Pay + بنكي + انستاباي + محفظة + STC Pay) -->
     <div id="renewModal" class="modal-overlay">
         <div class="modal-container p-6 max-w-lg">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                <h3 class="text-base font-black text-white" data-i18n="modal_renew_title">تجديد الاشتراك الشهري (30 يوماً)</h3>
+                <h3 class="text-base font-black text-white" data-i18n="modal_renew_title">تجديد وتفعيل الاشتراك الشهري (30 يوماً)</h3>
                 <button onclick="closeModal('renewModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
             </div>
             <div class="space-y-4">
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
-                    <span class="text-xs text-gray-400" data-i18n="modal_renew_price">قيمة الاشتراك:</span>
-                    <div class="text-2xl font-black text-emerald-400 mt-1" id="renewModalPrice">500 ج.م / ر.س</div>
+                    <span class="text-xs text-gray-400" data-i18n="modal_renew_price">قيمة الاشتراك المطلوب تحويلها:</span>
+                    <div class="text-2xl font-black text-emerald-400 mt-1" id="renewModalPrice">129 ر.س</div>
                 </div>
 
+                <!-- 1. الدفع عبر Apple Pay والبطاقة البنكية -->
                 <div class="space-y-2">
-                    <a id="renewStripeLink" href="#" target="_blank" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 flex items-center justify-center gap-2 transition">
-                        <span data-i18n="modal_renew_card">💳 الدفع بالبطاقة البنكية أونلاين (فيزا / ماستركارد)</span>
+                    <button type="button" onclick="IronApp.startApplePayCheckout()" class="w-full py-3.5 px-4 bg-black hover:bg-neutral-900 text-white font-black text-sm rounded-xl border border-white/25 shadow-lg flex items-center justify-center gap-2 transition">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.96 6.33c.67-.81 1.12-1.94 1-3.08-.96.04-2.13.64-2.82 1.45-.61.71-1.15 1.86-1 2.96 1.07.08 2.16-.52 2.82-1.33z"/>
+                        </svg>
+                        <span data-i18n="pay_apple_pay_btn">Pay — الدفع السريع عبر Apple Pay</span>
+                    </button>
+
+                    <a id="renewStripeLink" href="#" target="_blank" onclick="return IronApp.handleCardPaymentLinkClick(event)" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 flex items-center justify-center gap-2 transition">
+                        <span data-i18n="modal_renew_card">💳 الدفع بالبطاقة البنكية أونلاين (مدى / فيزا / ماستركارد)</span>
                     </a>
                 </div>
 
+                <!-- شريط توجيه التحويل الفوري النشط -->
+                <div id="activeTransferActionBox" class="hidden bg-emerald-500/10 border border-emerald-500/35 rounded-xl p-3 text-xs space-y-1.5"></div>
+
+                <!-- 2. وسائل التحويل الفعلي المباشر (البنكي IBAN + انستاباي + المحفظة + STC Pay) -->
                 <div class="border-t border-slate-800 pt-3">
-                    <h5 class="text-xs font-bold text-white mb-2" data-i18n="modal_renew_wallets">أو التحويل السريع عبر المحافظ الإلكترونية:</h5>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1.5 font-mono">
-                        <div class="flex justify-between"><span class="text-gray-400" data-i18n="modal_renew_voda_lbl">فودافون كاش:</span> <strong class="text-white" id="renewModalVodafone">01000000000</strong></div>
-                        <div class="flex justify-between"><span class="text-gray-400" data-i18n="modal_renew_insta_lbl">انستاباي:</span> <strong class="text-white" id="renewModalInstapay">coach@instapay</strong></div>
-                        <div class="flex justify-between"><span class="text-gray-400" data-i18n="modal_renew_stc_lbl">STC Pay:</span> <strong class="text-white" id="renewModalStc">0500000000</strong></div>
+                    <h5 class="text-xs font-bold text-white mb-2" data-i18n="modal_renew_wallets">أو اضغط للتحويل الفوري المباشر عبر الحساب البنكي والمحافظ:</h5>
+                    <div class="space-y-2 text-xs">
+                        <!-- الحساب البنكي / الآيبان -->
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-gray-300 font-bold" data-i18n="modal_renew_iban_lbl">🏦 الحساب البنكي (IBAN):</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="IronApp.triggerDirectTransfer('iban')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                    <button type="button" onclick="IronApp.copyPaymentValue('iban')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                                </div>
+                            </div>
+                            <strong class="text-amber-400 font-mono text-xs block break-all select-all" dir="ltr" id="renewModalIban">SA4180000644608017933823</strong>
+                        </div>
+
+                        <!-- انستاباي InstaPay -->
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-gray-300 font-bold" data-i18n="modal_renew_insta_lbl">⚡ انستاباي (InstaPay):</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="IronApp.triggerDirectTransfer('instapay')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                    <button type="button" onclick="IronApp.copyPaymentValue('instapay')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                                </div>
+                            </div>
+                            <strong class="text-white font-mono text-xs block break-all select-all" dir="ltr" id="renewModalInstapay">mahmoudsaeed291997@instapay</strong>
+                        </div>
+
+                        <!-- فودافون كاش / المحفظة -->
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-gray-300 font-bold" data-i18n="modal_renew_voda_lbl">📱 محفظة فودافون كاش:</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="IronApp.triggerDirectTransfer('vodafone')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_ussd">تحويل فوري 📲</button>
+                                    <button type="button" onclick="IronApp.copyPaymentValue('vodafone')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                                </div>
+                            </div>
+                            <strong class="text-white font-mono text-xs block select-all" dir="ltr" id="renewModalVodafone">01274300663</strong>
+                        </div>
+
+                        <!-- STC Pay -->
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-gray-300 font-bold" data-i18n="modal_renew_stc_lbl">🇸🇦 محفظة STC Pay:</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="IronApp.triggerDirectTransfer('stc')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                    <button type="button" onclick="IronApp.copyPaymentValue('stc')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                                </div>
+                            </div>
+                            <strong class="text-white font-mono text-xs block select-all" dir="ltr" id="renewModalStc">966563055827</strong>
+                        </div>
                     </div>
                 </div>
 
-                <div>
+                <div id="receiptUploadSection">
                     <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_renew_receipt">رفع صورة إيصال التحويل لتأكيد التجديد فوري *:</label>
                     <input type="file" id="receiptUploadInput" onchange="IronApp.handleReceiptFileChange(this)" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-500/20 file:text-emerald-400 hover:file:bg-emerald-500/30">
                     <div id="receiptPreviewBox" class="hidden mt-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold"></div>

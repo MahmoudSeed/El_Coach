@@ -34,21 +34,21 @@ const IronConfig = {
     coachInfo: {
         name: "الكوتش محمود",
         title: "مدرب معتمد NASM & خبير تغذية رياضية",
-        phone: "+201000000000", // سيتمكن الكوتش من تعديله من لوحة التحكم
-        whatsapp: "201000000000",
-        vodafoneCash: "01000000000",
-        instapayUser: "coach@instapay",
-        stcPay: "0500000000",
+        phone: "+966563055827",
+        whatsapp: "966563055827",
+        vodafoneCash: "01274300663",
+        instapayUser: "mahmoudsaeed291997@instapay",
+        stcPay: "966563055827",
         bankName: "البنك الأهلي / الراجحي",
-        bankIban: "EG00000000000000000000000000",
-        paymentLink: "https://buy.stripe.com/demo",
+        bankIban: "SA4180000644608017933823",
+        paymentLink: "",
         adminUsername: "El_Coach",
         adminPasswordHash: hashPassword("123123"),
         passwordHash: hashPassword("admin")
     },
     subscriptionPrice: {
-        monthly: 500, // EGP أو SAR حسب رغبة المدرب
-        currency: "ج.م / ر.س",
+        monthly: 129,
+        currency: "ر.س",
         defaultDurationDays: 30
     },
     defaultTrainees: [
