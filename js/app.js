@@ -935,11 +935,6 @@ const IronApp = {
         const doneCount = completedSlots.length;
         const pct = Math.min(100, Math.round((doneCount / totalMealsCount) * 100));
 
-        const consumedCal = slotMeta.reduce((acc, s) => {
-            if (!completedSlots.includes(s.key)) return acc;
-            return acc + (Number(s.meal?.calories) || Math.round(targetCal / 4));
-        }, 0);
-
         box.innerHTML = `
             <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -947,7 +942,6 @@ const IronApp = {
                         <div class="flex items-center justify-between mb-1.5">
                             <span class="text-xs font-black text-white flex items-center gap-1.5">
                                 <span>${this.t("meals_tracker_title")}</span>
-                                <span class="text-[11px] text-emerald-400 font-mono">(${consumedCal} / ${targetCal} kcal)</span>
                             </span>
                             <span class="text-xs font-black text-emerald-400">${this.t("meals_tracker_count", { done: doneCount, total: totalMealsCount, pct })}</span>
                         </div>
@@ -967,23 +961,17 @@ const IronApp = {
                     </div>
                 </div>
 
-                <!-- أزرار الوجبات الـ 4 اليومية لتحديد الوجبة التي تم تناولها -->
+                <!-- أزرار الوجبات الـ 4 اليومية فقط (فطار + غداء + عشاء + سناك) بدون تفاصيل الوجبة -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-slate-800/80">
                     ${slotMeta.map(s => {
                         const isDone = completedSlots.includes(s.key);
-                        const trMeal = (s.meal && typeof IronI18n !== "undefined") ? IronI18n.trMeal(s.meal) : s.meal;
-                        const mealName = trMeal?.name || s.label;
-                        const mealCal = trMeal?.calories ? `${trMeal.calories} kcal` : "";
                         return `
                             <button type="button" onclick="IronApp.toggleMealSlot('${s.key}')"
-                                class="p-2 rounded-xl border text-start transition flex items-center justify-between gap-1.5 min-w-0 ${isDone ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-slate-950/70 border-slate-800 text-gray-400 hover:border-slate-700 hover:text-gray-200'}">
-                                <div class="min-w-0 flex-1">
-                                    <div class="text-[11px] font-black flex items-center gap-1">
-                                        <span>${s.icon}</span>
-                                        <span class="truncate">${s.label}</span>
-                                    </div>
-                                    <div class="text-[10px] truncate opacity-80">${mealName} ${mealCal ? `• ${mealCal}` : ''}</div>
-                                </div>
+                                class="px-3 py-2 rounded-xl border transition flex items-center justify-between gap-2 ${isDone ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-sm shadow-emerald-500/10' : 'bg-slate-950/70 border-slate-800 text-gray-300 hover:border-slate-700 hover:text-white'}">
+                                <span class="text-xs font-black flex items-center gap-1.5">
+                                    <span>${s.icon}</span>
+                                    <span>${s.label}</span>
+                                </span>
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-black shrink-0 ${isDone ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-gray-400'}">
                                     ${isDone ? '✓' : '+'}
                                 </span>

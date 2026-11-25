@@ -390,10 +390,10 @@ const IronI18n = {
             meals_tracker_count: "{done} / {total} وجبات • {pct}%",
             meals_add_btn: "+ تسجيل وجبة (✓)",
             meals_toast_done: "عاش! تم تسجيل الوجبة ({done} من {total} وجبات اليوم) 🥗🔥",
-            meal_slot_breakfast: "الإفطار",
-            meal_slot_lunch: "الغداء",
-            meal_slot_dinner: "العشاء",
-            meal_slot_snack: "السناك"
+            meal_slot_breakfast: "فطار",
+            meal_slot_lunch: "غداء",
+            meal_slot_dinner: "عشاء",
+            meal_slot_snack: "سناك"
         },
         en: {
             brand_name: "IronCoach",

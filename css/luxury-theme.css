@@ -7,50 +7,50 @@
 
 :root,
 html[data-theme="dark"] {
-    --bg-main: #070a12;
-    --bg-header: rgba(7, 10, 18, 0.90);
-    --bg-card: rgba(15, 23, 42, 0.82);
-    --bg-elevated: #0d1322;
-    --bg-input: #030712;
-    --bg-subtle: rgba(30, 41, 59, 0.75);
-    --border-color: rgba(51, 65, 85, 0.65);
-    --border-strong: rgba(71, 85, 105, 0.85);
+    --bg-main: #110606;
+    --bg-header: rgba(18, 7, 7, 0.85);
+    --bg-card: rgba(20, 12, 14, 0.78);
+    --bg-elevated: #1b0c0e;
+    --bg-input: rgba(12, 6, 8, 0.88);
+    --bg-subtle: rgba(45, 21, 20, 0.72);
+    --border-color: rgba(249, 115, 22, 0.24);
+    --border-strong: rgba(245, 158, 11, 0.45);
     --primary: #10b981;
     --primary-hover: #059669;
-    --primary-glow: rgba(16, 185, 129, 0.25);
+    --primary-glow: rgba(249, 115, 22, 0.28);
     --accent-amber: #f59e0b;
     --accent-cyan: #06b6d4;
     --text-main: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
-    --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-    --nav-bg: rgba(9, 13, 22, 0.94);
-    --scrollbar-track: #090d16;
-    --scrollbar-thumb: #334155;
+    --text-secondary: #e2e8f0;
+    --text-muted: #cbd5e1;
+    --card-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.75), 0 0 24px -8px rgba(249, 115, 22, 0.16);
+    --nav-bg: rgba(18, 8, 9, 0.92);
+    --scrollbar-track: #140708;
+    --scrollbar-thumb: #9a3412;
     color-scheme: dark;
 }
 
 html[data-theme="light"] {
-    --bg-main: #f1f5f9;
-    --bg-header: rgba(255, 255, 255, 0.92);
-    --bg-card: #ffffff;
-    --bg-elevated: #ffffff;
-    --bg-input: #f8fafc;
-    --bg-subtle: #e2e8f0;
-    --border-color: #cbd5e1;
-    --border-strong: #94a3b8;
+    --bg-main: #2a0d08;
+    --bg-header: rgba(255, 247, 237, 0.90);
+    --bg-card: rgba(255, 250, 243, 0.88);
+    --bg-elevated: #fff7ed;
+    --bg-input: #fffaf5;
+    --bg-subtle: #ffedd5;
+    --border-color: rgba(249, 115, 22, 0.32);
+    --border-strong: rgba(234, 88, 12, 0.50);
     --primary: #059669;
     --primary-hover: #047857;
-    --primary-glow: rgba(5, 150, 105, 0.18);
+    --primary-glow: rgba(249, 115, 22, 0.24);
     --accent-amber: #d97706;
     --accent-cyan: #0891b2;
     --text-main: #0f172a;
     --text-secondary: #334155;
     --text-muted: #64748b;
-    --card-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.07), 0 4px 10px -4px rgba(15, 23, 42, 0.04);
-    --nav-bg: rgba(255, 255, 255, 0.96);
-    --scrollbar-track: #e2e8f0;
-    --scrollbar-thumb: #94a3b8;
+    --card-shadow: 0 12px 30px -6px rgba(124, 45, 18, 0.22), 0 4px 12px -4px rgba(234, 88, 12, 0.14);
+    --nav-bg: rgba(255, 247, 237, 0.94);
+    --scrollbar-track: #fed7aa;
+    --scrollbar-thumb: #ea580c;
     color-scheme: light;
 }
 
@@ -67,10 +67,69 @@ body {
     padding: 0;
     min-height: 100vh;
     overflow-x: hidden;
+    position: relative;
     transition: background-color 0.25s ease, color 0.25s ease;
     background-image:
-        radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 40%);
+        radial-gradient(circle at 15% 15%, rgba(249, 115, 22, 0.34) 0%, transparent 42%),
+        radial-gradient(circle at 85% 18%, rgba(225, 29, 72, 0.28) 0%, transparent 45%),
+        radial-gradient(circle at 50% 88%, rgba(245, 158, 11, 0.26) 0%, transparent 50%),
+        radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.16) 0%, transparent 42%),
+        linear-gradient(135deg, rgba(16, 6, 7, 0.86) 0%, rgba(24, 9, 8, 0.82) 50%, rgba(14, 7, 11, 0.88) 100%),
+        url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80') !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-attachment: fixed !important;
+}
+
+/* طبقة الشرار والتوهج الناري التحفيزي في الخلفية */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        radial-gradient(2px 2px at 12% 28%, rgba(251, 146, 60, 0.75) 50%, transparent 100%),
+        radial-gradient(2.5px 2.5px at 32% 72%, rgba(245, 158, 11, 0.65) 50%, transparent 100%),
+        radial-gradient(2px 2px at 68% 24%, rgba(239, 68, 68, 0.70) 50%, transparent 100%),
+        radial-gradient(3px 3px at 84% 64%, rgba(251, 191, 36, 0.65) 50%, transparent 100%),
+        radial-gradient(2px 2px at 48% 42%, rgba(249, 115, 22, 0.60) 50%, transparent 100%),
+        radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.18), transparent 60%);
+    animation: fieryPulseGlow 6s ease-in-out infinite alternate;
+}
+
+@keyframes fieryPulseGlow {
+    0% {
+        opacity: 0.72;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.03);
+    }
+}
+
+body > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* تخصيص البطاقات في الوضع الناري الداكن لتعكس التوهج التحفيزي */
+html[data-theme="dark"] .bg-slate-900,
+html[data-theme="dark"] .bg-slate-900\/80,
+html[data-theme="dark"] .bg-slate-900\/90,
+html[data-theme="dark"] .bg-slate-900\/95,
+html[data-theme="dark"] .bg-slate-900\/60 {
+    background-color: rgba(20, 11, 13, 0.78) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-color: rgba(249, 115, 22, 0.22) !important;
+    box-shadow: var(--card-shadow);
+}
+
+html[data-theme="dark"] .bg-gradient-to-r.from-slate-900 {
+    background-image: linear-gradient(135deg, rgba(28, 10, 10, 0.88) 0%, rgba(45, 14, 10, 0.82) 55%, rgba(16, 40, 32, 0.82) 100%) !important;
+    border-color: rgba(249, 115, 22, 0.35) !important;
 }
 
 html[dir="rtl"] body {
@@ -226,39 +285,50 @@ html[data-theme="light"] #impersonatingBanner {
     border-color: rgba(217, 119, 6, 0.35) !important;
 }
 
-/* البطاقات والحاويات الرئيسية في الوضع الفاتح */
+/* البطاقات والحاويات الرئيسية في الوضع الفاتح الناري */
+html[data-theme="light"] body {
+    background-image:
+        radial-gradient(circle at 15% 15%, rgba(249, 115, 22, 0.45) 0%, transparent 45%),
+        radial-gradient(circle at 85% 20%, rgba(239, 68, 68, 0.35) 0%, transparent 45%),
+        radial-gradient(circle at 50% 85%, rgba(245, 158, 11, 0.40) 0%, transparent 50%),
+        linear-gradient(135deg, rgba(67, 20, 7, 0.72) 0%, rgba(124, 45, 18, 0.65) 50%, rgba(45, 12, 10, 0.75) 100%),
+        url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80') !important;
+}
+
 html[data-theme="light"] .bg-slate-900,
 html[data-theme="light"] .bg-slate-900\/80,
 html[data-theme="light"] .bg-slate-900\/90,
 html[data-theme="light"] .bg-slate-900\/95,
 html[data-theme="light"] .bg-slate-900\/60 {
-    background-color: #ffffff !important;
+    background-color: rgba(255, 250, 243, 0.90) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     box-shadow: var(--card-shadow);
 }
 
-/* الحاويات الفرعية وحقول الإدخال في الوضع الفاتح */
+/* الحاويات الفرعية وحقول الإدخال في الوضع الفاتح الناري */
 html[data-theme="light"] .bg-slate-950,
 html[data-theme="light"] .bg-slate-950\/60,
 html[data-theme="light"] .bg-slate-950\/70,
 html[data-theme="light"] .bg-slate-950\/80 {
-    background-color: #f8fafc !important;
+    background-color: rgba(255, 244, 230, 0.92) !important;
 }
 
 /* الأزرار والخلفيات الثانوية في الوضع الفاتح */
 html[data-theme="light"] .bg-slate-800,
 html[data-theme="light"] .bg-slate-800\/80 {
-    background-color: #e2e8f0 !important;
+    background-color: #ffedd5 !important;
     color: #1e293b !important;
 }
 
 html[data-theme="light"] .hover\:bg-slate-700:hover {
-    background-color: #cbd5e1 !important;
+    background-color: #fed7aa !important;
 }
 
-/* البانرات المتدرجة في الوضع الفاتح */
+/* البانرات المتدرجة في الوضع الفاتح الناري */
 html[data-theme="light"] .bg-gradient-to-r.from-slate-900,
 html[data-theme="light"] .bg-gradient-to-r.from-slate-950 {
-    background-image: linear-gradient(to left, #ffffff, #f0fdf4, #ecfeff) !important;
+    background-image: linear-gradient(to left, rgba(255, 247, 237, 0.94), rgba(255, 237, 213, 0.92), rgba(254, 243, 199, 0.92)) !important;
     box-shadow: var(--card-shadow);
 }
 
@@ -273,14 +343,14 @@ html[data-theme="light"] .bg-cyan-950\/20 {
     background-color: rgba(6, 182, 212, 0.08) !important;
 }
 
-/* الحدود في الوضع الفاتح */
+/* الحدود في الوضع الفاتح الناري */
 html[data-theme="light"] .border-slate-800,
 html[data-theme="light"] .border-slate-800\/80,
 html[data-theme="light"] .border-slate-800\/60,
 html[data-theme="light"] .border-slate-700,
 html[data-theme="light"] .border-slate-700\/80,
 html[data-theme="light"] .border-slate-700\/60 {
-    border-color: #cbd5e1 !important;
+    border-color: rgba(249, 115, 22, 0.32) !important;
 }
 
 /* النصوص في الوضع الفاتح */
