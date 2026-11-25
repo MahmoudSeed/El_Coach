@@ -292,8 +292,8 @@
                                 <input type="email" id="regOauthEmail" dir="ltr" placeholder="name@gmail.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
                             </div>
                             <div id="regOauthPassWrap">
-                                <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="signup_pass_lbl">كلمة المرور (6 أحرف على الأقل) *</label>
-                                <input type="password" id="regOauthPassword" minlength="6" placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                                <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="signup_pass_lbl">كلمة المرور لحسابك *</label>
+                                <input type="password" id="regOauthPassword" placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
                             </div>
                             <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-emerald-500/20 transition" data-i18n="signup_oauth_continue">
                                 متابعة لتحديد خطتك البدنية ←
@@ -448,9 +448,31 @@
                 <div id="pendingReceiptNotice" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 mt-4 text-xs text-amber-300 font-bold"></div>
 
                 <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 my-6 text-start space-y-3">
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
-                        <span class="text-xs text-gray-400" data-i18n="expired_price_label">قيمة الاشتراك الشهري (30 يوماً):</span>
-                        <strong class="text-emerald-400 font-black text-lg" id="expiredPriceDisplay">129 ر.س</strong>
+                    <!-- اختيار باقة العضوية (1 شهر 139 | 2 شهر 239 | 3 شهور 299) -->
+                    <div>
+                        <label class="block text-xs font-black text-gray-300 mb-2" data-i18n="tier_select_label">🎯 اختر باقة العضوية والتجديد:</label>
+                        <div class="grid grid-cols-3 gap-2" id="expiredTierSelector">
+                            <button type="button" data-tier-months="1" onclick="IronApp.selectSubscriptionTier(1)" class="sub-tier-card p-2.5 rounded-xl border border-emerald-500 bg-emerald-500/15 text-center transition">
+                                <div class="text-xs font-black text-white" data-i18n="tier_1m_title">1 شهر</div>
+                                <div class="text-base font-black text-emerald-400 mt-0.5">139 <span class="text-[10px]">ر.س</span></div>
+                                <div class="text-[10px] text-gray-400" data-i18n="tier_1m_sub">30 يوماً</div>
+                            </button>
+                            <button type="button" data-tier-months="2" onclick="IronApp.selectSubscriptionTier(2)" class="sub-tier-card p-2.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 text-center transition">
+                                <div class="text-xs font-black text-white" data-i18n="tier_2m_title">2 شهر</div>
+                                <div class="text-base font-black text-emerald-400 mt-0.5">239 <span class="text-[10px]">ر.س</span></div>
+                                <div class="text-[10px] text-amber-400 font-bold" data-i18n="tier_2m_sub">60 يوماً • وفر 39</div>
+                            </button>
+                            <button type="button" data-tier-months="3" onclick="IronApp.selectSubscriptionTier(3)" class="sub-tier-card p-2.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 text-center transition relative">
+                                <div class="text-xs font-black text-white" data-i18n="tier_3m_title">3 شهور 🔥</div>
+                                <div class="text-base font-black text-emerald-400 mt-0.5">299 <span class="text-[10px]">ر.س</span></div>
+                                <div class="text-[10px] text-amber-400 font-bold" data-i18n="tier_3m_sub">90 يوماً • وفر 118</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2.5 pt-1">
+                        <span class="text-xs text-gray-400" id="expiredSelectedTierText" data-i18n="expired_price_label">إجمالي الباقة المختارة:</span>
+                        <strong class="text-emerald-400 font-black text-lg" id="expiredPriceDisplay">139 ر.س</strong>
                     </div>
 
                     <!-- زر الدفع الفوري عبر Apple Pay -->
@@ -553,7 +575,10 @@
                                 <p class="text-xs text-gray-400 mt-1" data-i18n="home_sub">خطة اليوم مصممة تحت إشراف الكوتش محمود للوصول لأفضل فورمة بأمان تام</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button onclick="IronApp.openRenewPaymentModal()" class="px-4 py-3 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35 font-black text-xs rounded-xl transition flex items-center gap-1.5">
+                                <span data-i18n="home_renew_membership_btn">💳 تجديد العضوية</span>
+                            </button>
                             <button onclick="IronApp.switchTab('workouts')" class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
                                 <span data-i18n="home_start_btn">ابدأ تمرين اليوم في الجيم 🏋️‍♂️</span>
                             </button>
@@ -1321,9 +1346,31 @@
                 <button onclick="closeModal('renewModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
             </div>
             <div class="space-y-4">
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
-                    <span class="text-xs text-gray-400" data-i18n="modal_renew_price">قيمة الاشتراك المطلوب تحويلها:</span>
-                    <div class="text-2xl font-black text-emerald-400 mt-1" id="renewModalPrice">129 ر.س</div>
+                <!-- اختيار باقة تجديد العضوية (1 شهر 139 | 2 شهر 239 | 3 شهور 299) -->
+                <div>
+                    <label class="block text-xs font-black text-gray-300 mb-2" data-i18n="tier_select_label">🎯 اختر باقة العضوية المطلوب تفعيلها:</label>
+                    <div class="grid grid-cols-3 gap-2" id="modalTierSelector">
+                        <button type="button" data-tier-months="1" onclick="IronApp.selectSubscriptionTier(1)" class="sub-tier-card p-2.5 rounded-xl border border-emerald-500 bg-emerald-500/15 text-center transition">
+                            <div class="text-xs font-black text-white" data-i18n="tier_1m_title">1 شهر</div>
+                            <div class="text-base font-black text-emerald-400 mt-0.5">139 <span class="text-[10px]">ر.س</span></div>
+                            <div class="text-[10px] text-gray-400" data-i18n="tier_1m_sub">30 يوماً</div>
+                        </button>
+                        <button type="button" data-tier-months="2" onclick="IronApp.selectSubscriptionTier(2)" class="sub-tier-card p-2.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 text-center transition">
+                            <div class="text-xs font-black text-white" data-i18n="tier_2m_title">2 شهر</div>
+                            <div class="text-base font-black text-emerald-400 mt-0.5">239 <span class="text-[10px]">ر.س</span></div>
+                            <div class="text-[10px] text-amber-400 font-bold" data-i18n="tier_2m_sub">60 يوماً • وفر 39</div>
+                        </button>
+                        <button type="button" data-tier-months="3" onclick="IronApp.selectSubscriptionTier(3)" class="sub-tier-card p-2.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 text-center transition relative">
+                            <div class="text-xs font-black text-white" data-i18n="tier_3m_title">3 شهور 🔥</div>
+                            <div class="text-base font-black text-emerald-400 mt-0.5">299 <span class="text-[10px]">ر.س</span></div>
+                            <div class="text-[10px] text-amber-400 font-bold" data-i18n="tier_3m_sub">90 يوماً • وفر 118</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                    <span class="text-xs text-gray-300 font-bold" id="modalSelectedTierText" data-i18n="modal_renew_price">قيمة الباقة المختارة:</span>
+                    <div class="text-xl font-black text-emerald-400" id="renewModalPrice">139 ر.س</div>
                 </div>
 
                 <!-- 1. الدفع عبر Apple Pay والبطاقة البنكية -->

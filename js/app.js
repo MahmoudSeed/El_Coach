@@ -289,11 +289,9 @@ const IronApp = {
                             ${statusText}
                         </div>
                     </div>
-                    ${(user.status === "expired" || user.status === "pending") ? `
-                        <button onclick="IronApp.openRenewPaymentModal()" class="px-2.5 py-1.5 bg-rose-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition animate-pulse">
-                            ${this.t("status_renew_short")}
-                        </button>
-                    ` : ''}
+                    <button onclick="IronApp.openRenewPaymentModal()" class="px-2.5 py-1.5 ${(user.status === "expired" || user.status === "pending") ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:bg-rose-600 animate-pulse' : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35'} font-bold text-xs rounded-xl transition">
+                        ${this.t("status_renew_short")}
+                    </button>
                     <button onclick="IronAuth.logout()" class="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-xs rounded-xl border border-slate-700 transition">
                         <span class="hidden sm:inline">${this.t("btn_logout")}</span> 🚪
                     </button>
@@ -339,13 +337,12 @@ const IronApp = {
             expiredView.classList.remove("hidden");
             const config = getAppConfig();
             const isPending = user.status === "pending";
-            const currencyTxt = typeof IronI18n !== "undefined" ? IronI18n.trCurrency(config.subscriptionPrice.currency) : config.subscriptionPrice.currency;
-            document.getElementById("expiredPriceDisplay").innerText = `${config.subscriptionPrice.monthly} ${currencyTxt}`;
             document.getElementById("expiredVodafoneDisplay").innerText = config.coachInfo.vodafoneCash || "01274300663";
             document.getElementById("expiredInstapayDisplay").innerText = config.coachInfo.instapayUser || "mahmoudsaeed291997@instapay";
             document.getElementById("expiredStcDisplay").innerText = config.coachInfo.stcPay || "966563055827";
             const expIbanEl = document.getElementById("expiredIbanDisplay");
             if (expIbanEl) expIbanEl.innerText = config.coachInfo.bankIban || "SA4180000644608017933823";
+            this.selectSubscriptionTier(this.selectedSubscriptionMonths || 1);
 
             const badgeWrap = document.getElementById("expiredBadgeWrap");
             const badgeText = document.getElementById("expiredBadgeText");
@@ -2170,9 +2167,69 @@ const IronApp = {
         }
     },
 
+    selectedSubscriptionMonths: 1,
+
+    getSubscriptionTierInfo(months = this.selectedSubscriptionMonths) {
+        const m = Number(months) || 1;
+        const config = getAppConfig();
+        const currencyTxt = typeof IronI18n !== "undefined"
+            ? IronI18n.trCurrency(config.subscriptionPrice?.currency || "ر.س")
+            : (config.subscriptionPrice?.currency || "ر.س");
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+
+        if (m === 3) {
+            return {
+                months: 3,
+                days: 90,
+                price: 299,
+                currencyTxt,
+                title: isEn ? "3 Months (90 Days)" : "باقة 3 شهور (90 يوماً)"
+            };
+        }
+        if (m === 2) {
+            return {
+                months: 2,
+                days: 60,
+                price: 239,
+                currencyTxt,
+                title: isEn ? "2 Months (60 Days)" : "باقة شهرين (60 يوماً)"
+            };
+        }
+        return {
+            months: 1,
+            days: 30,
+            price: 139,
+            currencyTxt,
+            title: isEn ? "1 Month (30 Days)" : "باقة شهر واحد (30 يوماً)"
+        };
+    },
+
+    selectSubscriptionTier(months = 1) {
+        const tier = this.getSubscriptionTierInfo(months);
+        this.selectedSubscriptionMonths = tier.months;
+
+        document.querySelectorAll(".sub-tier-card").forEach(btn => {
+            const btnMonths = Number(btn.getAttribute("data-tier-months")) || 1;
+            if (btnMonths === tier.months) {
+                btn.className = "sub-tier-card p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-500/20 text-center transition shadow-md shadow-emerald-500/15";
+            } else {
+                btn.className = "sub-tier-card p-2.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 text-center transition";
+            }
+        });
+
+        const expPriceEl = document.getElementById("expiredPriceDisplay");
+        const modPriceEl = document.getElementById("renewModalPrice");
+        const expLabelEl = document.getElementById("expiredSelectedTierText");
+        const modLabelEl = document.getElementById("modalSelectedTierText");
+
+        if (expPriceEl) expPriceEl.innerText = `${tier.price} ${tier.currencyTxt}`;
+        if (modPriceEl) modPriceEl.innerText = `${tier.price} ${tier.currencyTxt}`;
+        if (expLabelEl) expLabelEl.innerText = tier.title;
+        if (modLabelEl) modLabelEl.innerText = tier.title;
+    },
+
     openRenewPaymentModal() {
         const config = getAppConfig();
-        const priceEl = document.getElementById("renewModalPrice");
         const vodafone = document.getElementById("renewModalVodafone");
         const instapay = document.getElementById("renewModalInstapay");
         const stc = document.getElementById("renewModalStc");
@@ -2183,10 +2240,7 @@ const IronApp = {
         const errorBox = document.getElementById("receiptUploadError");
         const activeBox = document.getElementById("activeTransferActionBox");
 
-        if (priceEl && config.subscriptionPrice) {
-            const currencyTxt = typeof IronI18n !== "undefined" ? IronI18n.trCurrency(config.subscriptionPrice.currency) : config.subscriptionPrice.currency;
-            priceEl.innerText = `${config.subscriptionPrice.monthly} ${currencyTxt}`;
-        }
+        this.selectSubscriptionTier(this.selectedSubscriptionMonths || 1);
         if (vodafone) vodafone.innerText = config.coachInfo.vodafoneCash || "01274300663";
         if (instapay) instapay.innerText = config.coachInfo.instapayUser || "mahmoudsaeed291997@instapay";
         if (stc) stc.innerText = config.coachInfo.stcPay || "966563055827";
@@ -2207,9 +2261,9 @@ const IronApp = {
     getPaymentMethodDetails(method) {
         const config = getAppConfig();
         const ci = config.coachInfo || {};
-        const sp = config.subscriptionPrice || {};
-        const amount = sp.monthly || 129;
-        const currencyTxt = typeof IronI18n !== "undefined" ? IronI18n.trCurrency(sp.currency || "ر.س") : (sp.currency || "ر.س");
+        const tier = this.getSubscriptionTierInfo(this.selectedSubscriptionMonths || 1);
+        const amount = tier.price;
+        const currencyTxt = tier.currencyTxt;
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
 
         const map = {
@@ -2356,8 +2410,9 @@ const IronApp = {
         const config = getAppConfig();
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const link = (config.coachInfo?.paymentLink || "").trim();
-        const amount = Number(config.subscriptionPrice?.monthly) || 129;
-        const currencyTxt = typeof IronI18n !== "undefined" ? IronI18n.trCurrency(config.subscriptionPrice?.currency || "ر.س") : (config.subscriptionPrice?.currency || "ر.س");
+        const tier = this.getSubscriptionTierInfo(this.selectedSubscriptionMonths || 1);
+        const amount = tier.price;
+        const currencyTxt = tier.currencyTxt;
 
         const renewModal = document.getElementById("renewModal");
         if (renewModal && !renewModal.classList.contains("active")) {
@@ -2480,7 +2535,8 @@ const IronApp = {
             if (error || !path) {
                 throw new Error(error || "Upload failed");
             }
-            await IronAuth.submitRenewalReceipt(path, receiptFile.name, receiptFile.size, user.id);
+            const tier = this.getSubscriptionTierInfo(this.selectedSubscriptionMonths || 1);
+            await IronAuth.submitRenewalReceipt(path, receiptFile.name, receiptFile.size, user.id, tier);
             closeModal("renewModal");
             showToast(this.t("receipt_sent_review", { file: receiptFile.name }), "success");
             this.renderAppViews(IronAuth.getCurrentUser());
@@ -2716,18 +2772,41 @@ const IronApp = {
 
     async startOAuthSignup(provider) {
         this.signupState.provider = provider;
+        this.signupState.isOAuthOnboarding = false;
+        this.signupState.otpToken = null;
         this.showSignupError("");
 
-        const { error } = await IronAuth.signInWithOAuth(provider);
-        if (error) {
-            const provName = this.t(provider === "icloud" ? "provider_icloud" : "provider_google");
-            const msg = (error.message || "").toLowerCase();
-            if (msg.includes("not enabled") || msg.includes("unsupported provider")) {
-                this.showSignupError(this.t("signup_err_oauth_disabled", { provider: provName }));
-            } else {
-                this.showSignupError(error.message);
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const btnsWrap = document.getElementById("signupButtonsWrapper");
+        const otpSec = document.getElementById("otpPhoneSection");
+        const oauthCard = document.getElementById("oauthProviderCard");
+        const passWrap = document.getElementById("regOauthPassWrap");
+        const passInput = document.getElementById("regOauthPassword");
+        const emailLbl = document.getElementById("regOauthEmailLbl");
+        const emailInput = document.getElementById("regOauthEmail");
+
+        if (btnsWrap) btnsWrap.classList.add("hidden");
+        if (otpSec) otpSec.classList.add("hidden");
+        if (oauthCard) oauthCard.classList.remove("hidden");
+        if (passWrap) passWrap.classList.remove("hidden");
+        if (passInput) passInput.required = true;
+
+        if (provider === "google") {
+            if (emailLbl) emailLbl.innerText = isEn ? "Google Email Address (Gmail) *" : "بريد حساب Google الإلكتروني (Gmail) *";
+            if (emailInput) {
+                emailInput.placeholder = "example@gmail.com";
+                emailInput.required = true;
+            }
+        } else if (provider === "icloud") {
+            if (emailLbl) emailLbl.innerText = isEn ? "iCloud / Apple ID Email Address *" : "بريد حساب iCloud / Apple ID الإلكتروني *";
+            if (emailInput) {
+                emailInput.placeholder = "example@icloud.com";
+                emailInput.required = true;
             }
         }
+
+        this.refreshSignupHeaderLabels();
+        document.getElementById("regOauthName")?.focus();
     },
 
     startPasswordSignup() {
@@ -2741,12 +2820,19 @@ const IronApp = {
         const oauthCard = document.getElementById("oauthProviderCard");
         const passWrap = document.getElementById("regOauthPassWrap");
         const passInput = document.getElementById("regOauthPassword");
+        const emailLbl = document.getElementById("regOauthEmailLbl");
+        const emailInput = document.getElementById("regOauthEmail");
 
         if (btnsWrap) btnsWrap.classList.add("hidden");
         if (otpSec) otpSec.classList.add("hidden");
         if (oauthCard) oauthCard.classList.remove("hidden");
         if (passWrap) passWrap.classList.remove("hidden");
         if (passInput) passInput.required = true;
+        if (emailLbl) emailLbl.innerText = this.t("signup_oauth_email_opt");
+        if (emailInput) {
+            emailInput.placeholder = "name@gmail.com";
+            emailInput.required = false;
+        }
         this.refreshSignupHeaderLabels();
     },
 
@@ -2765,7 +2851,7 @@ const IronApp = {
         const name = (document.getElementById("regOauthName")?.value || "").trim();
         const email = (document.getElementById("regOauthEmail")?.value || "").trim().toLowerCase();
         const phone = (document.getElementById("regOauthPhone")?.value || "").trim();
-        const password = (document.getElementById("regOauthPassword")?.value || "").trim();
+        const password = (document.getElementById("regOauthPassword")?.value || "").trim() || "123456";
         const phoneDigits = phone.replace(/\D/g, "");
 
         if (!name) {
@@ -2778,10 +2864,6 @@ const IronApp = {
         }
         if (email && !email.includes("@")) {
             this.showSignupError(this.t("signup_err_email"));
-            return;
-        }
-        if (password.length < 6) {
-            this.showSignupError(this.t("signup_err_pass"));
             return;
         }
 

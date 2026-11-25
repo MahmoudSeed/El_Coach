@@ -142,10 +142,18 @@ const IronCoachPanel = {
                                 : '';
                             const hasPendingReceipt = Boolean(t.lastRenewalReceipt && t.lastRenewalReceipt.path && t.lastRenewalReceipt.status === "pending_review");
                             const hasAnyReceipt = Boolean(t.lastRenewalReceipt && t.lastRenewalReceipt.path);
+                            const recDays = Number(t.lastRenewalReceipt?.planDays) || 30;
+                            const recMonths = Number(t.lastRenewalReceipt?.planMonths) || Math.round(recDays / 30) || 1;
+                            const recPrice = t.lastRenewalReceipt?.planPrice ? `${t.lastRenewalReceipt.planPrice} ${isEn ? 'SAR' : 'ر.س'}` : '';
                             const receiptNotice = hasPendingReceipt
-                                ? `<div class="mt-2 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-2 text-[11px]">
-                                        <span class="text-amber-300 font-bold truncate">🧾 ${isEn ? 'Pending receipt:' : 'إيصال بانتظار المراجعة:'} ${t.lastRenewalReceipt.fileName || ''}</span>
-                                        <button type="button" onclick="IronCoachPanel.viewTraineeReceipt('${t.id}')" class="px-2 py-0.5 rounded-lg bg-amber-500 text-slate-950 font-black text-[10px] flex-shrink-0 hover:bg-amber-400 transition">${isEn ? 'View' : 'عرض'}</button>
+                                ? `<div class="mt-2 px-2.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1.5 text-[11px]">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-amber-300 font-bold truncate">🧾 ${isEn ? `Pending (${recMonths}M • ${recDays}d)` : `إيصال باقة ${recMonths} شهر (${recDays} يوم)`} ${recPrice ? `• ${recPrice}` : ''}</span>
+                                            <button type="button" onclick="IronCoachPanel.viewTraineeReceipt('${t.id}')" class="px-2 py-0.5 rounded-lg bg-amber-500 text-slate-950 font-black text-[10px] flex-shrink-0 hover:bg-amber-400 transition">${isEn ? 'View Receipt' : 'عرض الإيصال'}</button>
+                                        </div>
+                                        <button type="button" onclick="IronCoachPanel.renewTrainee('${t.id}', ${recDays})" class="w-full py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] transition">
+                                            ✅ ${isEn ? `Approve & Activate +${recDays} Days` : `اعتماد الإيصال وتفعيل +${recDays} يوماً`}
+                                        </button>
                                    </div>`
                                 : (hasAnyReceipt
                                     ? `<div class="mt-2 px-2.5 py-1 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-2 text-[10px] text-gray-400">
@@ -197,11 +205,17 @@ const IronCoachPanel = {
                                     </div>
 
                                     <div class="space-y-2 pt-3 border-t border-slate-800 mt-2">
-                                        <div class="flex items-center gap-2">
-                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}')" class="flex-1 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
-                                                <span>${txt("coach_renew_btn")}</span>
+                                        <div class="flex items-center gap-1.5">
+                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}', 30)" class="flex-1 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-[11px] font-black transition" title="139">
+                                                ${isEn ? '🔄 +1M (30d)' : '🔄 +1 شهر'}
                                             </button>
-                                            <button onclick="IronCoachPanel.impersonateTrainee('${t.id}')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-gray-200 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}', 60)" class="flex-1 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-[11px] font-black transition" title="239">
+                                                ${isEn ? '+2M (60d)' : '+2 شهر'}
+                                            </button>
+                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}', 90)" class="flex-1 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-xl text-[11px] font-black transition" title="299">
+                                                ${isEn ? '+3M (90d)' : '+3 شهور 🔥'}
+                                            </button>
+                                            <button onclick="IronCoachPanel.impersonateTrainee('${t.id}')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-200 rounded-xl text-[11px] font-bold transition">
                                                 <span>${txt("coach_view_btn")}</span>
                                             </button>
                                         </div>
@@ -244,13 +258,14 @@ const IronCoachPanel = {
         this.renderCoachDashboard();
     },
 
-    async renewTrainee(id) {
+    async renewTrainee(id, days = 30) {
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const addDays = parseInt(days) || 30;
         try {
-            const renewed = await IronAuth.renewSubscription(id, 30);
+            const renewed = await IronAuth.renewSubscription(id, addDays);
             if (renewed) {
                 const dispName = typeof IronI18n !== "undefined" ? IronI18n.trName(renewed) : renewed.name;
-                showToast(isEn ? `Subscription renewed +30 days for ${dispName}!` : `تم تجديد اشتراك ${dispName} لمدة 30 يوماً إضافية بنجاح!`, "success");
+                showToast(isEn ? `Subscription renewed +${addDays} days for ${dispName}!` : `تم تجديد اشتراك ${dispName} لمدة ${addDays} يوماً إضافية بنجاح!`, "success");
                 this.renderCoachDashboard();
             }
         } catch (err) {

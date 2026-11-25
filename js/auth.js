@@ -477,12 +477,15 @@ const IronAuth = {
         return mapped;
     },
 
-    async submitRenewalReceipt(path, fileName, fileSize, clientId = null) {
+    async submitRenewalReceipt(path, fileName, fileSize, clientId = null, planInfo = {}) {
         const res = await IronSupabase.callFunction("client-submit-receipt", {
             path,
             fileName,
             fileSize,
-            clientId
+            clientId,
+            planMonths: Number(planInfo.months) || 1,
+            planDays: Number(planInfo.days) || 30,
+            planPrice: Number(planInfo.price) || 139
         });
         if (!res.ok || !res.data?.client) {
             throw new Error(res.error || "Failed to submit receipt");

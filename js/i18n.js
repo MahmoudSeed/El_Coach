@@ -399,7 +399,15 @@ const IronI18n = {
             modal_renew_iban_lbl: "🏦 الحساب البنكي (IBAN):",
             pay_action_transfer: "تحويل الآن 🚀",
             pay_action_ussd: "تحويل فوري 📲",
-            pay_action_copy: "📋 نسخ"
+            pay_action_copy: "📋 نسخ",
+            home_renew_membership_btn: "💳 تجديد العضوية",
+            tier_select_label: "🎯 اختر باقة العضوية المطلوبة:",
+            tier_1m_title: "1 شهر",
+            tier_1m_sub: "30 يوماً",
+            tier_2m_title: "2 شهر",
+            tier_2m_sub: "60 يوماً • وفر 39",
+            tier_3m_title: "3 شهور 🔥",
+            tier_3m_sub: "90 يوماً • وفر 118"
         },
         en: {
             brand_name: "IronCoach",
@@ -786,7 +794,15 @@ const IronI18n = {
             modal_renew_iban_lbl: "🏦 Bank Account (IBAN):",
             pay_action_transfer: "Transfer Now 🚀",
             pay_action_ussd: "Instant Dial 📲",
-            pay_action_copy: "📋 Copy"
+            pay_action_copy: "📋 Copy",
+            home_renew_membership_btn: "💳 Renew Membership",
+            tier_select_label: "🎯 Choose Your Membership Plan:",
+            tier_1m_title: "1 Month",
+            tier_1m_sub: "30 Days",
+            tier_2m_title: "2 Months",
+            tier_2m_sub: "60 Days • Save 39",
+            tier_3m_title: "3 Months 🔥",
+            tier_3m_sub: "90 Days • Save 118"
         }
     },
 

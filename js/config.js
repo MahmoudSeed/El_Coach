@@ -47,9 +47,16 @@ const IronConfig = {
         passwordHash: hashPassword("admin")
     },
     subscriptionPrice: {
-        monthly: 129,
+        monthly: 139,
+        twoMonths: 239,
+        threeMonths: 299,
         currency: "ر.س",
-        defaultDurationDays: 30
+        defaultDurationDays: 30,
+        tiers: [
+            { months: 1, days: 30, price: 139 },
+            { months: 2, days: 60, price: 239 },
+            { months: 3, days: 90, price: 299 }
+        ]
     },
     defaultTrainees: [
         {
