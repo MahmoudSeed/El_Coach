@@ -46,6 +46,7 @@ const IronApp = {
     currentDayDiet: null,
     currentMealCategory: "all",
     currentExerciseMuscle: "all",
+    calcManuallyEdited: false,
 
     t(key, vars = {}) {
         return typeof IronI18n !== "undefined" ? IronI18n.t(key, vars) : key;
@@ -291,7 +292,7 @@ const IronApp = {
                             ${statusText}
                         </div>
                     </div>
-                    <button onclick="IronApp.openRenewPaymentModal()" class="px-2 sm:px-2.5 py-1 sm:py-1.5 ${(user.status === "expired" || user.status === "pending") ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:bg-rose-600 animate-pulse' : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35'} font-bold text-[11px] sm:text-xs rounded-xl transition whitespace-nowrap">
+                    <button onclick="IronApp.openRenewPaymentModal()" class="px-2 sm:px-2.5 py-1 sm:py-1.5 ${(user.status === "expired" || user.status === "pending") ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:bg-rose-600 animate-pulse' : 'bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 shadow-md shadow-amber-500/25'} font-black text-[11px] sm:text-xs rounded-xl transition whitespace-nowrap">
                         ${this.t("status_renew_short")}
                     </button>
                     <button onclick="IronAuth.logout()" class="px-2 sm:px-3 py-1 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-[11px] sm:text-xs rounded-xl border border-slate-700 transition whitespace-nowrap">
@@ -550,8 +551,22 @@ const IronApp = {
         if (document.getElementById("calcGender")) document.getElementById("calcGender").value = trainee.gender || "male";
         if (document.getElementById("calcActivity")) document.getElementById("calcActivity").value = trainee.activity || 1.55;
         if (document.getElementById("calcGoal")) {
-            const gStr = String(trainee.goal || "");
-            document.getElementById("calcGoal").value = gStr.includes("تضخيم") ? "450" : (gStr.includes("تثبيت") || gStr.includes("نحت")) ? "0" : "-500";
+            if (trainee.goalOffset !== undefined && trainee.goalOffset !== null && !Number.isNaN(Number(trainee.goalOffset))) {
+                document.getElementById("calcGoal").value = String(Number(trainee.goalOffset));
+            } else {
+                const gStr = String(trainee.goal || "").toLowerCase();
+                if (gStr.includes("lean") || gStr.includes("نظيف") || gStr.includes("+250")) {
+                    document.getElementById("calcGoal").value = "250";
+                } else if (gStr.includes("تضخيم") || gStr.includes("bulk") || gStr.includes("+450")) {
+                    document.getElementById("calcGoal").value = "450";
+                } else if (gStr.includes("تثبيت") || gStr.includes("نحت") || gStr.includes("maint") || gStr.includes("recomp")) {
+                    document.getElementById("calcGoal").value = "0";
+                } else if (gStr.includes("معتدل") || gStr.includes("moderate") || gStr.includes("-300")) {
+                    document.getElementById("calcGoal").value = "-300";
+                } else {
+                    document.getElementById("calcGoal").value = "-500";
+                }
+            }
         }
 
         // تعبئة نموذج المتابعة الأسبوعية بقيم المتدرب الحالي فقط (ومنع بقايا أي مستخدم سابق)
@@ -566,8 +581,9 @@ const IronApp = {
             document.getElementById("chkNotes").value = "";
         }
 
+        this.calcManuallyEdited = false;
         this.renderWaterTracker(trainee, parseFloat(waterTargetLiters));
-        this.runCalculator();
+        this.runCalculator(false);
         this.generateDayDiet(false);
         this.renderMealsTracker(trainee);
         this.startWaterReminderLoop();
@@ -1368,17 +1384,25 @@ const IronApp = {
             }
         });
 
+        if (tabId === "meals" && this.currentDayDiet) {
+            this.generateDayDietWithPlan(this.currentDayDiet);
+        }
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
     // تشغيل الحاسبة وحساب النتائج فورياً
-    runCalculator() {
+    runCalculator(fromUserEdit = false) {
+        if (fromUserEdit) {
+            this.calcManuallyEdited = true;
+        }
         const gender = document.getElementById("calcGender")?.value || "male";
         const age = document.getElementById("calcAge")?.value || 25;
         const weight = document.getElementById("calcWeight")?.value || 75;
         const height = document.getElementById("calcHeight")?.value || 175;
         const activity = document.getElementById("calcActivity")?.value || 1.55;
-        const goal = document.getElementById("calcGoal")?.value || -500;
+        const goalEl = document.getElementById("calcGoal");
+        const goal = goalEl ? goalEl.value : "-500";
 
         const results = IronCalculator.calculate({ gender, age, weight, height, activity, goal });
 
@@ -1394,28 +1418,35 @@ const IronApp = {
     },
 
     // حفظ السعرات ومزامنتها مع ملف المتدرب الحالي فقط
-    saveTargetCalories() {
-        if (!this.latestCalcResults) this.runCalculator();
+    saveTargetCalories(skipGenerate = false) {
+        if (!this.latestCalcResults) this.runCalculator(false);
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const goalSelect = document.getElementById("calcGoal");
         const goalLabel = goalSelect && goalSelect.selectedIndex >= 0 ? goalSelect.options[goalSelect.selectedIndex].text.split("(")[0].trim() : undefined;
+        const goalOffset = goalSelect ? parseFloat(goalSelect.value) : undefined;
         const inputs = {
             gender: document.getElementById("calcGender")?.value,
             age: document.getElementById("calcAge")?.value,
             weight: document.getElementById("calcWeight")?.value,
             height: document.getElementById("calcHeight")?.value,
             activity: document.getElementById("calcActivity")?.value,
-            goalLabel
+            goalLabel,
+            goalOffset
         };
+        this.calcManuallyEdited = false;
         const applied = IronCalculator.applyTargetToCurrentUser(this.latestCalcResults, inputs);
         if (applied) {
-            showToast(isEn ? "Target calories & macros saved and synced! 🎯" : "تم حفظ السعرات والماكروز في ملفك ومزامنتها بنجاح! 🎯", "success");
             const user = IronAuth.getCurrentUser();
             if (user) {
-                this.generateDayDiet(true);
                 this.renderTraineeData(user.traineeData);
+                if (!skipGenerate) {
+                    this.generateDayDiet(true);
+                }
             }
-        } else {
+            if (!skipGenerate) {
+                showToast(isEn ? "Target calories & macros saved and synced! 🎯" : "تم حفظ السعرات والماكروز في ملفك ومزامنتها بنجاح! 🎯", "success");
+            }
+        } else if (!skipGenerate) {
             showToast(isEn ? "Calories calculated successfully" : "تم احتساب السعرات بنجاح", "success");
         }
     },
@@ -1442,11 +1473,21 @@ const IronApp = {
     },
 
     generateDayDiet(forceNew = false) {
+        if (forceNew && this.calcManuallyEdited && this.latestCalcResults) {
+            this.saveTargetCalories(true);
+        }
+
         const user = IronAuth.getCurrentUser();
-        const targetCal = user && user.traineeData && user.traineeData.calories ? user.traineeData.calories : 2000;
+        const targetCal = (user && user.traineeData && user.traineeData.calories)
+            ? user.traineeData.calories
+            : (this.latestCalcResults?.targetCalories || 2000);
 
         let plan = !forceNew ? this.getSavedDietPlanForCurrentUser() : null;
-        const targetChanged = plan && plan.targetCaloriesSnapshot && Math.abs(plan.targetCaloriesSnapshot - targetCal) > 50;
+        const targetChanged = plan && (
+            !plan.targetCaloriesSnapshot ||
+            Math.abs(plan.targetCaloriesSnapshot - targetCal) > 5 ||
+            Math.abs((plan.totalCalories || 0) - targetCal) > 100
+        );
 
         if (!plan || !plan.breakfast || !plan.lunch || !plan.dinner || !plan.snack || targetChanged) {
             plan = IronMealsEngine.generateFullDayPlan(targetCal);
@@ -1458,8 +1499,14 @@ const IronApp = {
         this.generateDayDietWithPlan(plan);
         if (forceNew) {
             const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
-            showToast(isEn ? "New full-day meal plan generated and saved! 🥗" : "تم توليد وحفظ جدول دايت يومي جديد يطابق سعراتك! 🥗", "success");
+            showToast(isEn ? `New full-day meal plan generated matching ${targetCal} kcal! 🥗` : `تم توليد وحفظ جدول دايت يومي مطابق لـ ${targetCal} سعرة! 🥗`, "success");
         }
+    },
+
+    formatMealPortionTag(meal, isEn) {
+        const mult = Number(meal?.portionMultiplier);
+        if (!mult || Math.abs(mult - 1) < 0.01) return "";
+        return isEn ? ` (${mult}×)` : ` (×${mult} حصة)`;
     },
 
     shareDietPlanWhatsapp() {
@@ -1474,31 +1521,31 @@ const IronApp = {
 🔥 *Total Calories:* ${d.totalCalories} kcal
 🥩 Protein: ${d.totalProtein}g | 🍞 Carbs: ${d.totalCarbs}g | 🥑 Fats: ${d.totalFats}g
 -------------------------------------------
-🍳 *Breakfast:* ${b.name} (${b.calories} kcal)
+🍳 *Breakfast:* ${b.name}${this.formatMealPortionTag(b, true)} (${b.calories} kcal)
 • ${b.ingredients}
 
-🍗 *Lunch:* ${l.name} (${l.calories} kcal)
+🍗 *Lunch:* ${l.name}${this.formatMealPortionTag(l, true)} (${l.calories} kcal)
 • ${l.ingredients}
 
-🥣 *Dinner:* ${dn.name} (${dn.calories} kcal)
+🥣 *Dinner:* ${dn.name}${this.formatMealPortionTag(dn, true)} (${dn.calories} kcal)
 • ${dn.ingredients}
 
-🥜 *Snack:* ${s.name} (${s.calories} kcal)
+🥜 *Snack:* ${s.name}${this.formatMealPortionTag(s, true)} (${s.calories} kcal)
 • ${s.ingredients}` :
 `🥗 *جدولي الغذائي اليومي - أيرون كوتش (IronCoach Pro)*
 🔥 *إجمالي السعرات:* ${d.totalCalories} kcal
 🥩 بروتين: ${d.totalProtein}g | 🍞 كارب: ${d.totalCarbs}g | 🥑 دهون: ${d.totalFats}g
 -------------------------------------------
-🍳 *الإفطار:* ${b.name} (${b.calories} سعرة)
+🍳 *الإفطار:* ${b.name}${this.formatMealPortionTag(b, false)} (${b.calories} سعرة)
 • ${b.ingredients}
 
-🍗 *الغداء:* ${l.name} (${l.calories} سعرة)
+🍗 *الغداء:* ${l.name}${this.formatMealPortionTag(l, false)} (${l.calories} سعرة)
 • ${l.ingredients}
 
-🥣 *العشاء:* ${dn.name} (${dn.calories} سعرة)
+🥣 *العشاء:* ${dn.name}${this.formatMealPortionTag(dn, false)} (${dn.calories} سعرة)
 • ${dn.ingredients}
 
-🥜 *السناك:* ${s.name} (${s.calories} سعرة)
+🥜 *السناك:* ${s.name}${this.formatMealPortionTag(s, false)} (${s.calories} سعرة)
 • ${s.ingredients}`;
 
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
@@ -1509,6 +1556,8 @@ const IronApp = {
         const meal = typeof IronI18n !== "undefined" ? IronI18n.trMeal(rawMeal) : rawMeal;
         const calUnit = isEn ? "kcal" : "ك";
         const gramUnit = isEn ? "g" : "ج";
+        const mult = Number(meal?.portionMultiplier);
+        const hasPortionScale = mult && Math.abs(mult - 1) >= 0.01;
         return `
             <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition">
                 <div class="relative h-28 w-full overflow-hidden bg-slate-950">
@@ -1516,6 +1565,11 @@ const IronApp = {
                     <div class="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-slate-950/80 backdrop-blur text-[10px] text-emerald-400 font-black border border-emerald-500/20">
                         ${slotTitle}
                     </div>
+                    ${hasPortionScale ? `
+                        <div class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 text-[10px] font-black shadow">
+                            ${this.t("diet_portion", { mult })}
+                        </div>
+                    ` : ''}
                 </div>
                 <div class="p-3.5 flex-1 flex flex-col justify-between">
                     <div>
@@ -1539,7 +1593,7 @@ const IronApp = {
         `;
     },
 
-    // استبدال وجبة محددة بوجبة مكافئة وحفظ الخطة
+    // استبدال وجبة محددة بوجبة مكافئة ومحجمة لنفس السعرات وحفظ الخطة
     swapDayMeal(slotKey, currentMealId) {
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const alts = IronMealsEngine.findMealAlternatives(currentMealId);
@@ -1548,8 +1602,12 @@ const IronApp = {
             return;
         }
 
+        const previousMeal = this.currentDayDiet?.[slotKey];
         const randomAlt = alts[Math.floor(Math.random() * alts.length)];
-        this.currentDayDiet[slotKey] = randomAlt;
+        const scaledAlt = previousMeal && IronMealsEngine.scaleMealToTarget
+            ? IronMealsEngine.scaleMealToTarget(randomAlt, previousMeal.calories)
+            : randomAlt;
+        this.currentDayDiet[slotKey] = scaledAlt;
 
         const user = IronAuth.getCurrentUser();
         const targetCal = user && user.traineeData && user.traineeData.calories ? user.traineeData.calories : 2000;
@@ -1563,7 +1621,7 @@ const IronApp = {
 
         this.saveDietPlanForCurrentUser(d);
         this.generateDayDietWithPlan(d);
-        const altName = typeof IronI18n !== "undefined" ? IronI18n.trMeal(randomAlt).name : randomAlt.name;
+        const altName = typeof IronI18n !== "undefined" ? IronI18n.trMeal(scaledAlt).name : scaledAlt.name;
         showToast(isEn ? `Meal swapped to: ${altName}` : `تم استبدال الوجبة بـ: ${altName}`, "success");
     },
 
@@ -1580,11 +1638,20 @@ const IronApp = {
         const diffText = diffVal === 0 ? this.t("diet_exact")
             : diffVal > 0 ? `+${diffVal} ${calWord}`
             : `${diffVal} ${calWord}`;
+        const hasUnsavedCalc = this.calcManuallyEdited && this.latestCalcResults && Math.abs(this.latestCalcResults.targetCalories - targetCal) > 5;
 
         const trCat = (arCat) => typeof IronI18n !== "undefined" ? IronI18n.translateMealCategory(arCat) : arCat;
 
         container.innerHTML = `
             <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 sm:p-5 space-y-4">
+                ${hasUnsavedCalc ? `
+                    <div class="bg-amber-500/15 border border-amber-500/40 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span class="font-bold text-amber-300">${this.t("diet_calc_unsaved_notice", { calc: this.latestCalcResults.targetCalories, saved: targetCal })}</span>
+                        <button type="button" onclick="IronApp.saveTargetCalories()" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black text-xs shadow transition whitespace-nowrap">
+                            ${this.t("diet_calc_sync_now", { calc: this.latestCalcResults.targetCalories })}
+                        </button>
+                    </div>
+                ` : ''}
                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
                     <div class="flex items-center gap-3 flex-wrap">
                         <span class="text-xs text-gray-400">${this.t("diet_total")}</span>

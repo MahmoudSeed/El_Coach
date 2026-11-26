@@ -399,6 +399,9 @@ html[data-theme="light"] .text-gray-500 {
 html[data-theme="light"] .text-emerald-400 {
     color: #059669 !important;
 }
+html[data-theme="light"] .text-amber-300 {
+    color: #b45309 !important;
+}
 html[data-theme="light"] .text-amber-400 {
     color: #d97706 !important;
 }

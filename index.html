@@ -611,7 +611,7 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <button onclick="IronApp.openRenewPaymentModal()" class="px-4 py-3 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35 font-black text-xs rounded-xl transition flex items-center gap-1.5">
+                            <button onclick="IronApp.openRenewPaymentModal()" class="px-4 py-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 border border-amber-300/60 shadow-lg shadow-amber-500/25 font-black text-xs rounded-xl transition flex items-center gap-1.5">
                                 <span data-i18n="home_renew_membership_btn">💳 تجديد العضوية</span>
                             </button>
                             <button onclick="IronApp.switchTab('workouts')" class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
@@ -692,26 +692,26 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_gender">الجنس</label>
-                            <select id="calcGender" onchange="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
+                            <select id="calcGender" onchange="IronApp.runCalculator(true)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
                                 <option value="male" data-i18n="calc_male">ذكر</option>
                                 <option value="female" data-i18n="calc_female">أنثى</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_age">العمر (سنة)</label>
-                            <input type="number" id="calcAge" value="26" oninput="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
+                            <input type="number" id="calcAge" value="26" oninput="IronApp.runCalculator(true)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_weight">الوزن الحالي (كجم)</label>
-                            <input type="number" id="calcWeight" value="75" oninput="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
+                            <input type="number" id="calcWeight" value="75" oninput="IronApp.runCalculator(true)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_height">الطول (سم)</label>
-                            <input type="number" id="calcHeight" value="175" oninput="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
+                            <input type="number" id="calcHeight" value="175" oninput="IronApp.runCalculator(true)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_activity">مستوى النشاط اليومي</label>
-                            <select id="calcActivity" onchange="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
+                            <select id="calcActivity" onchange="IronApp.runCalculator(true)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
                                 <option value="1.2" data-i18n="calc_act_12">خامل (قليل الحركة أو مكتبي)</option>
                                 <option value="1.375" data-i18n="calc_act_1375">نشاط خفيف (تمرين 1-3 أيام)</option>
                                 <option value="1.55" selected data-i18n="calc_act_155">نشاط متوسط (تمرين 3-5 أيام)</option>
@@ -720,7 +720,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="calc_goal">الهدف البدني</label>
-                            <select id="calcGoal" onchange="IronApp.runCalculator()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
+                            <select id="calcGoal" onchange="IronApp.runCalculator(true)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold outline-none">
                                 <option value="-500" selected data-i18n="calc_goal_cut2">تنشيف وخسارة دهون حادة (-500 سعرة)</option>
                                 <option value="-300" data-i18n="calc_goal_cut1">خسارة دهون معتدلة (-300 سعرة)</option>
                                 <option value="0" data-i18n="calc_goal_maint">تثبيت وزن وإعادة تكوين الجسم (0 سعرة)</option>

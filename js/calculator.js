@@ -9,7 +9,8 @@ const IronCalculator = {
         weight = parseFloat(weight) || 75;
         height = parseFloat(height) || 175;
         activity = parseFloat(activity) || 1.55;
-        const goalOffset = parseFloat(goal) || -500;
+        const parsedGoal = parseFloat(goal);
+        const goalOffset = Number.isNaN(parsedGoal) ? -500 : parsedGoal;
 
         // 1. حساب معدل الأيض الأساسي (Mifflin-St Jeor BMR)
         let bmr = (10 * weight) + (6.25 * height) - (5 * age);
@@ -72,6 +73,9 @@ const IronCalculator = {
                 if (inputs.gender) trainee.gender = inputs.gender;
                 if (inputs.activity) trainee.activity = parseFloat(inputs.activity);
                 if (inputs.goalLabel) trainee.goal = inputs.goalLabel;
+                if (inputs.goalOffset !== undefined && inputs.goalOffset !== null && !Number.isNaN(parseFloat(inputs.goalOffset))) {
+                    trainee.goalOffset = parseFloat(inputs.goalOffset);
+                }
             }
             IronAuth.updateTrainee(trainee);
             return true;
