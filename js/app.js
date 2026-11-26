@@ -430,15 +430,10 @@ const IronApp = {
                         </div>
                     `}
                 </div>
-                <div class="flex items-center gap-1.5">
-                    <button type="button" onclick="document.getElementById('traineeAvatarInput')?.click()" class="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 transition">
+                <div class="flex items-center justify-center">
+                    <button type="button" onclick="document.getElementById('traineeAvatarInput')?.click()" class="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 transition">
                         ${hasAvatar ? this.t("avatar_change") : this.t("avatar_add")}
                     </button>
-                    ${hasAvatar ? `
-                        <button type="button" onclick="IronApp.removeTraineeAvatar()" class="text-[10px] font-bold text-rose-400 hover:text-rose-300 px-1.5 py-0.5 rounded-lg bg-rose-500/10 border border-rose-500/20 transition">
-                            ${this.t("avatar_remove")}
-                        </button>
-                    ` : ''}
                 </div>
             </div>
         `;
@@ -1483,10 +1478,14 @@ const IronApp = {
             : (this.latestCalcResults?.targetCalories || 2000);
 
         let plan = !forceNew ? this.getSavedDietPlanForCurrentUser() : null;
+        const hasLegacyScaleBadge = Boolean(
+            plan && (plan.breakfast?.portionMultiplier || plan.lunch?.portionMultiplier || plan.dinner?.portionMultiplier || plan.snack?.portionMultiplier)
+        );
         const targetChanged = plan && (
+            hasLegacyScaleBadge ||
             !plan.targetCaloriesSnapshot ||
             Math.abs(plan.targetCaloriesSnapshot - targetCal) > 5 ||
-            Math.abs((plan.totalCalories || 0) - targetCal) > 100
+            Math.abs((plan.totalCalories || 0) - targetCal) > 25
         );
 
         if (!plan || !plan.breakfast || !plan.lunch || !plan.dinner || !plan.snack || targetChanged) {
@@ -1499,14 +1498,8 @@ const IronApp = {
         this.generateDayDietWithPlan(plan);
         if (forceNew) {
             const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
-            showToast(isEn ? `New full-day meal plan generated matching ${targetCal} kcal! 🥗` : `تم توليد وحفظ جدول دايت يومي مطابق لـ ${targetCal} سعرة! 🥗`, "success");
+            showToast(isEn ? `New tailored daily meal plan created for ${targetCal} kcal! 🥗` : `تم تصميم وحفظ وجبات يومية مخصصة لـ ${targetCal} سعرة بدقة! 🥗`, "success");
         }
-    },
-
-    formatMealPortionTag(meal, isEn) {
-        const mult = Number(meal?.portionMultiplier);
-        if (!mult || Math.abs(mult - 1) < 0.01) return "";
-        return isEn ? ` (${mult}×)` : ` (×${mult} حصة)`;
     },
 
     shareDietPlanWhatsapp() {
@@ -1521,31 +1514,31 @@ const IronApp = {
 🔥 *Total Calories:* ${d.totalCalories} kcal
 🥩 Protein: ${d.totalProtein}g | 🍞 Carbs: ${d.totalCarbs}g | 🥑 Fats: ${d.totalFats}g
 -------------------------------------------
-🍳 *Breakfast:* ${b.name}${this.formatMealPortionTag(b, true)} (${b.calories} kcal)
+🍳 *Breakfast:* ${b.name} (${b.calories} kcal)
 • ${b.ingredients}
 
-🍗 *Lunch:* ${l.name}${this.formatMealPortionTag(l, true)} (${l.calories} kcal)
+🍗 *Lunch:* ${l.name} (${l.calories} kcal)
 • ${l.ingredients}
 
-🥣 *Dinner:* ${dn.name}${this.formatMealPortionTag(dn, true)} (${dn.calories} kcal)
+🥣 *Dinner:* ${dn.name} (${dn.calories} kcal)
 • ${dn.ingredients}
 
-🥜 *Snack:* ${s.name}${this.formatMealPortionTag(s, true)} (${s.calories} kcal)
+🥜 *Snack:* ${s.name} (${s.calories} kcal)
 • ${s.ingredients}` :
 `🥗 *جدولي الغذائي اليومي - أيرون كوتش (IronCoach Pro)*
 🔥 *إجمالي السعرات:* ${d.totalCalories} kcal
 🥩 بروتين: ${d.totalProtein}g | 🍞 كارب: ${d.totalCarbs}g | 🥑 دهون: ${d.totalFats}g
 -------------------------------------------
-🍳 *الإفطار:* ${b.name}${this.formatMealPortionTag(b, false)} (${b.calories} سعرة)
+🍳 *الإفطار:* ${b.name} (${b.calories} سعرة)
 • ${b.ingredients}
 
-🍗 *الغداء:* ${l.name}${this.formatMealPortionTag(l, false)} (${l.calories} سعرة)
+🍗 *الغداء:* ${l.name} (${l.calories} سعرة)
 • ${l.ingredients}
 
-🥣 *العشاء:* ${dn.name}${this.formatMealPortionTag(dn, false)} (${dn.calories} سعرة)
+🥣 *العشاء:* ${dn.name} (${dn.calories} سعرة)
 • ${dn.ingredients}
 
-🥜 *السناك:* ${s.name}${this.formatMealPortionTag(s, false)} (${s.calories} سعرة)
+🥜 *السناك:* ${s.name} (${s.calories} سعرة)
 • ${s.ingredients}`;
 
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
@@ -1556,8 +1549,6 @@ const IronApp = {
         const meal = typeof IronI18n !== "undefined" ? IronI18n.trMeal(rawMeal) : rawMeal;
         const calUnit = isEn ? "kcal" : "ك";
         const gramUnit = isEn ? "g" : "ج";
-        const mult = Number(meal?.portionMultiplier);
-        const hasPortionScale = mult && Math.abs(mult - 1) >= 0.01;
         return `
             <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition">
                 <div class="relative h-28 w-full overflow-hidden bg-slate-950">
@@ -1565,16 +1556,11 @@ const IronApp = {
                     <div class="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-slate-950/80 backdrop-blur text-[10px] text-emerald-400 font-black border border-emerald-500/20">
                         ${slotTitle}
                     </div>
-                    ${hasPortionScale ? `
-                        <div class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 text-[10px] font-black shadow">
-                            ${this.t("diet_portion", { mult })}
-                        </div>
-                    ` : ''}
                 </div>
                 <div class="p-3.5 flex-1 flex flex-col justify-between">
                     <div>
-                        <h5 class="font-black text-white text-xs mb-1 line-clamp-1">${meal.name}</h5>
-                        <p class="text-[11px] text-gray-400 line-clamp-2 leading-relaxed mb-2">${meal.ingredients}</p>
+                        <h5 class="font-black text-white text-xs mb-1">${meal.name}</h5>
+                        <p class="text-[11px] text-gray-400 leading-relaxed mb-2.5">${meal.ingredients}</p>
                     </div>
 
                     <div>
@@ -1593,24 +1579,30 @@ const IronApp = {
         `;
     },
 
-    // استبدال وجبة محددة بوجبة مكافئة ومحجمة لنفس السعرات وحفظ الخطة
+    // استبدال وجبة بوجبة مخصصة جديدة بأوزان دقيقة مطابقة لنفس سعرات الخانة وحفظ الخطة
     swapDayMeal(slotKey, currentMealId) {
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
-        const alts = IronMealsEngine.findMealAlternatives(currentMealId);
-        if (alts.length === 0) {
-            showToast(isEn ? "No additional calorie-matched alternatives available" : "لا توجد بدائل إضافية بنفس السعرات حالياً", "error");
-            return;
+        const previousMeal = this.currentDayDiet?.[slotKey] || null;
+        let replacement = null;
+
+        if (typeof IronMealsEngine.generateAlternativeForSlot === "function") {
+            replacement = IronMealsEngine.generateAlternativeForSlot(slotKey, previousMeal?.calories || 400, previousMeal);
+        }
+        if (!replacement) {
+            const alts = IronMealsEngine.findMealAlternatives(currentMealId);
+            if (alts.length === 0) {
+                showToast(isEn ? "No additional calorie-matched alternatives available" : "لا توجد بدائل إضافية بنفس السعرات حالياً", "error");
+                return;
+            }
+            replacement = alts[Math.floor(Math.random() * alts.length)];
         }
 
-        const previousMeal = this.currentDayDiet?.[slotKey];
-        const randomAlt = alts[Math.floor(Math.random() * alts.length)];
-        const scaledAlt = previousMeal && IronMealsEngine.scaleMealToTarget
-            ? IronMealsEngine.scaleMealToTarget(randomAlt, previousMeal.calories)
-            : randomAlt;
-        this.currentDayDiet[slotKey] = scaledAlt;
+        this.currentDayDiet[slotKey] = replacement;
 
         const user = IronAuth.getCurrentUser();
-        const targetCal = user && user.traineeData && user.traineeData.calories ? user.traineeData.calories : 2000;
+        const targetCal = (user && user.traineeData && user.traineeData.calories)
+            ? user.traineeData.calories
+            : (this.latestCalcResults?.targetCalories || 2000);
 
         const d = this.currentDayDiet;
         d.totalCalories = d.breakfast.calories + d.lunch.calories + d.dinner.calories + d.snack.calories;
@@ -1621,7 +1613,7 @@ const IronApp = {
 
         this.saveDietPlanForCurrentUser(d);
         this.generateDayDietWithPlan(d);
-        const altName = typeof IronI18n !== "undefined" ? IronI18n.trMeal(scaledAlt).name : scaledAlt.name;
+        const altName = typeof IronI18n !== "undefined" ? IronI18n.trMeal(replacement).name : replacement.name;
         showToast(isEn ? `Meal swapped to: ${altName}` : `تم استبدال الوجبة بـ: ${altName}`, "success");
     },
 
