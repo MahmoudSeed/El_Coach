@@ -215,6 +215,7 @@ const IronApp = {
     resolveProgramIdFromName(programName = "") {
         const p = String(programName).toLowerCase();
         if (p.includes("ppl") && (p.includes("upper") || p.includes("علوي"))) return "prog_ppl_upper_lower";
+        if (p.includes("ppl") && (p.includes("bulk") || p.includes("تضخيم") || p.includes("hypertrophy") || p.includes("3x10") || p.includes("3×10") || p.includes("3*10"))) return "prog_ppl_bulk";
         if (p.includes("upper") || p.includes("علوي")) return "prog_upper_lower";
         if (p.includes("arnold") || p.includes("آرنولد")) return "prog_arnold";
         if (p.includes("bro") || p.includes("برو")) return "prog_bro";
@@ -580,7 +581,9 @@ const IronApp = {
     renderHomePlanSummary(trainee) {
         const card = document.getElementById("homePlanSummaryCard");
         if (!card || !trainee) return;
-        const assignedProg = trainee.program || "PPL (Push Pull Legs)";
+        const assignedProg = typeof IronI18n !== "undefined" && IronI18n.trProgram
+            ? IronI18n.trProgram(trainee.program || "PPL (Push Pull Legs)")
+            : (trainee.program || "PPL (Push Pull Legs)");
         const checkinsCount = Array.isArray(trainee.history) ? trainee.history.length : 0;
         const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
         const displayGoal = typeof IronI18n !== "undefined" ? IronI18n.trGoal(trainee.goal || "تنشيف وخسارة دهون") : (trainee.goal || "تنشيف وخسارة دهون");
@@ -1162,13 +1165,13 @@ const IronApp = {
             }
 
             return `
-                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 wo-summary-card">
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                        <h4 class="text-sm font-black text-white flex items-center gap-2">
+                        <h4 class="text-sm font-black wo-summary-heading flex items-center gap-2">
                             <span>${this.t("logs_title", { count: myLogs.length })}</span>
                         </h4>
                         <div class="flex items-center gap-2">
-                            <span class="text-[11px] text-emerald-400 font-bold">${this.t("logs_recent", { count: Math.min(limit, myLogs.length) })}</span>
+                            <span class="text-[11px] wo-summary-accent font-bold">${this.t("logs_recent", { count: Math.min(limit, myLogs.length) })}</span>
                             <button type="button" onclick="IronApp.resetAllWorkoutLogs()" class="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 text-[11px] font-bold transition">
                                 ${this.t("logs_reset_all_btn")}
                             </button>
@@ -1185,12 +1188,12 @@ const IronApp = {
                                 <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5 text-xs space-y-2.5">
                                     <div class="flex items-start justify-between gap-2">
                                         <div class="min-w-0">
-                                            <div class="font-black text-white truncate">${log.dayTitle}</div>
+                                            <div class="font-black wo-summary-heading truncate">${log.dayTitle}</div>
                                             <div class="text-[10px] text-gray-400">${log.programName} • ${dateFormatted}</div>
                                         </div>
                                         <div class="flex items-center gap-1.5 flex-shrink-0">
                                             <div class="text-end">
-                                                <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px]">
+                                                <span class="px-2 py-0.5 rounded-full wo-summary-sets-badge border font-bold text-[10px]">
                                                     ${this.t("logs_sets", { sets: setsText })}
                                                 </span>
                                                 ${log.totalVolumeKg > 0 ? `<div class="text-[10px] text-amber-400 font-mono mt-0.5">${this.t("logs_volume", { vol: log.totalVolumeKg })}</div>` : ''}
@@ -1203,13 +1206,13 @@ const IronApp = {
                                     </div>
                                     ${completedExList.length > 0 ? `
                                         <div class="pt-2 border-t border-slate-800/80">
-                                            <div class="text-[10px] font-bold text-emerald-400 mb-1.5">${this.t("logs_completed_exercises_lbl", { count: completedExList.length })}</div>
+                                            <div class="text-[11px] font-black wo-summary-heading mb-1.5">${this.t("logs_completed_exercises_lbl", { count: completedExList.length })}</div>
                                             <div class="flex flex-wrap gap-1.5" dir="ltr">
                                                 ${completedExList.map(exItem => {
                                                     const isFull = exItem.isFull !== undefined ? exItem.isFull : (exItem.completedSets >= exItem.totalSets);
                                                     const weightTag = exItem.maxWeightKg > 0 ? ` • ${exItem.maxWeightKg}kg` : '';
                                                     return `
-                                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${isFull ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25' : 'bg-amber-500/10 text-amber-300 border-amber-500/25'}">
+                                                        <span class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold border ${isFull ? 'wo-ex-pill-done' : 'wo-ex-pill-partial'}">
                                                             ${isFull ? '✓' : '⚡'} ${exItem.name} (${exItem.completedSets}/${exItem.totalSets}${weightTag})
                                                         </span>
                                                     `;
@@ -1823,9 +1826,9 @@ const IronApp = {
                                     ? 'bg-amber-950/20 border-amber-500/45'
                                     : 'bg-slate-900/80 border-slate-800/80';
                                 const doneBadge = isFullDone
-                                    ? `<span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black">✓ ${exProg.completedSets}/${exProg.totalSets}</span>`
+                                    ? `<span class="px-2 py-0.5 rounded-md border text-[10px] font-black wo-ex-pill-done">✓ ${exProg.completedSets}/${exProg.totalSets}</span>`
                                     : isPartDone
-                                    ? `<span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-black">⚡ ${exProg.completedSets}/${exProg.totalSets}</span>`
+                                    ? `<span class="px-2 py-0.5 rounded-md border text-[10px] font-black wo-ex-pill-partial">⚡ ${exProg.completedSets}/${exProg.totalSets}</span>`
                                     : '';
 
                                 return `

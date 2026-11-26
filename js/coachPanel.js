@@ -4,8 +4,21 @@
  */
 
 const IronCoachPanel = {
+    activeSection: "clients",
+    selectedCoachProgId: "prog_ppl",
     filterStatus: "all",
     searchQuery: "",
+
+    setSection(section = "clients") {
+        this.activeSection = section === "programs" ? "programs" : "clients";
+        this.renderCoachDashboard();
+    },
+
+    selectCoachProgram(progId) {
+        this.selectedCoachProgId = progId || "prog_ppl";
+        this.activeSection = "programs";
+        this.renderCoachDashboard();
+    },
 
     // رسم واجهة لوحة تحكم الكوتش
     renderCoachDashboard() {
@@ -97,6 +110,22 @@ const IronCoachPanel = {
                         </div>
                     </div>
                 </div>
+
+                <!-- التبديل بين إدارة المشتركين وقسم البرامج التدريبية بتفاصيلها -->
+                <div class="flex flex-wrap items-center gap-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-2">
+                    <button type="button" onclick="IronCoachPanel.setSection('clients')"
+                        class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 ${this.activeSection !== 'programs' ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : 'bg-slate-950/70 text-gray-300 hover:text-white border border-slate-800'}">
+                        <span>👥</span>
+                        <span>${txt("coach_tab_clients", { count: trainees.length })}</span>
+                    </button>
+                    <button type="button" onclick="IronCoachPanel.setSection('programs')"
+                        class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 ${this.activeSection === 'programs' ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'bg-slate-950/70 text-gray-300 hover:text-white border border-slate-800'}">
+                        <span>🏋️‍♂️</span>
+                        <span>${txt("coach_tab_programs", { count: typeof workoutProgramsDatabase !== 'undefined' ? workoutProgramsDatabase.length : 7 })}</span>
+                    </button>
+                </div>
+
+                ${this.activeSection === 'programs' ? this.renderCoachProgramsSection(trainees, isEn, txt) : `
 
                 <!-- شريط البحث وفلترة المشتركين -->
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
@@ -201,7 +230,7 @@ const IronCoachPanel = {
                                             </div>
                                             <div>
                                                 <span class="text-gray-400">${isEn ? 'Program:' : 'البرنامج:'}</span>
-                                                <div class="font-bold text-cyan-400 truncate">${t.program || 'PPL'}</div>
+                                                <div class="font-bold text-cyan-400 truncate">${typeof IronI18n !== 'undefined' && IronI18n.trProgram ? IronI18n.trProgram(t.program || 'PPL (Push Pull Legs)') : (t.program || 'PPL')}</div>
                                             </div>
                                         </div>
                                         ${receiptNotice}
@@ -245,6 +274,112 @@ const IronCoachPanel = {
                         }).join('')}
                     </div>
                 `}
+                `}
+            </div>
+        `;
+    },
+
+    // قسم البرامج التدريبية بتفاصيلها داخل لوحة الكوتش
+    renderCoachProgramsSection(trainees, isEn, txt) {
+        const programs = typeof workoutProgramsDatabase !== "undefined" ? workoutProgramsDatabase : [];
+        if (programs.length === 0) return "";
+
+        const selectedProg = programs.find(p => p.id === this.selectedCoachProgId) || programs[0];
+        const resolveId = (name) => (typeof IronApp !== "undefined" && IronApp.resolveProgramIdFromName) ? IronApp.resolveProgramIdFromName(name) : "prog_ppl";
+
+        return `
+            <div class="space-y-5">
+                <!-- شبكة بطاقات جميع البرامج التدريبية -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    ${programs.map(p => {
+                        const isSelected = p.id === selectedProg.id;
+                        const totalExercises = p.days.reduce((acc, d) => acc + d.exercises.length, 0);
+                        const assignedCount = trainees.filter(t => resolveId(t.program || "") === p.id).length;
+                        const dispName = isEn ? p.nameEn : p.nameAr;
+                        return `
+                            <button type="button" onclick="IronCoachPanel.selectCoachProgram('${p.id}')"
+                                class="text-start rounded-2xl p-4 border transition flex flex-col justify-between gap-2 ${isSelected ? 'bg-amber-500/15 border-amber-500 shadow-lg shadow-amber-500/10' : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'}">
+                                <div>
+                                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${isSelected ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-amber-400'}">
+                                            ${p.level}
+                                        </span>
+                                        <span class="text-[10px] font-bold text-cyan-400">
+                                            👥 ${assignedCount}
+                                        </span>
+                                    </div>
+                                    <h4 class="font-black text-white text-sm leading-snug">${dispName}</h4>
+                                    <div class="text-[11px] text-gray-400 mt-1">${p.frequency}</div>
+                                </div>
+                                <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px] font-bold">
+                                    <span class="text-gray-300">${isEn ? `${p.days.length} Days • ${totalExercises} Exercises` : `${p.days.length} أيام • ${totalExercises} تمرين`}</span>
+                                    <span class="${isSelected ? 'text-amber-400' : 'text-emerald-400'}">${isSelected ? (isEn ? 'Viewing ✓' : 'معروض ✓') : (isEn ? 'Details →' : 'التفاصيل ←')}</span>
+                                </div>
+                            </button>
+                        `;
+                    }).join("")}
+                </div>
+
+                <!-- تفاصيل البرنامج التدريبي المحدد (الأيام + التمارين + الجولات والتكرارات والراحة) -->
+                <div class="bg-slate-900/85 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-5">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                        <div class="space-y-1.5 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 text-xs font-black">${selectedProg.level}</span>
+                                <span class="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/25 text-xs font-bold">${selectedProg.frequency}</span>
+                            </div>
+                            <h3 class="text-xl font-black text-white">${isEn ? selectedProg.nameEn : selectedProg.nameAr}</h3>
+                            <p class="text-xs text-gray-300 leading-relaxed" dir="ltr">${selectedProg.description}</p>
+                        </div>
+                        ${selectedProg.image ? `
+                            <a href="${selectedProg.image}" target="_blank" class="block w-full md:w-56 h-32 rounded-2xl overflow-hidden border border-slate-700 bg-slate-950 flex-shrink-0 hover:border-amber-500 transition">
+                                <img src="${selectedProg.image}" onerror="this.parentElement.style.display='none'" class="w-full h-full object-cover" alt="${selectedProg.nameEn}">
+                            </a>
+                        ` : ''}
+                    </div>
+
+                    <div class="space-y-4">
+                        ${selectedProg.days.map(day => `
+                            <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 sm:p-5">
+                                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-3.5" dir="ltr">
+                                    <div>
+                                        <h4 class="font-black text-white text-base">${day.title}</h4>
+                                        <div class="text-xs text-amber-400 font-bold mt-0.5">${day.targetMuscles}</div>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 text-xs font-black text-cyan-400">
+                                        ${day.exercises.length} ${isEn ? 'Exercises' : 'تمرين'}
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3" dir="ltr">
+                                    ${day.exercises.map((item, idx) => {
+                                        const ex = typeof getExerciseById === "function" ? getExerciseById(item.exerciseId) : null;
+                                        const exLabel = item.displayNameEn || ex?.nameEn || item.exerciseId;
+                                        const safeExLabel = exLabel.replace(/'/g, "\\'");
+                                        const badgeNum = item.pair || `${idx + 1}`;
+                                        return `
+                                            <div ${ex ? `onclick="IronApp.openExerciseDetail('${ex.id}', '${safeExLabel}')"` : ''} class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center gap-3 hover:border-amber-500/45 cursor-pointer transition text-left">
+                                                <div class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-400 flex items-center justify-center font-black text-xs flex-shrink-0">
+                                                    ${badgeNum}
+                                                </div>
+                                                ${ex ? `<img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${exLabel}')" class="w-12 h-12 rounded-lg object-contain bg-slate-950 border border-slate-800 flex-shrink-0" alt="${exLabel}" loading="lazy">` : ''}
+                                                <div class="flex-1 min-w-0">
+                                                    <h5 class="font-black text-white text-xs truncate">${exLabel}</h5>
+                                                    ${ex?.nameAr ? `<div class="text-[11px] text-gray-400 truncate">${ex.nameAr}</div>` : ''}
+                                                    <div class="flex items-center gap-2 text-[11px] font-bold mt-1 flex-wrap">
+                                                        <span class="px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">${item.sets} × ${item.reps}</span>
+                                                        <span class="text-gray-400">• Rest ${item.restSec}s</span>
+                                                        ${ex?.equipment ? `<span class="text-amber-400/90">• ${ex.equipment}</span>` : ''}
+                                                    </div>
+                                                </div>
+                                                <div class="text-gray-400 text-xs">ℹ️</div>
+                                            </div>
+                                        `;
+                                    }).join("")}
+                                </div>
+                            </div>
+                        `).join("")}
+                    </div>
+                </div>
             </div>
         `;
     },

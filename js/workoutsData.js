@@ -5,15 +5,15 @@
 
 const workoutProgramsDatabase = [
     // ==========================================================
-    // 1. Push / Pull / Legs (Training Programs/Push_pull_legs.png)
+    // 1. Push / Pull / Legs — Cutting & Weight Loss (4 × 20)
     // ==========================================================
     {
         id: "prog_ppl",
-        nameAr: "Push / Pull / Legs",
-        nameEn: "Push / Pull / Legs (PPL)",
+        nameAr: "Push / Pull / Legs (تنشيف وخسارة الوزن 4×20)",
+        nameEn: "Push / Pull / Legs — Cutting & Fat Loss (4×20)",
         frequency: "8-Day Training Cycle (3 Days On • 1 Day Off)",
-        level: "Standard Template",
-        description: "Day 1: Push | Day 2: Pull | Day 3: Legs | Day 4: Rest | Day 5: Push | Day 6: Pull | Day 7: Legs | Day 8: Rest — Rest Between Sets: 60 sec.",
+        level: "Cutting & Weight Loss • 4 × 20",
+        description: "Cutting & Weight Loss Edition (4 Sets × 20 Reps) — Day 1: Push | Day 2: Pull | Day 3: Legs | Day 4: Rest | Day 5: Push | Day 6: Pull | Day 7: Legs | Day 8: Rest — Rest Between Sets: 60 sec.",
         image: "Training Programs/Push_pull_legs.png",
         days: [
             {
@@ -54,6 +54,61 @@ const workoutProgramsDatabase = [
                     { exerciseId: "ex_lg_9", displayNameEn: "Hip Thrust", sets: 4, reps: "20", restSec: 60 },
                     { exerciseId: "ex_lg_1", displayNameEn: "Squat", sets: 4, reps: "20", restSec: 60 },
                     { exerciseId: "ex_lg_11", displayNameEn: "Calf Raise", sets: 4, reps: "20", restSec: 60 }
+                ]
+            }
+        ]
+    },
+
+    // ==========================================================
+    // 1B. Push / Pull / Legs — Bulking & Hypertrophy (3 × 10)
+    // ==========================================================
+    {
+        id: "prog_ppl_bulk",
+        nameAr: "Push / Pull / Legs (تضخيم وبناء عضلات 3×10)",
+        nameEn: "Push / Pull / Legs — Bulking & Hypertrophy (3×10)",
+        frequency: "8-Day Training Cycle (3 Days On • 1 Day Off)",
+        level: "Bulking & Hypertrophy • 3 × 10",
+        description: "Bulking & Muscle Building Edition (3 Sets × 10 Reps) — Same PPL Exercises | Day 1: Push | Day 2: Pull | Day 3: Legs | Day 4: Rest | Day 5: Push | Day 6: Pull | Day 7: Legs | Day 8: Rest — Rest: 60 sec.",
+        image: "Training Programs/Push_pull_legs.png",
+        days: [
+            {
+                dayId: "ppl_bulk_d1",
+                title: "PUSH — BULKING (Days 1 & 5)",
+                targetMuscles: "Chest, Shoulders, Triceps",
+                exercises: [
+                    { exerciseId: "ex_ch_5", displayNameEn: "Chest Press", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_ch_7", displayNameEn: "Incline Chest Press", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_3", displayNameEn: "Lateral Raise", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_8", displayNameEn: "Front Raise", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_15", displayNameEn: "Triceps Machine", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_14", displayNameEn: "Overhead Triceps Extension", sets: 3, reps: "10", restSec: 60 }
+                ]
+            },
+            {
+                dayId: "ppl_bulk_d2",
+                title: "PULL — BULKING (Days 2 & 6)",
+                targetMuscles: "Back, Rear Delts, Biceps",
+                exercises: [
+                    { exerciseId: "ex_bk_1", displayNameEn: "Lat Pulldown", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_4", displayNameEn: "Seated Row", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_bk_8", displayNameEn: "Low Row", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_sh_6", displayNameEn: "Reverse Pec Deck", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_7", displayNameEn: "Dumbbell Curl", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_arm_8", displayNameEn: "Cable Curl", sets: 3, reps: "10", restSec: 60 }
+                ]
+            },
+            {
+                dayId: "ppl_bulk_d3",
+                title: "LEGS — BULKING (Days 3 & 7)",
+                targetMuscles: "Quads, Hamstrings, Glutes, Calves",
+                exercises: [
+                    { exerciseId: "ex_lg_4", displayNameEn: "Leg Extension", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_lg_5", displayNameEn: "Lying Leg Curl", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_lg_3", displayNameEn: "Leg Press", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_lg_7", displayNameEn: "Seated Leg Curl", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_lg_9", displayNameEn: "Hip Thrust", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_lg_1", displayNameEn: "Squat", sets: 3, reps: "10", restSec: 60 },
+                    { exerciseId: "ex_lg_11", displayNameEn: "Calf Raise", sets: 3, reps: "10", restSec: 60 }
                 ]
             }
         ]

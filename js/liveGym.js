@@ -423,11 +423,11 @@ const IronLiveGym = {
             </div>
 
             ${doneExercisesInSession.length > 0 ? `
-                <div class="bg-emerald-950/20 border border-emerald-500/25 rounded-xl p-2.5 mb-4">
-                    <div class="text-[11px] font-black text-emerald-400 mb-1.5">${txt("gym_done_exercises_bar", { count: doneExercisesInSession.length, total: w.exercises.length })}</div>
+                <div class="bg-slate-900/90 border border-sky-500/30 rounded-xl p-2.5 mb-4">
+                    <div class="text-[11px] font-black wo-summary-heading mb-1.5">${txt("gym_done_exercises_bar", { count: doneExercisesInSession.length, total: w.exercises.length })}</div>
                     <div class="flex flex-wrap gap-1.5" dir="ltr">
                         ${doneExercisesInSession.map(d => `
-                            <span class="px-2 py-0.5 rounded-lg text-[11px] font-bold border ${d.full ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/15 text-amber-300 border-amber-500/30'}">
+                            <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold border ${d.full ? 'wo-ex-pill-done' : 'wo-ex-pill-partial'}">
                                 ${d.full ? '✓' : '⚡'} ${d.name} (${d.done}/${d.total})
                             </span>
                         `).join('')}

@@ -349,7 +349,7 @@ const IronI18n = {
             modal_renew_title: "تجديد وتفعيل العضوية",
             modal_renew_price: "قيمة الباقة المختارة:",
             modal_renew_card: "💳 الدفع بالبطاقة البنكية أونلاين",
-            modal_renew_wallets: "اختر وسيلة التحويل المناسبة لك واضغط (تحويل الآن أو نسخ):",
+            modal_renew_wallets: "اختر وسيلة التحويل المناسبة لك واضغط (تحويل الآن):",
             modal_renew_voda_lbl: "4. 🍊 أورانج كاش (محفظة)",
             modal_renew_insta_lbl: "5. 📲 انستا باي (InstaPay)",
             modal_renew_stc_lbl: "2. 🇸🇦 محفظة STC Pay",
@@ -412,7 +412,9 @@ const IronI18n = {
             tier_2m_title: "2 شهر",
             tier_2m_sub: "60 يوماً • وفر 39",
             tier_3m_title: "3 شهور 🔥",
-            tier_3m_sub: "90 يوماً • وفر 118"
+            tier_3m_sub: "90 يوماً • وفر 118",
+            coach_tab_clients: "إدارة المشتركين ({count})",
+            coach_tab_programs: "البرامج التدريبية بتفاصيلها ({count})"
         },
         en: {
             brand_name: "IronCoach",
@@ -749,7 +751,7 @@ const IronI18n = {
             modal_renew_title: "Activate or Renew Membership",
             modal_renew_price: "Selected Plan Total:",
             modal_renew_card: "💳 Pay Online by Card",
-            modal_renew_wallets: "Choose your transfer method and tap (Transfer Now or Copy):",
+            modal_renew_wallets: "Choose your transfer method and tap (Transfer Now):",
             modal_renew_voda_lbl: "4. 🍊 Orange Cash (Wallet)",
             modal_renew_insta_lbl: "5. 📲 InstaPay",
             modal_renew_stc_lbl: "2. 🇸🇦 STC Pay Wallet",
@@ -812,7 +814,9 @@ const IronI18n = {
             tier_2m_title: "2 Months",
             tier_2m_sub: "60 Days • Save 39",
             tier_3m_title: "3 Months 🔥",
-            tier_3m_sub: "90 Days • Save 118"
+            tier_3m_sub: "90 Days • Save 118",
+            coach_tab_clients: "Clients Management ({count})",
+            coach_tab_programs: "Training Programs & Details ({count})"
         }
     },
 
@@ -847,6 +851,19 @@ const IronI18n = {
             return "Certified NASM Trainer & Sports Nutrition Specialist";
         }
         return title;
+    },
+
+    trProgram(progName = "") {
+        const p = String(progName || "").trim();
+        if (!p) return this.isEn() ? "Push / Pull / Legs (Cutting 4×20)" : "Push / Pull / Legs (تنشيف 4×20)";
+        const low = p.toLowerCase();
+        if (low === "ppl (push pull legs)" || low === "ppl") {
+            return this.isEn() ? "PPL — Cutting & Fat Loss (4×20)" : "PPL — تنشيف وخسارة الوزن (4×20)";
+        }
+        if (low.includes("ppl") && (low.includes("bulk") || low.includes("3×10") || low.includes("3x10"))) {
+            return this.isEn() ? "PPL — Bulking & Hypertrophy (3×10)" : "PPL — تضخيم وبناء عضلات (3×10)";
+        }
+        return p;
     },
 
     trGoal(goal = "") {
