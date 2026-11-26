@@ -436,6 +436,8 @@
                                 <option value="Bro Split">Bro Split</option>
                                 <option value="Anterior / Posterior">Anterior / Posterior</option>
                                 <option value="PPL × Upper / Lower">PPL × Upper / Lower</option>
+                                <option value="Home Workouts (No Equipment)">التمارين المنزلية (بدون أجهزة) — Home Workouts</option>
+                                <option value="Post-C-Section Recovery">تأهيل ما بعد الولادة القيصرية — Post-C-Section</option>
                             </select>
                         </div>
 
@@ -833,7 +835,7 @@
             <!-- 4. تبويب البرامج التدريبية (Workouts) -->
             <div id="tab-workouts" class="tab-content space-y-5 sm:space-y-6">
                 <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-6">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
                         <div>
                             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold mb-2">
                                 <span data-i18n="wo_badge">🎯 جدولك التدريبي المخصص لك</span>
@@ -844,8 +846,34 @@
                         <div id="assignedProgramBadge" class="px-4 py-2 rounded-2xl bg-slate-950 border border-emerald-500/30 text-emerald-400 text-xs font-black"></div>
                     </div>
 
+                    <!-- أقسام التمرين المتخصصة (الجدول المعتمد + الكارديو والتقييم اليومي + التمارين المنزلية + ما بعد القيصرية) -->
+                    <div id="workoutSubSectionTabs" class="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-5">
+                        <button type="button" onclick="IronApp.switchWorkoutSubSection('assigned')" data-wo-sec="assigned"
+                            class="wo-subsec-btn px-3 py-2.5 rounded-2xl border text-xs font-black transition flex items-center justify-center gap-1.5 bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20" data-i18n="wo_sec_assigned">
+                            🎯 جدولي المعتمد
+                        </button>
+                        <button type="button" onclick="IronApp.switchWorkoutSubSection('cardio')" data-wo-sec="cardio"
+                            class="wo-subsec-btn px-3 py-2.5 rounded-2xl border text-xs font-black transition flex items-center justify-center gap-1.5 bg-slate-950 border-slate-800 text-sky-300 hover:border-sky-500/50" data-i18n="wo_sec_cardio">
+                            🏃 الكارديو والتقييم
+                        </button>
+                        <button type="button" onclick="IronApp.switchWorkoutSubSection('home')" data-wo-sec="home"
+                            class="wo-subsec-btn px-3 py-2.5 rounded-2xl border text-xs font-black transition flex items-center justify-center gap-1.5 bg-slate-950 border-slate-800 text-amber-300 hover:border-amber-500/50" data-i18n="wo_sec_home">
+                            🏠 التمارين المنزلية
+                        </button>
+                        <button type="button" onclick="IronApp.switchWorkoutSubSection('csection')" data-wo-sec="csection"
+                            class="wo-subsec-btn px-3 py-2.5 rounded-2xl border text-xs font-black transition flex items-center justify-center gap-1.5 bg-slate-950 border-slate-800 text-rose-300 hover:border-rose-500/50" data-i18n="wo_sec_csection">
+                            🤱 ما بعد الولادة القيصرية
+                        </button>
+                    </div>
+
+                    <!-- شاشة الكارديو والتقييم اليومي (السير + السايكل + الأوبتكال مع التوقيت) -->
+                    <div id="workoutCardioEvaluationBox" class="hidden space-y-5 mb-6"></div>
+
+                    <!-- شاشة البرامج المتخصصة (التمارين المنزلية / ما بعد القيصرية) -->
+                    <div id="workoutSpecialtyProgramBox" class="hidden space-y-6 mb-6"></div>
+
                     <!-- أزرار اختيار البرنامج التدريبي (تُخفى عن المتدرب ليعرض له جدوله فقط) -->
-                    <div id="programSelectorWrapper" class="hidden grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-6">
+                    <div id="programSelectorWrapper" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-6">
                         <button onclick="IronApp.selectProgram('prog_ppl')" class="prog-select-btn p-3 rounded-2xl border text-center transition bg-emerald-500/10 border-emerald-500 text-emerald-400 font-bold text-xs" data-prog="prog_ppl">
                             <div class="text-base mb-1">🔥</div>
                             <div>PPL تنشيف (4×20)</div>
@@ -873,6 +901,14 @@
                         <button onclick="IronApp.selectProgram('prog_ppl_upper_lower')" class="prog-select-btn p-3 rounded-2xl border text-center transition bg-slate-950 border-slate-800 text-gray-300 font-bold text-xs hover:border-slate-700" data-prog="prog_ppl_upper_lower">
                             <div class="text-base mb-1">⚡</div>
                             <div>PPL × Upper / Lower</div>
+                        </button>
+                        <button onclick="IronApp.selectProgram('prog_home')" class="prog-select-btn p-3 rounded-2xl border text-center transition bg-slate-950 border-slate-800 text-gray-300 font-bold text-xs hover:border-slate-700" data-prog="prog_home">
+                            <div class="text-base mb-1">🏠</div>
+                            <div>Home (No Gym)</div>
+                        </button>
+                        <button onclick="IronApp.selectProgram('prog_csection')" class="prog-select-btn p-3 rounded-2xl border text-center transition bg-slate-950 border-slate-800 text-gray-300 font-bold text-xs hover:border-slate-700" data-prog="prog_csection">
+                            <div class="text-base mb-1">🤱</div>
+                            <div>Post-C-Section</div>
                         </button>
                     </div>
 
@@ -907,6 +943,9 @@
                         <button onclick="IronApp.setExerciseMuscle('أرجل')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="أرجل" data-i18n="ex_legs">الأرجل والأفخاذ</button>
                         <button onclick="IronApp.setExerciseMuscle('ذراعين')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="ذراعين" data-i18n="ex_arms">الذراعين (باي وتراي)</button>
                         <button onclick="IronApp.setExerciseMuscle('بطن وكور')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="بطن وكور" data-i18n="ex_abs">البطن والكور</button>
+                        <button onclick="IronApp.setExerciseMuscle('كارديو')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="كارديو" data-i18n="ex_cardio">الكارديو (السير/السايكل/الأوبتكال)</button>
+                        <button onclick="IronApp.setExerciseMuscle('تمارين منزلية')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="تمارين منزلية" data-i18n="ex_home">التمارين المنزلية</button>
+                        <button onclick="IronApp.setExerciseMuscle('بعد الولادة القيصرية')" class="ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300" data-muscle="بعد الولادة القيصرية" data-i18n="ex_csection">ما بعد الولادة القيصرية</button>
                     </div>
 
                     <!-- شبكة التمارين -->
@@ -1204,6 +1243,8 @@
                         <option value="Bro Split">Bro Split</option>
                         <option value="Anterior / Posterior">Anterior / Posterior</option>
                         <option value="PPL × Upper / Lower">PPL × Upper / Lower</option>
+                        <option value="Home Workouts (No Equipment)">التمارين المنزلية (بدون أجهزة) — Home Workouts</option>
+                        <option value="Post-C-Section Recovery">تأهيل ما بعد الولادة القيصرية — Post-C-Section</option>
                     </select>
                 </div>
                 <div>
@@ -1296,6 +1337,8 @@
                             <option value="Bro Split">Bro Split</option>
                             <option value="Anterior / Posterior">Anterior / Posterior</option>
                             <option value="PPL × Upper / Lower">PPL × Upper / Lower</option>
+                            <option value="Home Workouts (No Equipment)">التمارين المنزلية (بدون أجهزة) — Home Workouts</option>
+                            <option value="Post-C-Section Recovery">تأهيل ما بعد الولادة القيصرية — Post-C-Section</option>
                         </select>
                     </div>
                 </div>

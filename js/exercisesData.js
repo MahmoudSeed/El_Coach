@@ -945,6 +945,446 @@ const exercisesDatabase = [
         mistakes: ["رفع المرفقين عن الوسادة", "السرعة في الحركة السلبية"],
         breathing: "زفير عند الدفع/الفرد، وشهيق عند الرجوع.",
         alternatives: ["ex_arm_4", "ex_arm_13"]
+    },
+
+    // ===================================================
+    // تمارين الكارديو والأجهزة الهوائية (Cardio Machines)
+    // ===================================================
+    {
+        id: "ex_cardio_treadmill",
+        nameAr: "السير الكهربائي — مشي مائل أو جري (تريدميل)",
+        nameEn: "Treadmill (Incline Walk / Jog)",
+        muscle: "كارديو",
+        secondary: ["القلب والأوعية الدموية", "عضلات الأرجل والمؤخرة", "حرق الدهون"],
+        equipment: "جهاز السير الكهربائي (Treadmill)",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/Treadmill-gym.jpg/960px-Treadmill-gym.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        setup: "قف على جانبي الحزام أولاً، ثبّت مشبك الأمان بالملابس، اضبط السرعة على 3 كم/س والميلان المناسب لهدفك (ميلان 6-12 لحرق الدهون، أو 1-2 للجري) ثم ابدأ.",
+        execution: "امشِ أو اجرِ باستقامة الجذع والنظر للأمام مع تحريك الذراعين بحرية بجانب الجسم بزاوية 90 درجة دون التعلق المستمر بالمقابض لضمان أقصى معدل حرق.",
+        mistakes: [
+            "الإمساك بمقابض الجهاز طوال التمرين مما يقلل السعرات المحروقة بنحو 30%",
+            "الانحناء للأمام نحو الشاشة وإجهاد أسفل الظهر والرقبة",
+            "زيادة السرعة فجأة دون تدرج الإحماء أو النزول قبل توقف الحزام"
+        ],
+        breathing: "تنفس عميق ومنتظم عبر الأنف والفم (إيقاع خطوتين شهيق وخطوتين زفير).",
+        alternatives: ["ex_cardio_cycle", "ex_cardio_elliptical"]
+    },
+    {
+        id: "ex_cardio_cycle",
+        nameAr: "الدراجة الثابتة / السايكل (Stationary Bike)",
+        nameEn: "Stationary Bike / Spin Cycle",
+        muscle: "كارديو",
+        secondary: ["عضلة القلب", "الفخذ الأمامي Quads", "السمانة بدون إجهاد الركبة"],
+        equipment: "الدراجة الثابتة / السايكل (Stationary Cycle)",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Stationary_bikes_at_a_gym.jpg/960px-Stationary_bikes_at_a_gym.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        setup: "اضبط ارتفاع المقعد ليصبح بمستوى عظمة الورك عند وقوفك بجانب الدراجة بحيث تنثني ركبتك قليلاً (15-20 درجة) عند وصول البدال لأدنى نقطة.",
+        execution: "أبقِ الجذع مستقراً والكتفين مسترخيين، واضغط بالبدال بشكل دائري متواصل بمعدل دوران ثابت (70-90 RPM) مع تدرج المقاومة حسب مستواك.",
+        mistakes: [
+            "انخفاض المقعد أكثر من اللازم مما يضغط على مفصل الركبة",
+            "ارتفاع المقعد المبالغ فيه مما يسبب تمايل الحوض يميناً ويساراً",
+            "تدوير بدون مقاومة تذكر أو تقويس الظهر على المقود"
+        ],
+        breathing: "شهيق عميق للبطن والصدر وزفير مريح متناسق مع وتيرة التبديل.",
+        alternatives: ["ex_cardio_elliptical", "ex_cardio_treadmill"]
+    },
+    {
+        id: "ex_cardio_elliptical",
+        nameAr: "جهاز الأوبتكال البيضاوي (Elliptical)",
+        nameEn: "Elliptical Cross-Trainer",
+        muscle: "كارديو",
+        secondary: ["جسم كامل", "أفخاذ ومؤخرة", "أكتاف وظهر بدون صدمات مفاصل"],
+        equipment: "جهاز الأوبتكال (Elliptical Trainer)",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Elliptical_machine.jpg/960px-Elliptical_machine.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+        setup: "اصعد عندما تتوقف الدواسات واضبط كامل باطن القدم على الدواسة، ثم أمسك المقابض المتحركة بارتخاء الكتفين واستقامة الظهر.",
+        execution: "حرك الدواسات بانسيابية مع الدفع والسحب بالذراعين بتناغم كامل، واضغط بكعب القدم للأسفل لتفعيل المؤخرة والأفخاذ مع إبقاء البطن مشدوداً.",
+        mistakes: [
+            "رفع الكعبين والأداء على أطراف الأصابع مما يسبب تنميل القدم وإجهاد السمانة",
+            "إسناد وزن الجسم على المقابض الثابتة بدلاً من استخدام عضلات الجسم",
+            "تقويس الظهر للأمام أثناء الإجهاد"
+        ],
+        breathing: "تنفس إيقاعي منتظم (شهيق عبر الأنف وزفير من الفم) مع شد خفيف للكور.",
+        alternatives: ["ex_cardio_cycle", "ex_cardio_treadmill"]
+    },
+
+    // ===================================================
+    // التمارين المنزلية بدون أجهزة جيم (Home Workouts)
+    // ===================================================
+    {
+        id: "ex_hm_pushup",
+        nameAr: "تمرين الضغط المنزلي (Push-Up)",
+        nameEn: "Home Push-Ups",
+        muscle: "تمارين منزلية",
+        secondary: ["الصدر", "الكتف الأمامي", "الترايسبس", "الكور"],
+        equipment: "وزن الجسم (منزلي)",
+        gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif",
+        setup: "ضع يديك على الأرض أوسع قليلاً من عرض الكتفين، واجعل الجسم خطاً مستقيماً واحداً من الرأس حتى الكعبين مع شد البطن والمؤخرة.",
+        execution: "انزل بصدرك ببطء نحو الأرض مع ثني المرفقين بزاوية 45 درجة للخلف حتى يقترب الصدر من الأرض، ثم ادفع بقوة حتى فرد الذراعين.",
+        mistakes: [
+            "تهدل الحوض لأسفل أو رفع المؤخرة عالياً",
+            "فتح الكوعين بزاوية 90 درجة مما يرهق مفصل الكتف"
+        ],
+        breathing: "شهيق أثناء النزول للأسفل، وزفير قوي عند الدفع للأعلى.",
+        alternatives: ["ex_hm_incline_pushup", "ex_hm_dips"]
+    },
+    {
+        id: "ex_hm_incline_pushup",
+        nameAr: "ضغط مائل على الحائط أو الكرسي (للمبتدئين)",
+        nameEn: "Incline / Wall Push-Ups",
+        muscle: "تمارين منزلية",
+        secondary: ["الصدر", "الترايسبس", "ثبات الكتف"],
+        equipment: "حائط / طاولة ثابتة / كرسي متين",
+        gif: "https://fitnessprogramer.com/wp-content/uploads/2021/06/Incline-Push-Up.gif",
+        setup: "استند بيديك على حافة طاولة متينة أو على الحائط بمستوى الصدر وأرجع قدميك للخلف بزاوية مائلة مع شد الجذع.",
+        execution: "اثنِ المرفقين بزاوية 45 درجة وأنزل صدرك نحو السطح بتحكم، ثم ادفع جسمك للعودة للوضع المستقيم مع عصر الصدر.",
+        mistakes: [
+            "الوقوف على سطح منزلق غير ثابت",
+            "تقويس أسفل الظهر بدلاً من شد البطن"
+        ],
+        breathing: "شهيق عند النزول، وزفير عند الدفع.",
+        alternatives: ["ex_hm_pushup", "ex_hm_dips"]
+    },
+    {
+        id: "ex_hm_squat",
+        nameAr: "سكوات منزلي بوزن الجسم",
+        nameEn: "Home Bodyweight Squat",
+        muscle: "تمارين منزلية",
+        secondary: ["الأفخاذ الأمامية", "المؤخرة Glutes", "الكور"],
+        equipment: "وزن الجسم (أو حقيبة ظهر بكتب لزيادة المقاومة)",
+        gif: "https://fitnessprogramer.com/wp-content/uploads/2021/05/Bodyweight-Squat.gif",
+        setup: "قف بعرض الكتفين مع تدوير أطراف الأصابع للخارج قليلاً، واجعل صدرك مرفوعاً وذراعيك للأمام للتوازن.",
+        execution: "ابدأ بدفع الورك للخلف والجلوس للأسفل كأنك تجلس على كرسي حتى يتوازى الفخذ مع الأرض، ثم ادفع بكعبيك للوقوف وعصر المؤخرة.",
+        mistakes: [
+            "انحراف الركبتين للداخل",
+            "رفع الكعبين عن الأرض أثناء النزول"
+        ],
+        breathing: "شهيق عميق قبل وأثناء النزول، وزفير قوي أثناء الصعود.",
+        alternatives: ["ex_hm_lunge", "ex_hm_wallsit"]
+    },
+    {
+        id: "ex_hm_lunge",
+        nameAr: "تمارين الطعن المنزلي بالتبادل (لانجز)",
+        nameEn: "Home Alternating Lunges",
+        muscle: "تمارين منزلية",
+        secondary: ["الفخذ الأمامي", "المؤخرة", "توازن الحوض"],
+        equipment: "وزن الجسم / زجاجتا ماء",
+        gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lunge.gif",
+        setup: "قف باستقامة وضع يديك على خصرك أو بجانبك وخذ خطوة واسعة للأمام أو للخلف.",
+        execution: "اخفض الركبة الخلفية حتى تقترب من الأرض وتشكل الركبتان زاوية 90 درجة، ثم ادفع بكعب القدم الأمامية للوقوف وبدل الساق.",
+        mistakes: [
+            "اندفاع الركبة الأمامية بعيداً أمام أصابع القدم",
+            "سقوط الجذع للأمام وفقدان التوازن"
+        ],
+        breathing: "شهيق أثناء النزول، وزفير عند الدفع للأعلى.",
+        alternatives: ["ex_hm_squat", "ex_hm_bridge"]
+    },
+    {
+        id: "ex_hm_row",
+        nameAr: "سحب ظهر بيد واحدة (بدمبل أو زجاجة ماء/شنطة)",
+        nameEn: "Single-Arm Home Row",
+        muscle: "تمارين منزلية",
+        secondary: ["الظهر المجانس", "وسط الظهر", "البايسبس"],
+        equipment: "دمبل منزلي أو حقيبة أوزان / زجاجة كبيرة + كرسي",
+        gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Row.gif",
+        setup: "ضع ركبة واحدة ويداً على كرسي أو سرير مستوٍ بحيث يكون الظهر موازياً للأرض ومستقيماً، وامسك المقاومة باليد الحرة.",
+        execution: "اسحب الوزن بقيادة الكوع باتجاه الورك واعصر لوح الكتف في القمة، ثم أنزله بتحكم حتى أقصى إطالة للظهر.",
+        mistakes: [
+            "تدوير الجذع مع السحب",
+            "رفع الكتف للأعلى بدلاً من السحب للخلف"
+        ],
+        breathing: "زفير أثناء السحب، وشهيق عند الإطالة.",
+        alternatives: ["ex_hm_superman", "ex_cs_band_row"]
+    },
+    {
+        id: "ex_hm_dips",
+        nameAr: "ترايسبس ديبس على الكرسي أو الأريكة",
+        nameEn: "Chair Triceps Dips",
+        muscle: "تمارين منزلية",
+        secondary: ["الترايسبس", "الكتف الأمامي", "أسفل الصدر"],
+        equipment: "كرسي ثابت أو أريكة متينة",
+        gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Bench-Dips.gif",
+        setup: "اجلس على حافة كرسي ثابت، ضع راحتي يديك بجانب الوركين والأصابع للأمام، وتقدم بقدميك للأمام.",
+        execution: "اثنِ الكوعين للخلف بزاوية 90 درجة مع إبقاء الظهر قريباً من حافة الكرسي، ثم ادفع بكفيك للأعلى حتى فرد الذراعين وعصر الترايسبس.",
+        mistakes: [
+            "ابتعاد الجسم عن الكرسي مما يضغط على مفصل الكتف",
+            "غرق الكتفين للأعلى نحو الأذنين"
+        ],
+        breathing: "شهيق أثناء النزول، وزفير عند الدفع للأعلى.",
+        alternatives: ["ex_hm_pushup", "ex_hm_incline_pushup"]
+    },
+    {
+        id: "ex_hm_bridge",
+        nameAr: "جسر المؤخرة والأرداف الأرضي (Glute Bridge)",
+        nameEn: "Floor Glute Bridge",
+        muscle: "تمارين منزلية",
+        secondary: ["المؤخرة Glutes", "الأفخاذ الخلفية", "أسفل الظهر"],
+        equipment: "سجادة أرضية",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Stretching_1200830.jpg/960px-Stretching_1200830.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+        setup: "استلقِ على ظهرك مع ثني الركبتين وتثبيت القدمين على الأرض بعرض الكتفين والذراعين ممدودتين بجانبك.",
+        execution: "ادفع عبر كعبي القدمين وارفع الحوض للأعلى حتى يصبح الجسم خطاً مستقيماً من الكتفين للركبتين، اعصر المؤخرة لثانيتين ثم انزل ببطء.",
+        mistakes: [
+            "تقويس أسفل الظهر فوق الحد الطبيعي في القمة",
+            "الدفع بأصابع القدم بدلاً من الكعبين"
+        ],
+        breathing: "زفير أثناء رفع الحوض وعصر العضلة، وشهيق عند النزول.",
+        alternatives: ["ex_hm_lunge", "ex_hm_squat"]
+    },
+    {
+        id: "ex_hm_superman",
+        nameAr: "تمديد الظهر الأرضي (سوبرمان)",
+        nameEn: "Superman Back Extension",
+        muscle: "تمارين منزلية",
+        secondary: ["القطنية", "أعلى الظهر", "المؤخرة"],
+        equipment: "سجادة أرضية",
+        gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Superman.gif",
+        setup: "استلقِ على بطنك مع مد الذراعين للأمام واستقامة الساقين للخلف والنظر للأسفل لحماية الرقبة.",
+        execution: "ارفع الصدر والذراعين والساقين بضعة سنتيمترات عن الأرض بتحكم من خلال شد الظهر والمؤخرة، اثبت لثانية ثم انزل بهدوء.",
+        mistakes: [
+            "رفع الرأس للخلف وإجهاد فقرات الرقبة",
+            "الخطف السريع بدلاً من التحكم العضلي"
+        ],
+        breathing: "زفير عند الرفع والثبات، وشهيق أثناء النزول.",
+        alternatives: ["ex_hm_row", "ex_hm_bridge"]
+    },
+    {
+        id: "ex_hm_plank",
+        nameAr: "تمرين البلانك المنزلي للبطن والكور",
+        nameEn: "Home Forearm Plank",
+        muscle: "تمارين منزلية",
+        secondary: ["عضلات البطن العميقة", "الظهر", "ثبات الكتف"],
+        equipment: "سجادة أرضية",
+        gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/plank.gif",
+        setup: "ارتكز على الساعدين تحت الكتفين وأصابع القدمين مع شد عضلات البطن والمؤخرة لإبقاء العمود الفقري محايداً.",
+        execution: "حافظ على ثبات الجسم كلوح مستقيم لمدة 30 إلى 60 ثانية دون هبوط الحوض أو ارتفاع المؤخرة.",
+        mistakes: [
+            "سقوط أسفل الظهر وتقوسه",
+            "حبس النفس أثناء الثبات"
+        ],
+        breathing: "تنفس عميق منتظم ومستمر طوال مدة الثبات.",
+        alternatives: ["ex_cs_dead_bug", "ex_hm_superman"]
+    },
+    {
+        id: "ex_hm_calf",
+        nameAr: "رفع السمانة المنزلي على الدرج أو الأرض",
+        nameEn: "Stair Standing Calf Raise",
+        muscle: "تمارين منزلية",
+        secondary: ["عضلة السمانة Calves", "ثبات الكاحل"],
+        equipment: "درجة سلم أو عتبة ثابتة",
+        gif: "https://fitnessprogramer.com/wp-content/uploads/2021/06/Standing-Calf-Raise.gif",
+        setup: "قف بمقدمة قدميك على حافة درجة سلم وأمسك الدرابزين أو الحائط للتوازن.",
+        execution: "انزل بالكعبين للأسفل ببطء لإطالة السمانة، ثم ادفع بقوة على أطراف الأصابع للأعلى واعصر العضلة لثانية في القمة.",
+        mistakes: [
+            "النزول والارتداد السريع دون توقف",
+            "ثني الركبتين أثناء الصعود"
+        ],
+        breathing: "زفير عند الصعود للأعلى، وشهيق أثناء النزول.",
+        alternatives: ["ex_hm_squat", "ex_hm_wallsit"]
+    },
+    {
+        id: "ex_hm_wallsit",
+        nameAr: "الجلوس الثابت على الحائط (Wall Sit)",
+        nameEn: "Wall Sit Isometric Hold",
+        muscle: "تمارين منزلية",
+        secondary: ["الفخذ الأمامي", "التحمل العضلي للأرجل"],
+        equipment: "حائط مستوٍ",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Airline_position.svg/960px-Airline_position.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+        setup: "أسند كامل ظهرك ورأسك للحائط وانزل للأسفل حتى يصبح الفخذان موازيين للأرض بزاوية 90 درجة في الركبتين.",
+        execution: "أبقِ الوزن موزعاً على الكعبين واليدين بعيدتين عن الفخذين واثبت من 30 إلى 60 ثانية مع التنفس الهادئ.",
+        mistakes: [
+            "الضغط باليدين على الفخذين لتخفيف الحمل",
+            "تقدم الركبتين أمام القدمين بشكل مفرط"
+        ],
+        breathing: "تنفس منتظم وعميق مع تجنب كتم النفس.",
+        alternatives: ["ex_hm_squat", "ex_hm_lunge"]
+    },
+    {
+        id: "ex_hm_jacks",
+        nameAr: "كارديو منزلي: قفز النجم (Jumping Jacks)",
+        nameEn: "Home Jumping Jacks Cardio",
+        muscle: "تمارين منزلية",
+        secondary: ["حرق الدهون", "اللياقة القلبية", "الأكتاف والأرجل"],
+        equipment: "وزن الجسم (منزلي)",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/Elementary_school_students_conduct_jumping_jacks_to_warm_up_USMC-120214-M-MA421-288.jpg/960px-Elementary_school_students_conduct_jumping_jacks_to_warm_up_USMC-120214-M-MA421-288.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+        setup: "قف باستقامة مع ضم القدمين والذراعين بجانبي الجسم وشد البطن برفق.",
+        execution: "اقفز برشاقة لفتح الساقين للجانبين مع رفع الذراعين فوق الرأس، ثم اقفز عائداً لوضع البداية بوتيرة منتظمة (أو خطوة جانبية بدون قفز لتخفيف الحمل على المفاصل).",
+        mistakes: [
+            "الهبوط على الكعبين بعنف بدلاً من أطراف القدمين المرنة",
+            "شد الرقبة والكتفين للأعلى"
+        ],
+        breathing: "تنفس إيقاعي مستمر مع كل قفزتين.",
+        alternatives: ["ex_hm_squat", "ex_cardio_treadmill"]
+    },
+
+    // ===================================================
+    // تأهيل وتمارين ما بعد الولادة القيصرية (Post-C-Section)
+    // ===================================================
+    {
+        id: "ex_cs_breathing",
+        nameAr: "التنفس البطني العميق 360° وتنشيط الجدار الداخلي",
+        nameEn: "360° Diaphragmatic Breathing",
+        muscle: "بعد الولادة القيصرية",
+        secondary: ["الحجاب الحاجز", "البطن المستعرضة TVA", "استرخاء قاع الحوض"],
+        equipment: "سجادة أرضية أو السرير (مسموح بعد موافقة الطبيب)",
+        gif: "https://upload.wikimedia.org/wikipedia/commons/9/9c/Diaphragmatic_breathing.gif?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+        setup: "استلقِ على ظهرك مع ثني الركبتين وإراحة القدمين أو اجلسي باستقامة، وضعي يداً على الصدر والأخرى على أسفل الأضلاع والبطن.",
+        execution: "خذي شهيقاً هادئاً عبر الأنف لمدة 4 ثوانٍ لتوسيع القفص الصدري والبطن 360 درجة (مع إرخاء قاع الحوض)، ثم أخرجي زفيراً طويلاً 6 ثوانٍ مع سحب أسفل البطن للداخل بلطف نحو العمود الفقري كأنك تغلقين سحاباً من الأسفل للأعلى.",
+        mistakes: [
+            "رفع الأكتاف والصدر للأعلى فقط دون تمدد البطن والأضلاع الجانبية",
+            "الشد العنيف أو كتم النفس مما يرفع الضغط داخل البطن على موضع الجرح"
+        ],
+        breathing: "شهيق أنفي بطيء للبطن والأضلاع (4 ثوانٍ) وزفير فموي بطيء مع تفعيل خفيف للكور (6 ثوانٍ).",
+        alternatives: ["ex_cs_pelvic_floor", "ex_cs_pelvic_tilt"]
+    },
+    {
+        id: "ex_cs_pelvic_floor",
+        nameAr: "تمارين قاع الحوض الآمنة (كيجل مع الزفير)",
+        nameEn: "Postpartum Pelvic Floor (Kegel)",
+        muscle: "بعد الولادة القيصرية",
+        secondary: ["عضلات قاع الحوض", "دعم المثانة وأسفل البطن"],
+        equipment: "بدون أدوات (سجادة أو جلوس مريح)",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/Physiotherapist_explaining_pelvic_floor.jpg/960px-Physiotherapist_explaining_pelvic_floor.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        setup: "اجلسي أو استلقي بوضعية محايدة مريحة للحوض مع إرخاء الفخذين والمؤخرة بالكامل.",
+        execution: "أثناء الزفير البطيء، اقبضي وارفعي عضلات قاع الحوض برفق للداخل والأعلى (كإيقاف التبول بلطف) لـ 3-5 ثوانٍ، ثم أرخيها بالكامل تماماً مع الشهيق العميق بين كل تكرار.",
+        mistakes: [
+            "شد عضلات المؤخرة أو ضم الفخذين بدلاً من التركيز على عضلات قاع الحوض",
+            "إهمال مرحلة الاسترخاء الكامل بين التكرارات (مما قد يسبب تشنج قاع الحوض)"
+        ],
+        breathing: "زفير لطيف أثناء الانقباض، وشهيق كامل للاسترخاء الكامل.",
+        alternatives: ["ex_cs_breathing", "ex_cs_pelvic_tilt"]
+    },
+    {
+        id: "ex_cs_pelvic_tilt",
+        nameAr: "إمالة الحوض اللطيفة وتقوية أسفل البطن (Pelvic Tilt)",
+        nameEn: "Gentle Supine Pelvic Tilt",
+        muscle: "بعد الولادة القيصرية",
+        secondary: ["البطن العميقة TVA", "تخفيف آلام أسفل الظهر", "دعم الانفصال العضلي"],
+        equipment: "سجادة أرضية (بعد استشارة الطبيب 6+ أسابيع)",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/PostureFoundationGarments04fig1.png/960px-PostureFoundationGarments04fig1.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        setup: "استلقِ على ظهرك مع ثني الركبتين وتثبيت القدمين على الأرض، والظهر في وضع مريح غير مقوس.",
+        execution: "مع الزفير، أملِ الحوض برفق نحو الأعلى لإغلاق الفراغ تحت أسفل الظهر ليلامس السجادة بنعومة مع شد خفيف في عضلات البطن العميقة لـ 3 ثوانٍ، ثم أرخي مع الشهيق. توقفي فوراً عند الشعور بأي شد في الجرح.",
+        mistakes: [
+            "الدفع القوي بالقدمين ورفع المؤخرة عن الأرض مبكراً",
+            "حدوث انتفاخ أو تقبب في منتصف البطن (Doming/Coning) — خففي الشد إذا ظهر"
+        ],
+        breathing: "زفير عند إمالة الحوض وتسطيح أسفل الظهر، وشهيق عند العودة.",
+        alternatives: ["ex_cs_breathing", "ex_cs_dead_bug"]
+    },
+    {
+        id: "ex_cs_dead_bug",
+        nameAr: "انزلاق الكعب الآمن / تعديل الحشرة الميتة للقيصرية",
+        nameEn: "Postpartum Heel Slides / Modified Dead Bug",
+        muscle: "بعد الولادة القيصرية",
+        secondary: ["البطن العميقة", "تثبيت الحوض", "علاج الانفصال العضلي"],
+        equipment: "سجادة أرضية",
+        gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dead-Bug.gif",
+        setup: "استلقِ على ظهرك مع ثني الركبتين والقدمين على السجادة (بدون رفع الرجلين في الهواء في البداية)، واضبطي التنفس العميق أولاً.",
+        execution: "مع الزفير وتثبيت أسفل البطن للداخل بلطف، حرّكي كعب قدم واحدة منزلقاً على الأرض للأمام ثم أرجعيه مع الشهيق قبل تبديل الساق. في المراحل المتقدمة (12+ أسبوع بعد التأكد من عدم وجود تحدب بالبطن) يمكن تعديله لحركة Dead Bug الكاملة.",
+        mistakes: [
+            "رفع الساقين معاً للأعلى قبل أن يستعيد الكور قدرته على تثبيت أسفل الظهر",
+            "ظهور بروز طولي في خط منتصف البطن (Coning) أو ارتفاع أسفل الظهر عن الأرض"
+        ],
+        breathing: "زفير مستمر طوال مد الساق للأمام، وشهيق عند سحبها للخلف.",
+        alternatives: ["ex_cs_pelvic_tilt", "ex_cs_bird_dog"]
+    },
+    {
+        id: "ex_cs_bridge",
+        nameAr: "جسر المؤخرة اللطيف ما بعد القيصرية",
+        nameEn: "Gentle Postpartum Glute Bridge",
+        muscle: "بعد الولادة القيصرية",
+        secondary: ["المؤخرة", "قاع الحوض", "أسفل الظهر بدون ضغط على البطن"],
+        equipment: "سجادة أرضية (بعد الأسبوع 6-8 وبموافقة الطبيب)",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Stretching_1200830.jpg/960px-Stretching_1200830.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+        setup: "استلقِ على ظهرك مع ثني الركبتين بعرض الحوض ووضع كفي اليدين بجانبك.",
+        execution: "ابدئي بزفير هادئ وتفعيل قاع الحوض وأسفل البطن، ثم ادفعي بالكعبين وارفعِي الحوض بتحكم لارتفاع مريح دون تقويس الظهر، اثبتي لثانيتين ثم انزلي ببطء.",
+        mistakes: [
+            "دفع البطن للأعلى وتقويس أسفل الظهر بشدة",
+            "رفع الحوض بسرعة مفاجئة تشد عضلات البطن الأمامية"
+        ],
+        breathing: "زفير عند الرفع وعصر المؤخرة، وشهيق أثناء النزول الهادئ.",
+        alternatives: ["ex_cs_pelvic_tilt", "ex_cs_cat_cow"]
+    },
+    {
+        id: "ex_cs_cat_cow",
+        nameAr: "إطالة القطة والبقرة اللطيفة للظهر والحوض",
+        nameEn: "Gentle Cat-Cow Spine Mobility",
+        muscle: "بعد الولادة القيصرية",
+        secondary: ["مرونة العمود الفقري", "الكتفين", "تنشيط البطن بلطف"],
+        equipment: "سجادة مبطنة مريحة للركبتين",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Yoga_at_Your_Park_-_Bitilasana.jpg/960px-Yoga_at_Your_Park_-_Bitilasana.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+        setup: "اجثي على اليدين والركبتين (الأيدي تحت الأكتاف والركبتان تحت الحوض) بعمود فقري مستقيم.",
+        execution: "مع الشهيق، أنزلي الصدر والبطن بهدوء بسيط جداً دون شد الجرح مع النظر للأمام؛ ومع الزفير، قوّسي الظهر للأعلى بلطف مع سحب السرة للداخل وعصر قاع الحوض.",
+        mistakes: [
+            "التمدد المبالغ فيه للبطن للأسفل مما يشعر بشد أو عدم راحة في جرح القيصرية",
+            "التحرك بسرعة بدلاً من التناغم مع التنفس"
+        ],
+        breathing: "شهيق هادئ عند استرخاء الظهر، وزفير عميق عند تقويس الظهر وسحب السرة للداخل.",
+        alternatives: ["ex_cs_bird_dog", "ex_cs_breathing"]
+    },
+    {
+        id: "ex_cs_bird_dog",
+        nameAr: "تمرين التوازن الآمن للظهر والكور (Bird-Dog)",
+        nameEn: "Gentle Bird-Dog Core Stability",
+        muscle: "بعد الولادة القيصرية",
+        secondary: ["عضلات الظهر العميقة", "البطن المستعرضة", "التوازن"],
+        equipment: "سجادة أرضية",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Girl_doing_bird_dog_yoga_pose.jpg/960px-Girl_doing_bird_dog_yoga_pose.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        setup: "على أربع نقاط (اليدين تحت الكتفين والركبتين تحت الحوض) مع استقامة الرقبة والحوض وحفظ ثبات البطن اللطيف.",
+        execution: "مع الزفير، ارفعي ذراعاً واحدة للأمام والساق المعاكسة للخلف بموازاة الأرض (أو قومي بتمديد الساق على السجادة فقط أولاً)، اثبتي ثانيتين دون ميلان الحوض، ثم عودي مع الشهيق وبدلي الاتجاه.",
+        mistakes: [
+            "تدوير الحوض لأعلى جهة الساق المرفوعة",
+            "تقوس أسفل الظهر وتهدل البطن لأسفل"
+        ],
+        breathing: "زفير أثناء تمديد الذراع والساق للثبات، وشهيق عند العودة.",
+        alternatives: ["ex_cs_cat_cow", "ex_cs_dead_bug"]
+    },
+    {
+        id: "ex_cs_wall_pushup",
+        nameAr: "تمرين ضغط لطيف على الحائط (آمن للقيصرية)",
+        nameEn: "C-Section Safe Wall / Incline Push-Up",
+        muscle: "بعد الولادة القيصرية",
+        secondary: ["الصدر", "الذراعين", "الكور الخفيف بدون ضغط بطني"],
+        equipment: "حائط مستوٍ (بدون أوزان)",
+        gif: "https://fitnessprogramer.com/wp-content/uploads/2021/06/Incline-Push-Up.gif",
+        setup: "قفي على بعد خطوة واحدة من الحائط وضعي كفي اليدين على الحائط بمستوى الصدر أوسع قليلاً من الكتفين مع تفعيل لطيف للبطن.",
+        execution: "اقتربي بصدرك نحو الحائط ببطء مع إبقاء الكوعين قريبين بزاوية 45 درجة، ثم ادفعي مع الزفير دون حبس النفس. هذا البديل الآمن يحمي من الضغط البطني الزائد للضغط الأرضي.",
+        mistakes: [
+            "النزول لأرضية منخفضة في الأسابيع الأولى قبل التئام الكور",
+            "كتم النفس أثناء الدفع"
+        ],
+        breathing: "شهيق أثناء الاقتراب من الحائط، وزفير لطيف عند الدفع مع شد السرة للداخل.",
+        alternatives: ["ex_cs_band_row", "ex_cs_walking"]
+    },
+    {
+        id: "ex_cs_band_row",
+        nameAr: "سحب الظهر جالسة بحزام المقاومة (لتصحيح قوام الرضاعة)",
+        nameEn: "Seated Resistance Band Posture Row",
+        muscle: "بعد الولادة القيصرية",
+        secondary: ["أعلى ووسط الظهر", "الكتف الخلفي", "فتح الصدر وعلاج تحدب الظهر"],
+        equipment: "أستيك مقاومة خفيف (Resistance Band)",
+        gif: "https://upload.wikimedia.org/wikipedia/commons/0/02/Trenirovachni_lastici_set.JPG?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+        setup: "اجلسي باستقامة على كرسي أو السجادة وثبتي حزام المقاومة الخفيف أمامك أو حول باطن القدمين.",
+        execution: "اسحبي الحزام بيديك للخلف باتجاه الخصر مع جمع لوحي الكتفين وفتح الصدر وعلاج انحناء الكتفين الناتج عن حمل الطفل والرضاعة، ثم عودي ببطء.",
+        mistakes: [
+            "رفع الكتفين نحو الأذنين أثناء السحب",
+            "استخدام مقاومة ثقيلة جداً تسبب إرهاق البطن"
+        ],
+        breathing: "زفير لطيف أثناء السحب للخلف، وشهيق عند مد الذراعين.",
+        alternatives: ["ex_cs_wall_pushup", "ex_cs_cat_cow"]
+    },
+    {
+        id: "ex_cs_walking",
+        nameAr: "المشي التدريجي الهادئ لاستعادة اللياقة بعد القيصرية",
+        nameEn: "Progressive Postpartum Walking",
+        muscle: "بعد الولادة القيصرية",
+        secondary: ["تنشيط الدورة الدموية", "منع التجلطات", "تحسين المزاج وحرق السعرات تدريجياً"],
+        equipment: "حذاء رياضي مريح (مشي منزلي أو خارجي مستوٍ)",
+        gif: "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/Women_walking_in_Hyderabad_street.jpg/960px-Women_walking_in_Hyderabad_street.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+        setup: "ابدئي بموافقة الطبيب لمدة 10-15 دقيقة على سطح مستوٍ مع فرد الظهر واسترخاء الكتفين دون حمل أوزان ثقيلة.",
+        execution: "سيري بخطوات مريحة وهادئة مع تنفس عميق، وزيدي المدة تدريجياً (+5 دقائق كل أسبوع عند زوال الألم) مع التوقف فوراً عند زيادة النزيف أو ألم البطن أو الحوض.",
+        mistakes: [
+            "المشي بسرعة عالية أو لمسافات طويلة جداً في الأسابيع الستة الأولى",
+            "دفع عربة ثقيلة صعوداً أو النزول المفرط عند وجود تعب"
+        ],
+        breathing: "تنفس مريح وعميق عبر الأنف بما يسمح بالتحدث بجمل كاملة بسهولة (Talk Test).",
+        alternatives: ["ex_cs_breathing", "ex_cardio_cycle"]
     }
 ];
 

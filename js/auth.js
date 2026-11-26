@@ -85,6 +85,9 @@ const IronAuth = {
         }
         const mapped = (data || []).map(row => this.refreshSubscriptionStatus(IronSupabase.mapClientFromDb(row)));
         IronSupabase.cache.trainees = mapped;
+        if (typeof IronSupabase.loadCoachWorkoutLogs === "function") {
+            await IronSupabase.loadCoachWorkoutLogs();
+        }
         return mapped;
     },
 

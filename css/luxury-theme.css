@@ -321,6 +321,7 @@ html[data-theme="light"] body::before {
 }
 
 html[data-theme="light"] .bg-slate-900,
+html[data-theme="light"] .bg-slate-900\/70,
 html[data-theme="light"] .bg-slate-900\/80,
 html[data-theme="light"] .bg-slate-900\/85,
 html[data-theme="light"] .bg-slate-900\/90,
@@ -334,9 +335,12 @@ html[data-theme="light"] .bg-slate-900\/60 {
 
 /* الحاويات الفرعية وحقول الإدخال في الوضع الفاتح الناري */
 html[data-theme="light"] .bg-slate-950,
+html[data-theme="light"] .bg-slate-950\/50,
 html[data-theme="light"] .bg-slate-950\/60,
 html[data-theme="light"] .bg-slate-950\/70,
+html[data-theme="light"] .bg-slate-950\/75,
 html[data-theme="light"] .bg-slate-950\/80,
+html[data-theme="light"] .bg-slate-950\/85,
 html[data-theme="light"] .bg-slate-950\/90 {
     background-color: rgba(255, 244, 230, 0.92) !important;
 }
@@ -363,11 +367,17 @@ html[data-theme="light"] .bg-gradient-to-r.from-slate-950 {
 html[data-theme="light"] .bg-emerald-950\/20 {
     background-color: rgba(16, 185, 129, 0.1) !important;
 }
-html[data-theme="light"] .bg-rose-950\/20 {
+html[data-theme="light"] .bg-rose-950\/20,
+html[data-theme="light"] .bg-rose-950\/40,
+html[data-theme="light"] .bg-rose-950\/45 {
     background-color: rgba(244, 63, 94, 0.08) !important;
 }
 html[data-theme="light"] .bg-cyan-950\/20 {
     background-color: rgba(6, 182, 212, 0.08) !important;
+}
+html[data-theme="light"] .bg-sky-950\/30,
+html[data-theme="light"] .bg-sky-950\/35 {
+    background-color: rgba(14, 165, 233, 0.1) !important;
 }
 
 /* الحدود في الوضع الفاتح الناري */
@@ -408,8 +418,27 @@ html[data-theme="light"] .text-amber-400 {
 html[data-theme="light"] .text-rose-400 {
     color: #e11d48 !important;
 }
-html[data-theme="light"] .text-cyan-400 {
+html[data-theme="light"] .text-cyan-400,
+html[data-theme="light"] .text-cyan-300 {
     color: #0891b2 !important;
+}
+html[data-theme="light"] .text-sky-300,
+html[data-theme="light"] .text-sky-200 {
+    color: #0369a1 !important;
+}
+html[data-theme="light"] .text-emerald-300 {
+    color: #047857 !important;
+}
+html[data-theme="light"] .text-rose-300 {
+    color: #be123c !important;
+}
+html[data-theme="light"] .wo-subsec-btn.bg-sky-500,
+html[data-theme="light"] .wo-subsec-btn.bg-emerald-500,
+html[data-theme="light"] .wo-subsec-btn.bg-amber-500 {
+    color: #0f172a !important;
+}
+html[data-theme="light"] .wo-subsec-btn.bg-rose-500 {
+    color: #ffffff !important;
 }
 html[data-theme="light"] .text-teal-400 {
     color: #0d9488 !important;
@@ -477,4 +506,28 @@ html[data-theme="light"] .wo-ex-pill-partial {
     .live-gym-ex-tabs {
         grid-template-columns: repeat(var(--gym-cols, 4), minmax(0, 1fr));
     }
+}
+
+/* تباين بطاقات الكارديو والتمارين المنزلية وما بعد القيصرية في النمط الفاتح */
+html[data-theme="light"] #workoutCardioEvaluationBox .text-sky-300,
+html[data-theme="light"] #workoutSpecialtyProgramBox .text-amber-300,
+html[data-theme="light"] #liveGymCardioSlot .text-sky-300 {
+    color: #0369a1 !important;
+}
+html[data-theme="light"] #workoutCardioEvaluationBox .text-emerald-300,
+html[data-theme="light"] #liveGymCardioSlot .text-emerald-300 {
+    color: #047857 !important;
+}
+html[data-theme="light"] #workoutCardioEvaluationBox .text-amber-300,
+html[data-theme="light"] #liveGymCardioSlot .text-amber-300 {
+    color: #b45309 !important;
+}
+html[data-theme="light"] .csection-safety-banner {
+    background-color: #fff1f2 !important;
+    border-color: #f43f5e !important;
+    color: #881337 !important;
+}
+html[data-theme="light"] .csection-safety-banner p,
+html[data-theme="light"] .csection-safety-banner strong {
+    color: #881337 !important;
 }

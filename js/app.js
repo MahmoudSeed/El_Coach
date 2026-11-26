@@ -139,7 +139,7 @@ const IronApp = {
         }
 
         const gymModal = document.getElementById("liveGymModal");
-        if (gymModal && gymModal.classList.contains("active") && typeof IronLiveGym !== "undefined" && IronLiveGym.activeSession) {
+        if (gymModal && gymModal.classList.contains("active") && typeof IronLiveGym !== "undefined" && (IronLiveGym.currentWorkout || IronLiveGym.activeSession)) {
             IronLiveGym.renderLiveGymModal();
         }
 
@@ -583,7 +583,7 @@ const IronApp = {
         this.renderMealsTracker(trainee);
         this.startWaterReminderLoop();
         this.renderMealsGrid();
-        this.selectProgram(this.selectedProgramId);
+        this.switchWorkoutSubSection(this.currentWorkoutSubSection || "assigned");
         this.renderWorkoutLogs();
         this.renderExercisesGrid();
         this.renderCheckinHistory(trainee);
@@ -1059,7 +1059,22 @@ const IronApp = {
     // =========================================================================
     resolveLogExercisesList(log) {
         if (Array.isArray(log.completedExercises) && log.completedExercises.length > 0) {
-            return log.completedExercises;
+            const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+            const catalog = typeof CARDIO_MACHINES_CATALOG !== "undefined" ? CARDIO_MACHINES_CATALOG : [];
+            return log.completedExercises.map(item => {
+                if (item && (item.isCardio || String(item.exerciseId || "").startsWith("ex_cardio_"))) {
+                    const mins = parseInt(item.durationMinutes || item.maxWeightKg) || 0;
+                    const meta = catalog.find(m => m.key === item.machineKey || m.exerciseId === item.exerciseId);
+                    const mName = meta ? (isEn ? meta.nameEn : meta.nameAr) : (item.name || "Cardio");
+                    const noteSuffix = item.speedOrNote ? ` (${item.speedOrNote})` : "";
+                    return {
+                        ...item,
+                        maxWeightKg: 0,
+                        name: `${meta?.icon || "🏃"} ${mName} • ${mins} ${isEn ? "min" : "دقيقة"}${noteSuffix}`
+                    };
+                }
+                return item;
+            });
         }
         // توافق تلقائي للسجلات القديمة التي حُفظت قبل إضافة أسماء التمارين التفصيلية
         if (typeof getProgramById === "function" && log.programId) {
@@ -1239,8 +1254,12 @@ const IronApp = {
             `;
         };
 
-        if (overviewContainer) overviewContainer.innerHTML = renderHtml(4);
-        if (workoutsTabContainer) workoutsTabContainer.innerHTML = renderHtml(8);
+        const cardioBannerHtml = this.renderLogsCardioSummaryBanner();
+        if (overviewContainer) overviewContainer.innerHTML = cardioBannerHtml + renderHtml(4);
+        if (workoutsTabContainer) workoutsTabContainer.innerHTML = cardioBannerHtml + renderHtml(8);
+        if (this.currentWorkoutSubSection === "cardio") {
+            this.renderCardioEvaluationView();
+        }
     },
 
     // =========================================================================
@@ -1911,9 +1930,586 @@ const IronApp = {
                                 `;
                             }).join('')}
                         </div>
+                        ${this.renderDayCardioStripHtml(this.selectedProgramId, day.dayId)}
                     </div>
                 `;
                 }).join('')}
+            </div>
+        `;
+        this.prependCsectionBannerIfNeeded(container, this.selectedProgramId);
+    },
+
+    // =========================================================================
+    // أقسام التمرين المتخصصة: الكارديو والتقييم اليومي + التمارين المنزلية + ما بعد القيصرية
+    // =========================================================================
+    currentWorkoutSubSection: "assigned",
+    standaloneCardioInterval: null,
+    standaloneCardioState: {
+        machineKey: "treadmill",
+        minutes: 20,
+        speedOrNote: "",
+        stopwatchRunning: false,
+        stopwatchStartedMs: null,
+        stopwatchAccumulatedSec: 0
+    },
+
+    prependCsectionBannerIfNeeded(container, progId) {
+        if (!container || typeof getProgramById !== "function") return;
+        const prog = getProgramById(progId);
+        if (!prog || !prog.isPostpartumSafety) return;
+        if (container.querySelector(".csection-safety-banner")) return;
+        const banner = document.createElement("div");
+        banner.className = "csection-safety-banner bg-rose-950/40 border border-rose-500/45 rounded-2xl p-4 text-xs leading-relaxed mb-4";
+        banner.innerHTML = `
+            <strong class="text-rose-300 font-black block mb-1">${this.t("csection_safety_title")}</strong>
+            <p class="text-rose-100">${this.t("csection_safety_desc")}</p>
+        `;
+        container.prepend(banner);
+    },
+
+    switchWorkoutSubSection(section = "assigned") {
+        const allowed = ["assigned", "cardio", "home", "csection"];
+        const sec = allowed.includes(section) ? section : "assigned";
+        this.currentWorkoutSubSection = sec;
+
+        const styleMap = {
+            assigned: "bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20",
+            cardio: "bg-sky-500 text-slate-950 border-sky-400 shadow-md shadow-sky-500/20",
+            home: "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20",
+            csection: "bg-rose-500 text-white border-rose-400 shadow-md shadow-rose-500/20"
+        };
+        const idleTextMap = {
+            assigned: "text-emerald-300 hover:border-emerald-500/50",
+            cardio: "text-sky-300 hover:border-sky-500/50",
+            home: "text-amber-300 hover:border-amber-500/50",
+            csection: "text-rose-300 hover:border-rose-500/50"
+        };
+
+        document.querySelectorAll(".wo-subsec-btn").forEach(btn => {
+            const key = btn.getAttribute("data-wo-sec");
+            if (key === sec) {
+                btn.className = `wo-subsec-btn px-3 py-2.5 rounded-2xl border text-xs font-black transition flex items-center justify-center gap-1.5 ${styleMap[key]}`;
+            } else {
+                btn.className = `wo-subsec-btn px-3 py-2.5 rounded-2xl border text-xs font-bold transition flex items-center justify-center gap-1.5 bg-slate-950 border-slate-800 ${idleTextMap[key] || "text-gray-300"}`;
+            }
+        });
+
+        const cardioBox = document.getElementById("workoutCardioEvaluationBox");
+        const specBox = document.getElementById("workoutSpecialtyProgramBox");
+        const detailsBox = document.getElementById("workoutProgramDetails");
+        const selectorBox = document.getElementById("programSelectorWrapper");
+
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        const isTrainee = user && user.role === "trainee";
+
+        if (sec === "assigned") {
+            if (cardioBox) cardioBox.classList.add("hidden");
+            if (specBox) specBox.classList.add("hidden");
+            if (detailsBox) detailsBox.classList.remove("hidden");
+            if (selectorBox) {
+                selectorBox.classList.toggle("hidden", isTrainee);
+            }
+            this.selectProgram(this.selectedProgramId || "prog_ppl");
+        } else if (sec === "cardio") {
+            if (detailsBox) detailsBox.classList.add("hidden");
+            if (selectorBox) selectorBox.classList.add("hidden");
+            if (specBox) specBox.classList.add("hidden");
+            if (cardioBox) {
+                cardioBox.classList.remove("hidden");
+                this.renderCardioEvaluationView();
+            }
+        } else {
+            if (detailsBox) detailsBox.classList.add("hidden");
+            if (selectorBox) selectorBox.classList.add("hidden");
+            if (cardioBox) cardioBox.classList.add("hidden");
+            if (specBox) {
+                specBox.classList.remove("hidden");
+                this.renderSpecialtyProgramView(sec === "home" ? "prog_home" : "prog_csection");
+            }
+        }
+    },
+
+    renderDayCardioStripHtml(progId, dayId) {
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const catalog = typeof CARDIO_MACHINES_CATALOG !== "undefined" ? CARDIO_MACHINES_CATALOG : [];
+        if (catalog.length === 0) return "";
+        const prog = typeof getProgramById === "function" ? getProgramById(progId) : null;
+        const recMins = prog?.recommendedCardio?.defaultMinutes || 20;
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        const timeline = (typeof IronLiveGym !== "undefined" && IronLiveGym.getTraineeCardioTimeline)
+            ? IronLiveGym.getTraineeCardioTimeline(user?.id, 5)
+            : [];
+        const latest = timeline[0] || null;
+        const evalPill = latest
+            ? (latest.trend === "first"
+                ? `<span class="px-2 py-0.5 rounded-md bg-sky-500/15 text-sky-300 border border-sky-500/35 text-[10px] font-black">🆕 ${latest.durationMinutes} ${isEn ? "min" : "د"}</span>`
+                : latest.deltaMinutes > 0
+                ? `<span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/35 text-[10px] font-black">📈 ${latest.durationMinutes} ${isEn ? "min" : "د"} (+${latest.deltaMinutes})</span>`
+                : latest.deltaMinutes === 0
+                ? `<span class="px-2 py-0.5 rounded-md bg-sky-500/15 text-sky-300 border border-sky-500/35 text-[10px] font-black">🎯 ${latest.durationMinutes} ${isEn ? "min" : "د"}</span>`
+                : `<span class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/35 text-[10px] font-black">📉 ${latest.durationMinutes} ${isEn ? "min" : "د"} (${latest.deltaMinutes})</span>`)
+            : `<span class="px-2 py-0.5 rounded-md bg-slate-800 text-sky-300 text-[10px] font-bold">🎯 ${recMins} ${isEn ? "min target" : "دقيقة مستهدفة"}</span>`;
+
+        return `
+            <div class="mt-3 pt-3 border-t border-slate-800/80">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-black text-sky-300">🏃 ${isEn ? "Post-Workout Cardio Options & Daily Evaluation:" : "كارديو التمرين اليومي (السير / السايكل / الأوبتكال) والتقييم:"}</span>
+                        ${evalPill}
+                    </div>
+                    <button type="button" onclick="IronApp.switchWorkoutSubSection('cardio')"
+                        class="px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/35 text-[11px] font-black transition">
+                        ⏱️ ${isEn ? "Log Cardio & Timer" : "تسجيل الوقت والتقييم"}
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    ${catalog.map(m => {
+                        const ex = typeof getExerciseById === "function" ? getExerciseById(m.exerciseId) : null;
+                        if (!ex) return "";
+                        const name = isEn ? m.nameEn : m.nameAr;
+                        const badge = isEn ? m.badgeEn : m.badgeAr;
+                        return `
+                            <div onclick="IronApp.openExerciseDetail('${ex.id}')"
+                                class="bg-slate-900/90 border border-slate-800 hover:border-sky-500/45 rounded-xl p-2 flex items-center gap-2.5 cursor-pointer transition">
+                                <img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${m.nameEn}')"
+                                    class="w-12 h-12 rounded-lg object-cover bg-slate-950 border border-slate-800 flex-shrink-0" alt="${name}" loading="lazy">
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xs font-black text-white truncate">${m.icon} ${name}</div>
+                                    <div class="text-[10px] text-sky-300 font-bold truncate">${badge}</div>
+                                    <div class="text-[10px] text-gray-400">${recMins} ${isEn ? "min" : "دقيقة"} • ℹ️ ${isEn ? "Guide" : "شرح"}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join("")}
+                </div>
+            </div>
+        `;
+    },
+
+    renderLogsCardioSummaryBanner() {
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        if (!user?.id || typeof IronLiveGym === "undefined" || !IronLiveGym.getTraineeCardioTimeline) return "";
+        const timeline = IronLiveGym.getTraineeCardioTimeline(user.id, 7);
+        if (timeline.length === 0) return "";
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const latest = timeline[0];
+        const machineName = isEn ? latest.machineNameEn : latest.machineNameAr;
+        const unit = isEn ? "min" : "دقيقة";
+        const deltaText = latest.trend === "first"
+            ? (isEn ? `Baseline: ${latest.durationMinutes} ${unit}` : `أول قراءة: ${latest.durationMinutes} ${unit}`)
+            : latest.deltaMinutes > 0
+            ? (isEn ? `📈 +${latest.deltaMinutes} ${unit} better than previous day (${latest.prevMinutes} → ${latest.durationMinutes} ${unit})` : `📈 تحسن +${latest.deltaMinutes} ${unit} عن اليوم السابق (${latest.prevMinutes} ← ${latest.durationMinutes} ${unit})`)
+            : latest.deltaMinutes === 0
+            ? (isEn ? `🎯 Matched previous day (${latest.durationMinutes} ${unit})` : `🎯 ثبات على نفس المدة (${latest.durationMinutes} ${unit})`)
+            : (isEn ? `📉 ${Math.abs(latest.deltaMinutes)} ${unit} lower than previous (${latest.prevMinutes} → ${latest.durationMinutes} ${unit})` : `📉 أقل بـ ${Math.abs(latest.deltaMinutes)} ${unit} عن اليوم السابق (${latest.prevMinutes} ← ${latest.durationMinutes} ${unit})`);
+
+        return `
+            <div class="mb-3 bg-sky-950/35 border border-sky-500/35 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-lg">${latest.icon}</span>
+                    <div class="min-w-0">
+                        <div class="font-black text-white truncate">${isEn ? "Daily Cardio Evaluation" : "تقييم الكارديو اليومي"}: ${machineName} (${latest.durationMinutes} ${unit})</div>
+                        <div class="text-[11px] font-bold ${latest.deltaMinutes > 0 ? 'text-emerald-300' : latest.deltaMinutes < 0 ? 'text-amber-300' : 'text-sky-300'}">${deltaText}</div>
+                    </div>
+                </div>
+                <button type="button" onclick="IronApp.switchTab('workouts'); IronApp.switchWorkoutSubSection('cardio')"
+                    class="px-3 py-1 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/35 text-[11px] font-black transition">
+                    ${isEn ? "View Cardio Chart 📊" : "متابعة ومنحنى الكارديو 📊"}
+                </button>
+            </div>
+        `;
+    },
+
+    getStandaloneCardioSeconds() {
+        const s = this.standaloneCardioState;
+        const base = Math.max(0, Number(s.stopwatchAccumulatedSec) || 0);
+        if (s.stopwatchRunning && s.stopwatchStartedMs) {
+            return base + Math.max(0, Math.floor((Date.now() - s.stopwatchStartedMs) / 1000));
+        }
+        return base;
+    },
+
+    setStandaloneCardioMachine(machineKey) {
+        this.standaloneCardioState.machineKey = machineKey;
+        this.renderCardioEvaluationView();
+    },
+
+    setStandaloneCardioMinutes(mins) {
+        this.standaloneCardioState.minutes = Math.max(0, Math.min(240, parseInt(mins) || 0));
+        this.renderCardioEvaluationView();
+    },
+
+    setStandaloneCardioNote(val) {
+        this.standaloneCardioState.speedOrNote = String(val || "").slice(0, 120);
+    },
+
+    toggleStandaloneCardioStopwatch() {
+        const s = this.standaloneCardioState;
+        if (s.stopwatchRunning) {
+            s.stopwatchAccumulatedSec = this.getStandaloneCardioSeconds();
+            s.stopwatchRunning = false;
+            s.stopwatchStartedMs = null;
+            if (s.stopwatchAccumulatedSec >= 30) {
+                s.minutes = Math.max(s.minutes || 0, Math.max(1, Math.round(s.stopwatchAccumulatedSec / 60)));
+            }
+            clearInterval(this.standaloneCardioInterval);
+            this.standaloneCardioInterval = null;
+        } else {
+            s.stopwatchRunning = true;
+            s.stopwatchStartedMs = Date.now();
+            this.startStandaloneCardioTicker();
+        }
+        this.renderCardioEvaluationView();
+    },
+
+    resetStandaloneCardioStopwatch() {
+        clearInterval(this.standaloneCardioInterval);
+        this.standaloneCardioInterval = null;
+        this.standaloneCardioState.stopwatchRunning = false;
+        this.standaloneCardioState.stopwatchStartedMs = null;
+        this.standaloneCardioState.stopwatchAccumulatedSec = 0;
+        this.renderCardioEvaluationView();
+    },
+
+    startStandaloneCardioTicker() {
+        clearInterval(this.standaloneCardioInterval);
+        this.standaloneCardioInterval = setInterval(() => {
+            const s = this.standaloneCardioState;
+            if (!s.stopwatchRunning) {
+                clearInterval(this.standaloneCardioInterval);
+                this.standaloneCardioInterval = null;
+                return;
+            }
+            const totalSec = this.getStandaloneCardioSeconds();
+            const el = document.getElementById("standaloneCardioClockText");
+            if (el && typeof IronLiveGym !== "undefined") {
+                el.innerText = IronLiveGym.formatDurationClock(totalSec);
+            }
+            const m = Math.floor(totalSec / 60);
+            if (m > (parseInt(s.minutes) || 0)) {
+                s.minutes = m;
+                const minInput = document.getElementById("standaloneCardioMinInput");
+                if (minInput && document.activeElement !== minInput) minInput.value = String(m);
+            }
+        }, 1000);
+    },
+
+    async saveStandaloneCardio() {
+        const s = this.standaloneCardioState;
+        if (s.stopwatchRunning) {
+            this.toggleStandaloneCardioStopwatch();
+        }
+        if (typeof IronLiveGym !== "undefined" && IronLiveGym.logStandaloneCardio) {
+            const ok = await IronLiveGym.logStandaloneCardio(s.machineKey, s.minutes, s.speedOrNote);
+            if (ok) {
+                this.resetStandaloneCardioStopwatch();
+            }
+        }
+    },
+
+    renderCardioChartSvg(timeline) {
+        if (!Array.isArray(timeline) || timeline.length < 2) return "";
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const points = [...timeline].slice(0, 8).reverse();
+        const vals = points.map(p => p.durationMinutes || 0);
+        const minV = Math.max(0, Math.min(...vals) - 5);
+        const maxV = Math.max(...vals) + 5;
+        const range = Math.max(5, maxV - minV);
+
+        const width = 520;
+        const height = 130;
+        const padX = 34;
+        const padY = 24;
+        const usableW = width - padX * 2;
+        const usableH = height - padY * 2;
+
+        const coords = points.map((p, idx) => {
+            const x = padX + (idx / (points.length - 1)) * usableW;
+            const y = padY + usableH - ((p.durationMinutes - minV) / range) * usableH;
+            return { x: Math.round(x), y: Math.round(y), mins: p.durationMinutes, date: String(p.date || "").slice(5, 10) };
+        });
+
+        const poly = coords.map(c => `${c.x},${c.y}`).join(" ");
+        const area = `${coords[0].x},${height - padY} ${poly} ${coords[coords.length - 1].x},${height - padY}`;
+
+        return `
+            <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5">
+                <div class="text-[11px] font-bold text-gray-300 mb-2 flex justify-between items-center">
+                    <span>📈 ${isEn ? "Daily Cardio Duration Progression" : "منحنى تطور وقت الكارديو يوماً بيوم"}</span>
+                    <span class="font-mono text-sky-300">${points[0].durationMinutes} ${isEn ? "min" : "د"} → ${points[points.length - 1].durationMinutes} ${isEn ? "min" : "د"}</span>
+                </div>
+                <svg viewBox="0 0 ${width} ${height}" class="w-full h-32 overflow-visible">
+                    <defs>
+                        <linearGradient id="cardioAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.32"/>
+                            <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.0"/>
+                        </linearGradient>
+                    </defs>
+                    <polygon points="${area}" fill="url(#cardioAreaGrad)" />
+                    <polyline fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${poly}" />
+                    ${coords.map(c => `
+                        <g>
+                            <circle cx="${c.x}" cy="${c.y}" r="4.5" fill="#38bdf8" stroke="#070a12" stroke-width="2" />
+                            <text x="${c.x}" y="${c.y - 9}" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="800">${c.mins}m</text>
+                            <text x="${c.x}" y="${height - 5}" text-anchor="middle" fill="#94a3b8" font-size="9">${c.date}</text>
+                        </g>
+                    `).join("")}
+                </svg>
+            </div>
+        `;
+    },
+
+    renderCardioEvaluationView() {
+        const container = document.getElementById("workoutCardioEvaluationBox");
+        if (!container) return;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const catalog = typeof CARDIO_MACHINES_CATALOG !== "undefined" ? CARDIO_MACHINES_CATALOG : [];
+        const s = this.standaloneCardioState;
+        if (s.stopwatchRunning && !this.standaloneCardioInterval) {
+            setTimeout(() => this.startStandaloneCardioTicker(), 50);
+        }
+
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        const timeline = (typeof IronLiveGym !== "undefined" && IronLiveGym.getTraineeCardioTimeline)
+            ? IronLiveGym.getTraineeCardioTimeline(user?.id, 14)
+            : [];
+        const comp = (typeof IronLiveGym !== "undefined" && IronLiveGym.getCardioComparison)
+            ? IronLiveGym.getCardioComparison(user?.id, s.machineKey, s.minutes)
+            : { trend: "first", previousMinutes: null, deltaMinutes: null };
+        const compHtml = (typeof IronLiveGym !== "undefined" && IronLiveGym.formatCardioComparisonHtml)
+            ? IronLiveGym.formatCardioComparisonHtml(comp, s.minutes, isEn)
+            : "";
+
+        const selectedMeta = catalog.find(m => m.key === s.machineKey) || catalog[0] || {};
+        const clockStr = typeof IronLiveGym !== "undefined"
+            ? IronLiveGym.formatDurationClock(this.getStandaloneCardioSeconds())
+            : "00:00";
+
+        container.innerHTML = `
+            <div class="bg-slate-950/75 border border-sky-500/35 rounded-3xl p-4 sm:p-5 space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/15 border border-sky-500/35 text-sky-300 text-[11px] font-black mb-1.5">
+                            ⏱️ ${isEn ? "CARDIO & DAY-OVER-DAY EVALUATION" : "الكارديو داخل التمرين + تقييم الأداء اليومي"}
+                        </div>
+                        <h4 class="text-lg font-black text-white">${isEn ? "Treadmill, Stationary Bike & Elliptical Tracker" : "السير الكهربائي + السايكل + الأوبتكال مع مقارنة اليوم باليوم السابق"}</h4>
+                        <p class="text-xs text-gray-400 mt-0.5">${isEn ? "Inspect proper machine posture with photos, run the timer, and measure daily progression." : "اختر الجهاز لرؤية شرحه بالصورة، شغّل المؤقت أو أدخل الوقت لقياس تقدمك عن اليوم السابق."}</p>
+                    </div>
+                </div>
+
+                <!-- بطاقات أجهزة الكارديو الثلاثة بالصور التوضيحية -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                    ${catalog.map(m => {
+                        const rawEx = typeof getExerciseById === "function" ? getExerciseById(m.exerciseId) : null;
+                        const ex = (rawEx && typeof IronI18n !== "undefined") ? IronI18n.trExercise(rawEx) : rawEx;
+                        const isSelected = m.key === s.machineKey;
+                        const dispName = isEn ? m.nameEn : m.nameAr;
+                        const badge = isEn ? m.badgeEn : m.badgeAr;
+                        return `
+                            <div onclick="IronApp.setStandaloneCardioMachine('${m.key}')"
+                                class="rounded-2xl border overflow-hidden cursor-pointer transition flex flex-col justify-between ${isSelected ? 'bg-sky-950/35 border-sky-400 shadow-lg shadow-sky-500/15' : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'}">
+                                ${ex ? `
+                                    <div class="relative h-44 bg-slate-950 overflow-hidden">
+                                        <img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${m.nameEn}')"
+                                            class="w-full h-full object-cover" alt="${dispName}">
+                                        <div class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-slate-950/85 text-[10px] font-black text-sky-300 border border-sky-500/35">
+                                            ${badge}
+                                        </div>
+                                        ${isSelected ? `<div class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-lg bg-sky-500 text-slate-950 text-[10px] font-black">✓ ${isEn ? "Selected" : "محدد"}</div>` : ""}
+                                    </div>
+                                ` : ""}
+                                <div class="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <h5 class="font-black text-white text-sm">${m.icon} ${dispName}</h5>
+                                        ${ex ? `<p class="text-[11px] text-gray-300 mt-1 line-clamp-2 leading-relaxed">${ex.execution}</p>` : ""}
+                                    </div>
+                                    ${ex ? `
+                                        <button type="button" onclick="event.stopPropagation(); IronApp.openExerciseDetail('${ex.id}')"
+                                            class="w-full py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 text-[11px] font-black transition">
+                                            📷 ${isEn ? "Full Technique & Mistakes" : "شرح الأداء والأخطاء الكامل ←"}
+                                        </button>
+                                    ` : ""}
+                                </div>
+                            </div>
+                        `;
+                    }).join("")}
+                </div>
+
+                <!-- مسجل التوقيت الفوري والمقارنة باليوم السابق -->
+                <div class="bg-slate-900/85 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="font-black text-xs text-white">${isEn ? `Selected Machine: ${selectedMeta.icon || ''} ${selectedMeta.nameEn || ''}` : `الجهاز المحدد للتسجيل: ${selectedMeta.icon || ''} ${selectedMeta.nameAr || ''}`}</div>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${[10, 15, 20, 30, 45].map(min => `
+                                <button type="button" onclick="IronApp.setStandaloneCardioMinutes(${min})"
+                                    class="px-2.5 py-1 rounded-lg text-[11px] font-black transition ${Number(s.minutes) === min ? 'bg-sky-500 text-slate-950' : 'bg-slate-800 text-gray-300 hover:bg-slate-700'}">
+                                    ${min} ${isEn ? "m" : "د"}
+                                </button>
+                            `).join("")}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 items-center">
+                        <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl p-2">
+                            <span id="standaloneCardioClockText" class="font-mono text-sm font-black text-amber-300 px-2">${clockStr}</span>
+                            <button type="button" onclick="IronApp.toggleStandaloneCardioStopwatch()"
+                                class="flex-1 py-1.5 rounded-lg text-xs font-black transition ${s.stopwatchRunning ? 'bg-amber-500 text-slate-950' : 'bg-sky-500/20 text-sky-300 border border-sky-500/40'}">
+                                ${s.stopwatchRunning ? (isEn ? "⏸ Pause Timer" : "⏸ إيقاف المؤقت") : (isEn ? "▶ Start Stopwatch" : "▶ تشغيل المؤقت")}
+                            </button>
+                            <button type="button" onclick="IronApp.resetStandaloneCardioStopwatch()" title="Reset"
+                                class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-gray-300 hover:text-white text-xs font-bold">🔄</button>
+                        </div>
+
+                        <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5">
+                            <label class="text-[11px] text-gray-300 font-bold whitespace-nowrap">${isEn ? "Minutes:" : "المدة (بالدقائق):"}</label>
+                            <input id="standaloneCardioMinInput" type="number" min="1" max="240" value="${s.minutes || 20}"
+                                oninput="IronApp.setStandaloneCardioMinutes(this.value)"
+                                class="w-full bg-transparent text-center font-mono text-sm font-black text-sky-300 outline-none">
+                        </div>
+
+                        <input type="text" value="${(s.speedOrNote || '').replace(/"/g, '&quot;')}"
+                            oninput="IronApp.setStandaloneCardioNote(this.value)"
+                            placeholder="${isEn ? (selectedMeta.targetHintEn || 'Speed / Incline / Level') : (selectedMeta.targetHintAr || 'السرعة / الميلان / المستوى')}"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 outline-none focus:border-sky-500">
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-950/90 border border-slate-800 rounded-xl p-3">
+                        <div class="text-xs">${compHtml}</div>
+                        <button type="button" onclick="IronApp.saveStandaloneCardio()"
+                            class="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-400 text-slate-950 font-black text-xs shadow-lg shadow-sky-500/20 hover:opacity-90 transition whitespace-nowrap">
+                            ${isEn ? "Save Cardio & Evaluate Today ✅" : "حفظ الكارديو وتقييم التطور ✅"}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- منحنى المقارنة اليومي وسجل الأيام السابقة -->
+                ${this.renderCardioChartSvg(timeline)}
+
+                <div class="space-y-2">
+                    <h5 class="text-xs font-black text-gray-200">📋 ${isEn ? `Day-by-Day Cardio Evaluation History (${timeline.length})` : `سجل مقارنة الكارديو كل يوم باليوم السابق (${timeline.length})`}</h5>
+                    ${timeline.length === 0 ? `
+                        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 text-center text-xs text-gray-400">
+                            ${isEn ? "No cardio sessions logged yet. Start the timer above and save your first session to begin day-over-day comparison!" : "لا توجد جلسات كارديو مسجلة بعد. ابدأ المؤقت أعلاه واحفظ أول جلسة لقياس تطورك كل يوم عن اليوم السابق!"}
+                        </div>
+                    ` : `
+                        <div class="space-y-2">
+                            ${timeline.map(item => {
+                                const dt = item.date ? new Date(item.date).toLocaleDateString(isEn ? "en-US" : "ar-EG", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+                                const badge = item.trend === "first"
+                                    ? `<span class="px-2 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[11px] font-black">🆕 ${isEn ? "First Log" : "نقطة البداية"}</span>`
+                                    : item.deltaMinutes > 0
+                                    ? `<span class="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/35 text-[11px] font-black">📈 +${item.deltaMinutes} ${isEn ? "min vs prev" : "د تحسن عن السابق"}</span>`
+                                    : item.deltaMinutes === 0
+                                    ? `<span class="px-2 py-0.5 rounded-lg bg-sky-500/15 text-sky-300 border border-sky-500/35 text-[11px] font-black">🎯 ${isEn ? "Matched prev" : "ثبات عن السابق"}</span>`
+                                    : `<span class="px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/35 text-[11px] font-black">📉 ${item.deltaMinutes} ${isEn ? "min vs prev" : "د عن السابق"}</span>`;
+                                return `
+                                    <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <span class="text-lg">${item.icon}</span>
+                                            <div class="min-w-0">
+                                                <div class="font-black text-white">${isEn ? item.machineNameEn : item.machineNameAr} • <span class="text-sky-300">${item.durationMinutes} ${isEn ? "min" : "دقيقة"}</span></div>
+                                                <div class="text-[11px] text-gray-400">${dt}${item.speedOrNote ? ` • ${item.speedOrNote}` : ""}</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            ${badge}
+                                            <button type="button" onclick="IronApp.deleteWorkoutLog('${item.logId}')" class="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold">🗑️</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join("")}
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+    },
+
+    renderSpecialtyProgramView(progId) {
+        const container = document.getElementById("workoutSpecialtyProgramBox");
+        if (!container || typeof getProgramById !== "function") return;
+        const prog = getProgramById(progId);
+        if (!prog) return;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        const traineeId = user?.id || null;
+        const allLogs = (typeof IronSupabase !== "undefined" && Array.isArray(IronSupabase.cache.workoutLogs))
+            ? IronSupabase.cache.workoutLogs
+            : [];
+        const progLogs = traineeId ? allLogs.filter(l => l.traineeId === traineeId && l.programId === prog.id) : [];
+
+        container.innerHTML = `
+            <div class="space-y-4">
+                ${prog.isPostpartumSafety ? `
+                    <div class="csection-safety-banner bg-rose-950/45 border border-rose-500/45 rounded-2xl p-4 text-xs leading-relaxed">
+                        <strong class="text-rose-300 font-black block mb-1">${this.t("csection_safety_title")}</strong>
+                        <p class="text-rose-100">${this.t("csection_safety_desc")}</p>
+                    </div>
+                ` : ""}
+
+                <div class="bg-slate-950/75 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1 flex-1">
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black ${prog.isPostpartumSafety ? 'bg-rose-500/15 text-rose-300 border border-rose-500/35' : 'bg-amber-500/15 text-amber-300 border border-amber-500/35'}">${prog.level}</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 text-cyan-300 border border-slate-700 text-[10px] font-bold">${prog.frequency}</span>
+                        </div>
+                        <h4 class="text-lg font-black text-white">${isEn ? prog.nameEn : prog.nameAr}</h4>
+                        <p class="text-xs text-gray-300 leading-relaxed">${isEn ? (prog.descriptionEn || prog.description) : prog.description}</p>
+                    </div>
+                    ${prog.image ? `<img src="${prog.image}" onerror="this.style.display='none'" class="w-full sm:w-44 h-28 rounded-xl object-cover border border-slate-800 bg-slate-950 flex-shrink-0" alt="${prog.nameEn}">` : ""}
+                </div>
+
+                <div class="space-y-4">
+                    ${prog.days.map(day => {
+                        const dayLogs = progLogs.filter(l => l.dayTitle === day.title);
+                        const latestLog = dayLogs[0] || null;
+                        return `
+                            <div class="bg-slate-950/75 border border-slate-800 rounded-2xl p-4 sm:p-5">
+                                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3 mb-4" dir="ltr">
+                                    <div>
+                                        <h5 class="font-black text-white text-sm sm:text-base">${day.title}</h5>
+                                        <div class="text-xs text-amber-400 font-bold mt-0.5">${day.targetMuscles}</div>
+                                        ${latestLog ? `<div class="text-[11px] font-black text-emerald-300 mt-1">✓ ${isEn ? `Completed (${latestLog.completedSets}/${latestLog.totalSets} sets)` : `منجز (${latestLog.completedSets}/${latestLog.totalSets} جولات)`}</div>` : ""}
+                                    </div>
+                                    <button onclick="IronApp.startLiveWorkout('${prog.id}', '${day.dayId}')"
+                                        class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition">
+                                        ${this.t("wo_start_btn")}
+                                    </button>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
+                                    ${day.exercises.map((item, idx) => {
+                                        const rawEx = typeof getExerciseById === "function" ? getExerciseById(item.exerciseId) : null;
+                                        if (!rawEx) return "";
+                                        const ex = typeof IronI18n !== "undefined" ? IronI18n.trExercise(rawEx) : rawEx;
+                                        const dispName = isEn ? (item.displayNameEn || ex.nameEn) : ex.nameAr;
+                                        const safeLabel = (item.displayNameEn || ex.nameEn).replace(/'/g, "\\'");
+                                        return `
+                                            <div onclick="IronApp.openExerciseDetail('${ex.id}', '${safeLabel}')"
+                                                class="bg-slate-900/80 border border-slate-800/80 rounded-xl p-2.5 sm:p-3 flex items-start gap-3 hover:border-emerald-500/45 cursor-pointer transition">
+                                                <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center font-black text-xs flex-shrink-0 mt-0.5">
+                                                    ${idx + 1}
+                                                </div>
+                                                <img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${ex.nameEn}')"
+                                                    class="w-16 h-16 rounded-xl object-contain bg-slate-950 border border-slate-800 flex-shrink-0" alt="${dispName}" loading="lazy">
+                                                <div class="flex-1 min-w-0">
+                                                    <h6 class="font-black text-white text-xs truncate">${dispName}</h6>
+                                                    <div class="text-[10px] text-gray-400 mt-0.5 line-clamp-2 leading-relaxed">${ex.execution}</div>
+                                                    <div class="flex items-center gap-2 text-[11px] font-bold mt-1.5 flex-wrap">
+                                                        <span class="text-emerald-400">${item.sets} × ${item.reps}</span>
+                                                        <span class="text-gray-400">• ${isEn ? `Rest ${item.restSec}s` : `راحة ${item.restSec}ث`}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join("")}
+                                </div>
+                                ${this.renderDayCardioStripHtml(prog.id, day.dayId)}
+                            </div>
+                        `;
+                    }).join("")}
+                </div>
             </div>
         `;
     },
@@ -3123,3 +3719,14 @@ const IronApp = {
 document.addEventListener("DOMContentLoaded", () => {
     IronApp.init();
 });
+
+// توسيع التعرف التلقائي على البرامج لتشمل البرامج المنزلية وما بعد الولادة القيصرية
+if (typeof IronApp !== "undefined" && typeof IronApp.resolveProgramIdFromName === "function") {
+    const _baseResolveProgramId = IronApp.resolveProgramIdFromName.bind(IronApp);
+    IronApp.resolveProgramIdFromName = function(programName = "") {
+        const low = String(programName || "").toLowerCase();
+        if (low.includes("home") || low.includes("منزل")) return "prog_home";
+        if (low.includes("csection") || low.includes("c-section") || low.includes("قيصر") || low.includes("ولادة")) return "prog_csection";
+        return _baseResolveProgramId(programName);
+    };
+}

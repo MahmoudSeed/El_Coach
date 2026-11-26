@@ -307,6 +307,36 @@ const IronSupabase = {
         void mealsRes;
     },
 
+    async loadCoachWorkoutLogs(limit = 250) {
+        const sb = this.initClient();
+        if (!sb) return [];
+        try {
+            const { data, error } = await sb
+                .from("workout_logs")
+                .select("*")
+                .order("logged_at", { ascending: false })
+                .limit(limit);
+            if (!error && Array.isArray(data)) {
+                this.cache.coachWorkoutLogs = data.map(row => ({
+                    id: row.id,
+                    traineeId: row.client_id,
+                    date: row.logged_at,
+                    programId: row.program_id,
+                    programName: row.program_name,
+                    dayTitle: row.day_title,
+                    completedSets: Number(row.completed_sets) || 0,
+                    totalSets: Number(row.total_sets) || 0,
+                    totalVolumeKg: Number(row.total_volume_kg) || 0,
+                    completedExercises: Array.isArray(row.completed_exercises) ? row.completed_exercises : []
+                }));
+                return this.cache.coachWorkoutLogs;
+            }
+        } catch (err) {
+            console.warn("loadCoachWorkoutLogs warning:", err);
+        }
+        return this.cache.coachWorkoutLogs || [];
+    },
+
     async saveDietPlan(clientId, authUserId, plan, targetCalSnapshot) {
         const sb = this.initClient();
         if (!sb || !clientId) return;
@@ -382,6 +412,9 @@ const IronSupabase = {
         }).select("*").single();
         if (!error && data) {
             entry.id = data.id;
+            if (Array.isArray(this.cache.coachWorkoutLogs)) {
+                this.cache.coachWorkoutLogs.unshift(entry);
+            }
         } else if (error) {
             console.error("insertWorkoutLog error:", error);
         }

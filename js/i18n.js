@@ -417,7 +417,16 @@ const IronI18n = {
             tier_3m_title: "3 شهور 🔥",
             tier_3m_sub: "90 يوماً • وفر 118",
             coach_tab_clients: "إدارة المشتركين ({count})",
-            coach_tab_programs: "البرامج التدريبية بتفاصيلها ({count})"
+            coach_tab_programs: "البرامج التدريبية بتفاصيلها ({count})",
+            wo_sec_assigned: "🎯 جدولي المعتمد",
+            wo_sec_cardio: "🏃 الكارديو والتقييم",
+            wo_sec_home: "🏠 التمارين المنزلية",
+            wo_sec_csection: "🤱 ما بعد الولادة القيصرية",
+            ex_cardio: "الكارديو (السير/السايكل/الأوبتكال)",
+            ex_home: "التمارين المنزلية",
+            ex_csection: "ما بعد الولادة القيصرية",
+            csection_safety_title: "🩺 تنبيه طبي مهم لتأهيل ما بعد الولادة القيصرية:",
+            csection_safety_desc: "ابدئي هذه التمارين فقط بعد مرور 6 إلى 8 أسابيع وموافقة طبيب النساء/الجراحة. توقفي فوراً إذا شعرتِ بألم في الجرح أو زيادة في النزيف أو لاحظتِ بروزاً في منتصف البطن (Doming)، وتجنبي تمارين البطن التقليدية (Crunches) في المراحل الأولى."
         },
         en: {
             brand_name: "IronCoach",
@@ -822,7 +831,16 @@ const IronI18n = {
             tier_3m_title: "3 Months 🔥",
             tier_3m_sub: "90 Days • Save 118",
             coach_tab_clients: "Clients Management ({count})",
-            coach_tab_programs: "Training Programs & Details ({count})"
+            coach_tab_programs: "Training Programs & Details ({count})",
+            wo_sec_assigned: "🎯 Assigned Split",
+            wo_sec_cardio: "🏃 Cardio & Daily Eval",
+            wo_sec_home: "🏠 Home Workouts",
+            wo_sec_csection: "🤱 Post-C-Section",
+            ex_cardio: "Cardio (Treadmill/Cycle/Elliptical)",
+            ex_home: "Home Workouts",
+            ex_csection: "Post-C-Section Rehab",
+            csection_safety_title: "🩺 Important Post-C-Section Medical Safety Note:",
+            csection_safety_desc: "Begin only after 6–8+ weeks and official OB/GYN medical clearance. Stop immediately if you feel incision pain, heavier bleeding, or notice abdominal midline doming/coning, and avoid traditional crunches or breath-holding early on."
         }
     },
 
@@ -868,6 +886,12 @@ const IronI18n = {
         }
         if (low.includes("ppl") && (low.includes("bulk") || low.includes("3×10") || low.includes("3x10"))) {
             return this.isEn() ? "PPL — Bulking & Hypertrophy (3×10)" : "PPL — تضخيم وبناء عضلات (3×10)";
+        }
+        if (low.includes("home") || low.includes("منزل")) {
+            return this.isEn() ? "Home Workouts (No Equipment)" : "التمارين المنزلية (بدون أجهزة)";
+        }
+        if (low.includes("csection") || low.includes("c-section") || low.includes("قيصر") || low.includes("ولادة")) {
+            return this.isEn() ? "Post-C-Section Safe Recovery" : "تأهيل ما بعد الولادة القيصرية";
         }
         return p;
     },
@@ -954,7 +978,10 @@ const IronI18n = {
             "أكتاف": "Shoulders",
             "أرجل": "Legs",
             "ذراعين": "Arms",
-            "بطن وكور": "Abs & Core"
+            "بطن وكور": "Abs & Core",
+            "كارديو": "Cardio",
+            "تمارين منزلية": "Home Workouts",
+            "بعد الولادة القيصرية": "Post-C-Section"
         };
         return map[muscle] || muscle;
     },

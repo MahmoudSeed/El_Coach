@@ -428,6 +428,165 @@ const workoutProgramsDatabase = [
                 ]
             }
         ]
+    },
+
+    // =========================================================================
+    // 8. برنامج التمارين المنزلية الكامل (بدون أجهزة جيم) - Home Workouts
+    // =========================================================================
+    {
+        id: "prog_home",
+        nameAr: "التمارين المنزلية (بدون أجهزة) — Home Full-Body",
+        nameEn: "Home Workouts — No Gym Equipment (4 Days)",
+        frequency: "4 Days / Week",
+        level: "Beginner to Intermediate (Home)",
+        description: "برنامج منزلي متكامل يعتمد على وزن الجسم أو أدوات بسيطة بالمنزل لبناء العضلات وحرق الدهون بدون حاجة للذهاب إلى النادي، مع كارديو منزلي وتوقيت متابعة يومي.",
+        descriptionEn: "Complete home workout split using bodyweight or simple household items to build muscle and burn fat without needing a gym, paired with daily cardio timing tracking.",
+        image: "https://fitnessprogramer.com/wp-content/uploads/2021/05/Bodyweight-Squat.gif",
+        recommendedCardio: { defaultMinutes: 20, machines: ["ex_cardio_treadmill", "ex_cardio_cycle", "ex_cardio_elliptical"] },
+        days: [
+            {
+                dayId: "home_d1",
+                title: "DAY 1 — HOME UPPER BODY & CORE",
+                targetMuscles: "Chest, Back, Triceps & Abs (At Home)",
+                exercises: [
+                    { exerciseId: "ex_hm_incline_pushup", displayNameEn: "Incline / Wall Push-Ups (Warm-Up)", sets: 3, reps: "15", restSec: 45 },
+                    { exerciseId: "ex_hm_pushup", displayNameEn: "Home Push-Ups", sets: 4, reps: "12-15", restSec: 60 },
+                    { exerciseId: "ex_hm_row", displayNameEn: "Single-Arm Home Row", sets: 4, reps: "12 / arm", restSec: 60 },
+                    { exerciseId: "ex_hm_dips", displayNameEn: "Chair Triceps Dips", sets: 3, reps: "15", restSec: 45 },
+                    { exerciseId: "ex_hm_superman", displayNameEn: "Superman Back Extension", sets: 3, reps: "15", restSec: 45 },
+                    { exerciseId: "ex_hm_plank", displayNameEn: "Home Forearm Plank", sets: 3, reps: "45s", restSec: 45 }
+                ]
+            },
+            {
+                dayId: "home_d2",
+                title: "DAY 2 — HOME LOWER BODY & GLUTES",
+                targetMuscles: "Quads, Glutes, Hamstrings & Calves (At Home)",
+                exercises: [
+                    { exerciseId: "ex_hm_squat", displayNameEn: "Home Bodyweight Squat", sets: 4, reps: "20", restSec: 60 },
+                    { exerciseId: "ex_hm_lunge", displayNameEn: "Home Alternating Lunges", sets: 4, reps: "14 / leg", restSec: 60 },
+                    { exerciseId: "ex_hm_bridge", displayNameEn: "Floor Glute Bridge", sets: 4, reps: "20", restSec: 45 },
+                    { exerciseId: "ex_hm_wallsit", displayNameEn: "Wall Sit Isometric Hold", sets: 3, reps: "45s", restSec: 60 },
+                    { exerciseId: "ex_hm_calf", displayNameEn: "Stair Standing Calf Raise", sets: 4, reps: "20", restSec: 45 }
+                ]
+            },
+            {
+                dayId: "home_d3",
+                title: "DAY 3 — HOME FAT-BURN & FULL BODY",
+                targetMuscles: "Cardio Conditioning, Legs, Chest & Core",
+                exercises: [
+                    { exerciseId: "ex_hm_jacks", displayNameEn: "Home Jumping Jacks Cardio", sets: 4, reps: "45s", restSec: 30 },
+                    { exerciseId: "ex_hm_squat", displayNameEn: "Home Bodyweight Squat", sets: 4, reps: "18", restSec: 45 },
+                    { exerciseId: "ex_hm_pushup", displayNameEn: "Home Push-Ups", sets: 3, reps: "12-15", restSec: 45 },
+                    { exerciseId: "ex_hm_lunge", displayNameEn: "Home Alternating Lunges", sets: 3, reps: "12 / leg", restSec: 45 },
+                    { exerciseId: "ex_hm_plank", displayNameEn: "Home Forearm Plank", sets: 3, reps: "45-60s", restSec: 45 }
+                ]
+            },
+            {
+                dayId: "home_d4",
+                title: "DAY 4 — HOME POSTURE, GLUTES & MOBILITY",
+                targetMuscles: "Back Posture, Glutes, Core & Light Cardio",
+                exercises: [
+                    { exerciseId: "ex_hm_row", displayNameEn: "Single-Arm Home Row", sets: 4, reps: "15 / arm", restSec: 45 },
+                    { exerciseId: "ex_hm_dips", displayNameEn: "Chair Triceps Dips", sets: 3, reps: "12-15", restSec: 45 },
+                    { exerciseId: "ex_hm_bridge", displayNameEn: "Floor Glute Bridge", sets: 4, reps: "20", restSec: 45 },
+                    { exerciseId: "ex_hm_superman", displayNameEn: "Superman Back Extension", sets: 3, reps: "15", restSec: 45 },
+                    { exerciseId: "ex_cs_walking", displayNameEn: "Brisk Home/Outdoor Walk", sets: 1, reps: "20 min", restSec: 0 }
+                ]
+            }
+        ]
+    },
+
+    // =========================================================================
+    // 9. برنامج تأهيل ما بعد الولادة القيصرية (Post-C-Section Recovery)
+    // =========================================================================
+    {
+        id: "prog_csection",
+        nameAr: "تأهيل ما بعد الولادة القيصرية — Post-C-Section",
+        nameEn: "Post-C-Section Safe Recovery (Phased)",
+        frequency: "3–4 Days / Week (Gentle)",
+        level: "Postpartum Safety Cleared (6–12+ Wks)",
+        isPostpartumSafety: true,
+        description: "برنامج تأهيل واستعادة لياقة متدرج خصيصاً لما بعد الولادة القيصرية: يبدأ بالتنفس البطني العميق، تقوية قاع الحوض، علاج الانفصال العضلي بلطف، ثم تقوية القوام والأرداف بدون ضغط أو كرانش عنيف على جرح البطن.",
+        descriptionEn: "Phased postpartum C-section recovery plan: starts with 360° diaphragmatic breathing, pelvic floor rehab & gentle diastasis support before progressing to glute, posture & light cardio strength without abdominal strain.",
+        image: "https://upload.wikimedia.org/wikipedia/commons/9/9c/Diaphragmatic_breathing.gif?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+        recommendedCardio: { defaultMinutes: 15, machines: ["ex_cardio_treadmill", "ex_cardio_cycle", "ex_cardio_elliptical"] },
+        days: [
+            {
+                dayId: "cs_phase1",
+                title: "PHASE 1 — WEEKS 6–8+: BREATHING & DEEP CORE",
+                targetMuscles: "Diaphragm, Pelvic Floor, Deep TVA (Zero Strain)",
+                exercises: [
+                    { exerciseId: "ex_cs_breathing", displayNameEn: "360° Diaphragmatic Breathing", sets: 3, reps: "8 breaths", restSec: 30 },
+                    { exerciseId: "ex_cs_pelvic_floor", displayNameEn: "Postpartum Pelvic Floor (Kegel)", sets: 3, reps: "10 (3-5s)", restSec: 45 },
+                    { exerciseId: "ex_cs_pelvic_tilt", displayNameEn: "Gentle Supine Pelvic Tilt", sets: 3, reps: "10", restSec: 45 },
+                    { exerciseId: "ex_cs_walking", displayNameEn: "Gentle Postpartum Walk", sets: 1, reps: "10-15 min", restSec: 0 }
+                ]
+            },
+            {
+                dayId: "cs_phase2",
+                title: "PHASE 2 — WEEKS 8–12+: MOBILITY & GLUTE REHAB",
+                targetMuscles: "Glutes, Spine Mobility, Anti-Coning Core Control",
+                exercises: [
+                    { exerciseId: "ex_cs_breathing", displayNameEn: "360° Diaphragmatic Breathing", sets: 2, reps: "8 breaths", restSec: 30 },
+                    { exerciseId: "ex_cs_cat_cow", displayNameEn: "Gentle Cat-Cow Spine Mobility", sets: 3, reps: "10", restSec: 45 },
+                    { exerciseId: "ex_cs_dead_bug", displayNameEn: "Postpartum Heel Slides / Dead Bug", sets: 3, reps: "10 / leg", restSec: 45 },
+                    { exerciseId: "ex_cs_bridge", displayNameEn: "Gentle Postpartum Glute Bridge", sets: 3, reps: "12-15", restSec: 45 },
+                    { exerciseId: "ex_cs_walking", displayNameEn: "Progressive Postpartum Walk", sets: 1, reps: "15-20 min", restSec: 0 }
+                ]
+            },
+            {
+                dayId: "cs_phase3",
+                title: "PHASE 3 — WEEKS 12+: POSTURE & SAFE STRENGTH",
+                targetMuscles: "Upper Back Posture, Safe Chest, Balance & Cardio",
+                exercises: [
+                    { exerciseId: "ex_cs_bird_dog", displayNameEn: "Gentle Bird-Dog Core Stability", sets: 3, reps: "10 / side", restSec: 45 },
+                    { exerciseId: "ex_cs_band_row", displayNameEn: "Seated Resistance Band Row", sets: 3, reps: "15", restSec: 45 },
+                    { exerciseId: "ex_cs_wall_pushup", displayNameEn: "C-Section Safe Wall Push-Up", sets: 3, reps: "12", restSec: 45 },
+                    { exerciseId: "ex_cs_bridge", displayNameEn: "Gentle Postpartum Glute Bridge", sets: 3, reps: "15", restSec: 45 },
+                    { exerciseId: "ex_cs_walking", displayNameEn: "Steady Postpartum Walk / Cycle", sets: 1, reps: "20-25 min", restSec: 0 }
+                ]
+            }
+        ]
+    }
+];
+
+// بيانات أجهزة الكارديو الثلاثة المعتمدة للتقييم اليومي (السير + السايكل + الأوبتكال)
+const CARDIO_MACHINES_CATALOG = [
+    {
+        key: "treadmill",
+        exerciseId: "ex_cardio_treadmill",
+        icon: "🏃",
+        nameAr: "السير الكهربائي",
+        nameEn: "Treadmill",
+        badgeAr: "حرق عالي • ميلان وسرعة",
+        badgeEn: "High Burn • Incline & Speed",
+        defaultMinutes: 20,
+        targetHintAr: "مثال: سرعة 5.5 • ميلان 8% • 20 دقيقة",
+        targetHintEn: "e.g., Speed 5.5 • Incline 8% • 20 min"
+    },
+    {
+        key: "cycle",
+        exerciseId: "ex_cardio_cycle",
+        icon: "🚴",
+        nameAr: "الدراجة الثابتة (السايكل)",
+        nameEn: "Stationary Cycle",
+        badgeAr: "آمن للركبة والمفاصل",
+        badgeEn: "Joint & Knee Friendly",
+        defaultMinutes: 20,
+        targetHintAr: "مثال: مقاومة 7 • 80 RPM • 20 دقيقة",
+        targetHintEn: "e.g., Resistance 7 • 80 RPM • 20 min"
+    },
+    {
+        key: "elliptical",
+        exerciseId: "ex_cardio_elliptical",
+        icon: "⚡",
+        nameAr: "جهاز الأوبتكال البيضاوي",
+        nameEn: "Elliptical Trainer",
+        badgeAr: "جسم كامل بدون صدمات",
+        badgeEn: "Full-Body Low Impact",
+        defaultMinutes: 20,
+        targetHintAr: "مثال: مستوى 6 • حركة كاملة • 20 دقيقة",
+        targetHintEn: "e.g., Level 6 • Full Stride • 20 min"
     }
 ];
 

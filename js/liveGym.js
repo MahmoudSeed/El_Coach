@@ -224,6 +224,8 @@ const IronLiveGym = {
                 s.actualReps = "";
             });
         });
+        this.currentWorkout.cardio = this.createDefaultCardioState();
+        this.stopCardioStopwatch(false);
         this.stopRestTimer();
         this.saveDraftSession();
         this.renderLiveGymModal();
@@ -280,6 +282,430 @@ const IronLiveGym = {
         openModal("altExercisesModal");
     },
 
+    // =========================================================================
+    // إدارة الكارديو داخل التمرين اليومي + التوقيت والمقارنة باليوم السابق
+    // =========================================================================
+    cardioTimerInterval: null,
+
+    createDefaultCardioState(machineKey = "treadmill") {
+        const catalog = typeof CARDIO_MACHINES_CATALOG !== "undefined" ? CARDIO_MACHINES_CATALOG : [];
+        const meta = catalog.find(m => m.key === machineKey) || catalog[0] || { key: "treadmill", exerciseId: "ex_cardio_treadmill" };
+        return {
+            machineKey: meta.key,
+            exerciseId: meta.exerciseId,
+            minutes: 0,
+            speedOrNote: "",
+            stopwatchRunning: false,
+            stopwatchStartedMs: null,
+            stopwatchAccumulatedSec: 0
+        };
+    },
+
+    ensureCardioState() {
+        if (!this.currentWorkout) return this.createDefaultCardioState();
+        if (!this.currentWorkout.cardio || typeof this.currentWorkout.cardio !== "object") {
+            this.currentWorkout.cardio = this.createDefaultCardioState();
+        }
+        return this.currentWorkout.cardio;
+    },
+
+    getCardioMachineCatalog() {
+        return typeof CARDIO_MACHINES_CATALOG !== "undefined" ? CARDIO_MACHINES_CATALOG : [];
+    },
+
+    getCardioStopwatchTotalSec(cardio) {
+        if (!cardio) return 0;
+        const base = Math.max(0, Number(cardio.stopwatchAccumulatedSec) || 0);
+        if (cardio.stopwatchRunning && cardio.stopwatchStartedMs) {
+            return base + Math.max(0, Math.floor((Date.now() - cardio.stopwatchStartedMs) / 1000));
+        }
+        return base;
+    },
+
+    formatDurationClock(totalSeconds) {
+        const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+        const mins = Math.floor(s / 60);
+        const secs = s % 60;
+        return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    },
+
+    selectCardioMachine(machineKey) {
+        const cardio = this.ensureCardioState();
+        const catalog = this.getCardioMachineCatalog();
+        const meta = catalog.find(m => m.key === machineKey) || catalog[0];
+        if (!meta) return;
+        cardio.machineKey = meta.key;
+        cardio.exerciseId = meta.exerciseId;
+        this.saveDraftSession();
+        this.refreshCardioSectionDom();
+    },
+
+    setCardioMinutes(minutesVal) {
+        const cardio = this.ensureCardioState();
+        cardio.minutes = Math.max(0, Math.min(240, parseInt(minutesVal) || 0));
+        this.saveDraftSession();
+        this.refreshCardioSectionDom();
+    },
+
+    adjustCardioMinutes(delta) {
+        const cardio = this.ensureCardioState();
+        cardio.minutes = Math.max(0, Math.min(240, (parseInt(cardio.minutes) || 0) + delta));
+        this.saveDraftSession();
+        this.refreshCardioSectionDom();
+    },
+
+    setCardioNote(noteVal) {
+        const cardio = this.ensureCardioState();
+        cardio.speedOrNote = String(noteVal || "").slice(0, 120);
+        this.saveDraftSession();
+    },
+
+    toggleCardioStopwatch() {
+        const cardio = this.ensureCardioState();
+        if (cardio.stopwatchRunning) {
+            cardio.stopwatchAccumulatedSec = this.getCardioStopwatchTotalSec(cardio);
+            cardio.stopwatchRunning = false;
+            cardio.stopwatchStartedMs = null;
+            if (cardio.stopwatchAccumulatedSec >= 30) {
+                cardio.minutes = Math.max(cardio.minutes || 0, Math.max(1, Math.round(cardio.stopwatchAccumulatedSec / 60)));
+            }
+            clearInterval(this.cardioTimerInterval);
+            this.cardioTimerInterval = null;
+        } else {
+            cardio.stopwatchRunning = true;
+            cardio.stopwatchStartedMs = Date.now();
+            this.startCardioTicker();
+        }
+        this.saveDraftSession();
+        this.refreshCardioSectionDom();
+    },
+
+    stopCardioStopwatch(resetTimer = true) {
+        clearInterval(this.cardioTimerInterval);
+        this.cardioTimerInterval = null;
+        const cardio = this.currentWorkout?.cardio;
+        if (!cardio) return;
+        if (cardio.stopwatchRunning) {
+            cardio.stopwatchAccumulatedSec = this.getCardioStopwatchTotalSec(cardio);
+            cardio.stopwatchRunning = false;
+            cardio.stopwatchStartedMs = null;
+        }
+        if (resetTimer) {
+            cardio.stopwatchAccumulatedSec = 0;
+        }
+        this.saveDraftSession();
+        this.refreshCardioSectionDom();
+    },
+
+    startCardioTicker() {
+        clearInterval(this.cardioTimerInterval);
+        this.cardioTimerInterval = setInterval(() => {
+            const cardio = this.currentWorkout?.cardio;
+            if (!cardio || !cardio.stopwatchRunning) {
+                clearInterval(this.cardioTimerInterval);
+                this.cardioTimerInterval = null;
+                return;
+            }
+            const totalSec = this.getCardioStopwatchTotalSec(cardio);
+            const clockEl = document.getElementById("liveGymCardioStopwatchText");
+            if (clockEl) clockEl.innerText = this.formatDurationClock(totalSec);
+            const elapsedMin = Math.floor(totalSec / 60);
+            if (elapsedMin > (parseInt(cardio.minutes) || 0)) {
+                cardio.minutes = elapsedMin;
+                this.saveDraftSession();
+                const minInput = document.getElementById("liveGymCardioMinutesInput");
+                if (minInput && document.activeElement !== minInput) minInput.value = String(elapsedMin);
+                this.refreshCardioComparisonDom();
+            }
+        }, 1000);
+    },
+
+    getTraineeCardioTimeline(traineeId, limit = 14) {
+        if (!traineeId || typeof IronSupabase === "undefined") return [];
+        const pool = [];
+        const seenIds = new Set();
+        const pushList = (arr) => {
+            if (!Array.isArray(arr)) return;
+            arr.forEach(l => {
+                if (l && l.traineeId === traineeId && !seenIds.has(l.id)) {
+                    seenIds.add(l.id);
+                    pool.push(l);
+                }
+            });
+        };
+        pushList(IronSupabase.cache.workoutLogs);
+        pushList(IronSupabase.cache.coachWorkoutLogs);
+
+        const catalog = this.getCardioMachineCatalog();
+        const entries = [];
+
+        pool.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).forEach(log => {
+            const list = Array.isArray(log.completedExercises) ? log.completedExercises : [];
+            const cardioItems = list.filter(ex => ex && (ex.isCardio || String(ex.exerciseId || "").startsWith("ex_cardio_")));
+            if (cardioItems.length > 0) {
+                const totalMin = cardioItems.reduce((sum, item) => sum + (parseInt(item.durationMinutes || item.maxWeightKg) || 0), 0);
+                const first = cardioItems[0];
+                const machineKey = first.machineKey
+                    || (first.exerciseId === "ex_cardio_cycle" ? "cycle" : first.exerciseId === "ex_cardio_elliptical" ? "elliptical" : "treadmill");
+                const meta = catalog.find(m => m.key === machineKey) || catalog[0];
+                if (totalMin > 0) {
+                    entries.push({
+                        logId: log.id,
+                        date: log.date,
+                        dayKey: String(log.date || "").slice(0, 10),
+                        machineKey,
+                        exerciseId: first.exerciseId || meta?.exerciseId || "ex_cardio_treadmill",
+                        machineNameAr: meta?.nameAr || "كارديو",
+                        machineNameEn: meta?.nameEn || "Cardio",
+                        icon: meta?.icon || "🏃",
+                        durationMinutes: totalMin,
+                        speedOrNote: first.speedOrNote || ""
+                    });
+                }
+            }
+        });
+
+        // ترتيب أحدث -> أقدم ثم حساب مقارنة كل يوم باليوم السابق
+        const withDelta = entries.map((entry, idx) => {
+            const prev = entries[idx + 1] || null;
+            const deltaMinutes = prev ? entry.durationMinutes - prev.durationMinutes : null;
+            return {
+                ...entry,
+                prevMinutes: prev ? prev.durationMinutes : null,
+                deltaMinutes,
+                trend: deltaMinutes === null ? "first" : deltaMinutes > 0 ? "up" : deltaMinutes < 0 ? "down" : "same"
+            };
+        });
+
+        return withDelta.slice(0, limit);
+    },
+
+    getCardioComparison(traineeId, machineKey, currentMinutes) {
+        const timeline = this.getTraineeCardioTimeline(traineeId, 20);
+        const curMin = Math.max(0, parseInt(currentMinutes) || 0);
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        // نبحث عن آخر سجل كارديو من يوم سابق أو آخر جلسة مسجلة للمقارنة العادلة
+        const priorDayEntry = timeline.find(e => e.dayKey !== todayStr) || timeline[0] || null;
+        const sameMachinePrev = timeline.find(e => e.machineKey === machineKey && e.dayKey !== todayStr)
+            || timeline.find(e => e.machineKey === machineKey)
+            || null;
+
+        if (!priorDayEntry) {
+            return {
+                previousMinutes: null,
+                previousMachineKey: null,
+                previousDate: null,
+                sameMachinePrevMinutes: null,
+                deltaMinutes: null,
+                trend: "first"
+            };
+        }
+
+        const ref = priorDayEntry;
+        const delta = curMin > 0 ? (curMin - ref.durationMinutes) : null;
+        return {
+            previousMinutes: ref.durationMinutes,
+            previousMachineKey: ref.machineKey,
+            previousDate: ref.date,
+            sameMachinePrevMinutes: sameMachinePrev ? sameMachinePrev.durationMinutes : null,
+            deltaMinutes: delta,
+            trend: delta === null ? "pending" : delta > 0 ? "up" : delta < 0 ? "down" : "same"
+        };
+    },
+
+    formatCardioComparisonHtml(comp, currentMinutes, isEn) {
+        const curMin = Math.max(0, parseInt(currentMinutes) || 0);
+        const unit = isEn ? "min" : "دقيقة";
+        if (comp.trend === "first") {
+            return curMin > 0
+                ? `<span class="text-cyan-300 font-black">🆕 ${isEn ? `First cardio baseline logged: ${curMin} ${unit}` : `أول تسجيل كارديو (خط البداية: ${curMin} ${unit})`}</span>`
+                : `<span class="text-gray-400 font-bold">${isEn ? "Enter or time your cardio minutes to set today's baseline." : "سجل دقائق الكارديو أو شغّل المؤقت لبدء تقييم تطورك اليومي."}</span>`;
+        }
+        if (curMin === 0) {
+            return `<span class="text-sky-300 font-bold">${isEn ? `Previous session: ${comp.previousMinutes} ${unit} — Beat it today!` : `اليوم السابق: ${comp.previousMinutes} ${unit} — حاول الوصول إليها أو تجاوزها اليوم!`}</span>`;
+        }
+        if (comp.deltaMinutes > 0) {
+            return `<span class="text-emerald-300 font-black">📈 ${isEn ? `Progress! +${comp.deltaMinutes} ${unit} vs previous day (${comp.previousMinutes} → ${curMin} ${unit})` : `تحسن ممتاز! +${comp.deltaMinutes} ${unit} عن اليوم السابق (${comp.previousMinutes} ← ${curMin} ${unit})`}</span>`;
+        }
+        if (comp.deltaMinutes === 0) {
+            return `<span class="text-sky-300 font-black">🎯 ${isEn ? `Matched previous day (${curMin} ${unit})` : `تطابق ممتاز مع اليوم السابق (${curMin} ${unit})`}</span>`;
+        }
+        return `<span class="text-amber-300 font-black">📉 ${isEn ? `${Math.abs(comp.deltaMinutes)} ${unit} less than previous day (${comp.previousMinutes} → ${curMin} ${unit})` : `أقل بـ ${Math.abs(comp.deltaMinutes)} ${unit} عن اليوم السابق (${comp.previousMinutes} ← ${curMin} ${unit})`}</span>`;
+    },
+
+    buildCardioExerciseEntry(cardioState) {
+        const catalog = this.getCardioMachineCatalog();
+        const meta = catalog.find(m => m.key === cardioState?.machineKey) || catalog[0] || {
+            key: "treadmill",
+            exerciseId: "ex_cardio_treadmill",
+            nameEn: "Treadmill",
+            nameAr: "السير الكهربائي"
+        };
+        const mins = Math.max(1, parseInt(cardioState?.minutes) || 0);
+        return {
+            exerciseId: meta.exerciseId,
+            name: `Cardio: ${meta.nameEn}`,
+            isCardio: true,
+            machineKey: meta.key,
+            durationMinutes: mins,
+            speedOrNote: String(cardioState?.speedOrNote || "").trim(),
+            completedSets: 1,
+            totalSets: 1,
+            isFull: true,
+            maxWeightKg: 0
+        };
+    },
+
+    async logStandaloneCardio(machineKey, minutesVal, speedOrNote = "") {
+        const mins = Math.max(0, Math.min(240, parseInt(minutesVal) || 0));
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        if (mins <= 0) {
+            showToast(isEn ? "Please enter cardio duration in minutes (at least 1 min)" : "يرجى إدخال مدة الكارديو بالدقائق (دقيقة واحدة على الأقل)", "error");
+            return false;
+        }
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        const traineeId = user?.id || null;
+        if (!traineeId) return false;
+
+        const catalog = this.getCardioMachineCatalog();
+        const meta = catalog.find(m => m.key === machineKey) || catalog[0];
+        const comp = this.getCardioComparison(traineeId, meta.key, mins);
+        const cardioItem = this.buildCardioExerciseEntry({
+            machineKey: meta.key,
+            minutes: mins,
+            speedOrNote
+        });
+
+        const entry = {
+            id: "log_" + Date.now(),
+            traineeId,
+            date: new Date().toISOString(),
+            programId: "cardio_daily",
+            programName: isEn ? "Daily Cardio & Timing Evaluation" : "الكارديو والتقييم اليومي",
+            dayTitle: `CARDIO — ${meta.nameEn.toUpperCase()} (${mins} MIN)`,
+            completedSets: 1,
+            totalSets: 1,
+            totalVolumeKg: 0,
+            completedExercises: [cardioItem]
+        };
+
+        if (typeof IronSupabase !== "undefined" && IronSupabase.isAvailable()) {
+            await IronSupabase.insertWorkoutLog(entry, user.traineeData?.authUserId || null);
+        } else if (typeof IronSupabase !== "undefined") {
+            IronSupabase.cache.workoutLogs.unshift(entry);
+        }
+
+        const evalMsg = comp.trend === "first"
+            ? (isEn ? `Saved ${meta.nameEn} (${mins} min) — Baseline set! 🏃` : `تم حفظ ${meta.nameAr} (${mins} دقيقة) — خط البداية مسجل! 🏃`)
+            : comp.deltaMinutes > 0
+            ? (isEn ? `Saved ${meta.nameEn} (${mins} min) • +${comp.deltaMinutes} min 📈 vs previous day!` : `عاش! ${meta.nameAr} (${mins} دقيقة) • تحسن +${comp.deltaMinutes} د 📈 عن اليوم السابق!`)
+            : comp.deltaMinutes === 0
+            ? (isEn ? `Saved ${meta.nameEn} (${mins} min) • Matched yesterday 🎯` : `تم حفظ ${meta.nameAr} (${mins} دقيقة) • نفس أداء اليوم السابق 🎯`)
+            : (isEn ? `Saved ${meta.nameEn} (${mins} min) • ${Math.abs(comp.deltaMinutes)} min less than previous day` : `تم حفظ ${meta.nameAr} (${mins} دقيقة) • أقل بـ ${Math.abs(comp.deltaMinutes)} د عن السابق`);
+
+        showToast(evalMsg, "success");
+        if (typeof IronApp !== "undefined") {
+            if (IronApp.renderWorkoutLogs) IronApp.renderWorkoutLogs();
+            if (IronApp.renderCardioEvaluationView) IronApp.renderCardioEvaluationView();
+            if (IronApp.selectedProgramId) IronApp.selectProgram(IronApp.selectedProgramId);
+        }
+        return true;
+    },
+
+    refreshCardioComparisonDom() {
+        const compEl = document.getElementById("liveGymCardioComparisonBox");
+        if (!compEl || !this.currentWorkout) return;
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const cardio = this.ensureCardioState();
+        const comp = this.getCardioComparison(user?.id, cardio.machineKey, cardio.minutes);
+        compEl.innerHTML = this.formatCardioComparisonHtml(comp, cardio.minutes, isEn);
+    },
+
+    refreshCardioSectionDom() {
+        const slot = document.getElementById("liveGymCardioSlot");
+        if (slot) {
+            slot.innerHTML = this.renderCardioSectionHtml();
+        }
+    },
+
+    renderCardioSectionHtml() {
+        const cardio = this.ensureCardioState();
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const catalog = this.getCardioMachineCatalog();
+        const selectedMeta = catalog.find(m => m.key === cardio.machineKey) || catalog[0] || {};
+        const selectedEx = typeof getExerciseById === "function" ? getExerciseById(selectedMeta.exerciseId) : null;
+        const user = typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null;
+        const comp = this.getCardioComparison(user?.id, cardio.machineKey, cardio.minutes);
+        const totalSec = this.getCardioStopwatchTotalSec(cardio);
+        if (cardio.stopwatchRunning && !this.cardioTimerInterval) {
+            setTimeout(() => this.startCardioTicker(), 50);
+        }
+
+        return `
+            <div class="bg-slate-950/75 border border-sky-500/35 rounded-2xl p-3 sm:p-4 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-lg bg-sky-500/15 border border-sky-500/35 text-sky-300 flex items-center justify-center text-sm">🏃</span>
+                        <div>
+                            <div class="text-xs font-black text-white">${isEn ? "Daily Cardio & Timing Evaluation" : "الكارديو داخل التمرين والتقييم اليومي"}</div>
+                            <div class="text-[10px] text-gray-400">${isEn ? "Compare today's cardio duration with your previous session" : "قِس وقت الكارديو لتقييم تطورك اليومي عن اليوم السابق"}</div>
+                        </div>
+                    </div>
+                    ${selectedEx ? `
+                        <button type="button" onclick="IronApp.openExerciseDetail('${selectedEx.id}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 text-[10px] font-bold transition">
+                            📷 ${isEn ? "Machine Guide" : "شرح وصورة الجهاز"}
+                        </button>
+                    ` : ""}
+                </div>
+
+                <!-- اختيار جهاز الكارديو بالصورة التوضيحية -->
+                <div class="grid grid-cols-3 gap-2">
+                    ${catalog.map(m => {
+                        const exObj = typeof getExerciseById === "function" ? getExerciseById(m.exerciseId) : null;
+                        const active = m.key === cardio.machineKey;
+                        const dispName = isEn ? m.nameEn : m.nameAr;
+                        return `
+                            <button type="button" onclick="IronLiveGym.selectCardioMachine('${m.key}')"
+                                class="rounded-xl p-2 border text-start transition flex flex-col gap-1.5 ${active ? 'bg-sky-500/15 border-sky-400 shadow-sm shadow-sky-500/20' : 'bg-slate-900/70 border-slate-800 hover:border-slate-700'}">
+                                ${exObj ? `<img src="${exObj.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${m.nameEn}')" alt="${dispName}" class="w-full h-14 sm:h-16 rounded-lg object-cover bg-slate-950 border border-slate-800">` : ""}
+                                <div class="text-[11px] font-black leading-tight ${active ? 'text-sky-300' : 'text-gray-200'} truncate">${m.icon} ${dispName}</div>
+                            </button>
+                        `;
+                    }).join("")}
+                </div>
+
+                <!-- مؤقت الكارديو المباشر + إدخال الدقائق + مقارنة اليوم باليوم السابق -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 items-center">
+                    <div class="flex flex-wrap items-center gap-1.5 bg-slate-900/80 border border-slate-800 rounded-xl p-2">
+                        <span class="text-[11px] font-bold text-gray-300 px-1">${isEn ? "Duration:" : "المدة:"}</span>
+                        <button type="button" onclick="IronLiveGym.adjustCardioMinutes(-5)" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-black text-white">-5</button>
+                        <input id="liveGymCardioMinutesInput" type="number" min="0" max="240" value="${cardio.minutes || 0}"
+                            oninput="IronLiveGym.setCardioMinutes(this.value)"
+                            class="w-14 bg-slate-950 border border-sky-500/40 rounded-lg py-1 text-center text-xs font-black text-sky-300 font-mono outline-none">
+                        <span class="text-[11px] font-bold text-gray-400">${isEn ? "min" : "د"}</span>
+                        <button type="button" onclick="IronLiveGym.adjustCardioMinutes(5)" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-black text-white">+5</button>
+
+                        <span id="liveGymCardioStopwatchText" class="ms-auto font-mono text-xs font-black text-amber-300 px-2 py-1 rounded bg-slate-950 border border-slate-800">${this.formatDurationClock(totalSec)}</span>
+                        <button type="button" onclick="IronLiveGym.toggleCardioStopwatch()" class="px-2.5 py-1 rounded-lg ${cardio.stopwatchRunning ? 'bg-amber-500 text-slate-950' : 'bg-sky-500/20 text-sky-300 border border-sky-500/40'} text-[11px] font-black transition">
+                            ${cardio.stopwatchRunning ? (isEn ? "⏸ Pause" : "⏸ إيقاف") : (isEn ? "▶ Timer" : "▶ مؤقت")}
+                        </button>
+                    </div>
+
+                    <input type="text" value="${(cardio.speedOrNote || '').replace(/"/g, '&quot;')}"
+                        oninput="IronLiveGym.setCardioNote(this.value)"
+                        placeholder="${isEn ? (selectedMeta.targetHintEn || 'Speed / Incline / Level') : (selectedMeta.targetHintAr || 'السرعة / الميلان / المستوى')}"
+                        class="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 outline-none focus:border-sky-500">
+                </div>
+
+                <div id="liveGymCardioComparisonBox" class="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 text-[11px]">
+                    ${this.formatCardioComparisonHtml(comp, cardio.minutes, isEn)}
+                </div>
+            </div>
+        `;
+    },
+
     // إنهاء التمرين وحفظ البيانات وأسماء التمارين المنجزة في سجل المتدرب
     async finishWorkout() {
         if (!this.currentWorkout) return;
@@ -288,7 +714,17 @@ const IronLiveGym = {
         const totalSets = this.currentWorkout.exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
         const completedSets = this.currentWorkout.exercises.reduce((acc, ex) => acc + ex.sets.filter(s => s.completed).length, 0);
 
-        if (completedSets === 0) {
+        const cardioState = this.ensureCardioState();
+        if (cardioState.stopwatchRunning) {
+            const totalSec = this.getCardioStopwatchTotalSec(cardioState);
+            if (totalSec >= 30) {
+                cardioState.minutes = Math.max(cardioState.minutes || 0, Math.max(1, Math.round(totalSec / 60)));
+            }
+        }
+        const cardioMin = Math.max(0, parseInt(cardioState.minutes) || 0);
+        this.stopCardioStopwatch(false);
+
+        if (completedSets === 0 && cardioMin === 0) {
             const errMsg = typeof IronI18n !== "undefined"
                 ? IronI18n.t("gym_err_no_sets")
                 : (isEn ? "Please mark at least one set as Complete (✓) before saving the workout" : "يرجى إتمام جولة واحدة على الأقل (الضغط على Complete) قبل حفظ التمرين");
@@ -325,6 +761,10 @@ const IronLiveGym = {
                 };
             })
             .filter(Boolean);
+
+        if (cardioMin > 0) {
+            completedExercises.push(this.buildCardioExerciseEntry(cardioState));
+        }
 
         const entry = {
             id: "log_" + Date.now(),
@@ -398,6 +838,10 @@ const IronLiveGym = {
             </div>
 
             <!-- مؤشر التنقل بين تمارين اليوم (عمودان على الجوال، صفان متناسقان على الشاشات الأوسع) -->
+            <div id="liveGymCardioSlot" class="mb-3">
+                ${this.renderCardioSectionHtml()}
+            </div>
+
             <div class="live-gym-ex-tabs grid gap-1.5 sm:gap-2 mb-3" dir="ltr" style="--gym-cols: ${Math.max(2, Math.ceil(w.exercises.length / 2))};">
                 ${w.exercises.map((item, idx) => {
                     const label = item.displayNameEn || item.details?.nameEn || `Exercise ${idx + 1}`;

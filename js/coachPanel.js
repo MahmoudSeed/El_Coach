@@ -233,6 +233,21 @@ const IronCoachPanel = {
                                                 <div class="font-bold text-cyan-400 truncate">${typeof IronI18n !== 'undefined' && IronI18n.trProgram ? IronI18n.trProgram(t.program || 'PPL (Push Pull Legs)') : (t.program || 'PPL')}</div>
                                             </div>
                                         </div>
+                                        ${(() => {
+                                            const cTimeline = (typeof IronLiveGym !== 'undefined' && IronLiveGym.getTraineeCardioTimeline) ? IronLiveGym.getTraineeCardioTimeline(t.id, 3) : [];
+                                            if (cTimeline.length === 0) {
+                                                return `<div class="mt-2 px-2.5 py-1.5 rounded-xl bg-slate-950/50 border border-slate-800/80 text-[11px] text-gray-400 flex items-center justify-between gap-2"><span>🏃 ${isEn ? 'Cardio Evaluation:' : 'تقييم الكارديو:'}</span><span class="font-bold text-gray-500">${isEn ? 'No cardio logged yet' : 'لم يُسجل بعد'}</span></div>`;
+                                            }
+                                            const latestC = cTimeline[0];
+                                            const deltaPill = latestC.trend === 'first'
+                                                ? `<span class="text-cyan-300 font-black">🆕 ${isEn ? 'Baseline' : 'أول سجل'}</span>`
+                                                : latestC.deltaMinutes > 0
+                                                ? `<span class="text-emerald-300 font-black">📈 +${latestC.deltaMinutes}${isEn ? 'm' : 'د'}</span>`
+                                                : latestC.deltaMinutes === 0
+                                                ? `<span class="text-sky-300 font-black">🎯 ${isEn ? 'Same' : 'ثابت'}</span>`
+                                                : `<span class="text-amber-300 font-black">📉 ${latestC.deltaMinutes}${isEn ? 'm' : 'د'}</span>`;
+                                            return `<div class="mt-2 px-2.5 py-1.5 rounded-xl bg-sky-950/30 border border-sky-500/30 text-[11px] flex items-center justify-between gap-2"><span class="text-sky-200 font-bold truncate">${latestC.icon} ${isEn ? latestC.machineNameEn : latestC.machineNameAr}: <strong class="text-white">${latestC.durationMinutes} ${isEn ? 'min' : 'د'}</strong></span>${deltaPill}</div>`;
+                                        })()}
                                         ${receiptNotice}
                                     </div>
 
@@ -329,7 +344,13 @@ const IronCoachPanel = {
                                 <span class="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/25 text-xs font-bold">${selectedProg.frequency}</span>
                             </div>
                             <h3 class="text-lg sm:text-xl font-black text-white">${isEn ? selectedProg.nameEn : selectedProg.nameAr}</h3>
-                            <p class="text-xs text-gray-300 leading-relaxed" dir="ltr">${selectedProg.description}</p>
+                            <p class="text-xs text-gray-300 leading-relaxed" dir="ltr">${isEn ? (selectedProg.descriptionEn || selectedProg.description) : selectedProg.description}</p>
+                            ${selectedProg.isPostpartumSafety ? `
+                                <div class="csection-safety-banner bg-rose-950/40 border border-rose-500/40 rounded-2xl p-3 mt-2 text-xs">
+                                    <strong class="text-rose-300 block mb-0.5">${txt("csection_safety_title")}</strong>
+                                    <p class="text-rose-100 leading-relaxed">${txt("csection_safety_desc")}</p>
+                                </div>
+                            ` : ''}
                         </div>
                         ${selectedProg.image ? `
                             <a href="${selectedProg.image}" target="_blank" class="block w-full md:w-56 h-32 rounded-2xl overflow-hidden border border-slate-700 bg-slate-950 flex-shrink-0 hover:border-amber-500 transition">

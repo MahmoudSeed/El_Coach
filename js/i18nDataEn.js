@@ -488,6 +488,181 @@ const IronI18nEn = {
             execution: "Brace abs and glutes tightly inward (hollow-body posture) and hold 30–60 seconds breathing evenly.",
             mistakes: ["Letting hips sag and lower back arch", "Piking glutes high reducing core tension"],
             breathing: "Steady, rhythmic deep breaths without holding breath."
+        },
+        ex_cardio_treadmill: {
+            equipment: "Motorized Treadmill",
+            setup: "Stand on side rails first, clip safety key, set comfortable walk speed (3.0 km/h) and target incline (6–12% for incline fat burn, 1–2% for jogging).",
+            execution: "Walk or jog tall looking straight ahead, swinging arms naturally at 90° without holding side rails constantly for maximum calorie burn.",
+            mistakes: ["Holding rails continuously (cuts calorie burn ~30%)", "Slouching forward staring down at screen", "Stepping off while belt is moving"],
+            breathing: "Rhythmic 2-step inhale, 2-step exhale cadence."
+        },
+        ex_cardio_cycle: {
+            equipment: "Stationary Spin / Upright Bike",
+            setup: "Adjust seat height to hip-bone level so the knee keeps a slight 15–20° bend at the bottom of each pedal stroke.",
+            execution: "Keep torso upright, shoulders relaxed, and pedal smoothly in full circles (70–90 RPM) adjusting resistance progressively.",
+            mistakes: ["Seat too low causing knee strain", "Seat too high causing hip rocking", "Zero resistance spinning with rounded lower back"],
+            breathing: "Deep controlled inhales and exhales matched to cadence."
+        },
+        ex_cardio_elliptical: {
+            equipment: "Elliptical Cross-Trainer",
+            setup: "Step on stationary pedals with whole foot flat, grip moving handles lightly, and stand tall.",
+            execution: "Move pedals fluidly pushing and pulling handles synchronously while driving gently through heels with light core brace.",
+            mistakes: ["Rising onto tiptoes causing foot numbness", "Leaning weight heavily onto fixed handles", "Rounding shoulders forward under fatigue"],
+            breathing: "Smooth rhythmic nose inhale, mouth exhale."
+        },
+        ex_hm_pushup: {
+            equipment: "Bodyweight (Home)",
+            setup: "Place hands slightly wider than shoulders forming a straight plank from head to heels with core & glutes braced.",
+            execution: "Lower chest smoothly with elbows at 45° until just above floor, then press back up explosively.",
+            mistakes: ["Hips sagging or piking upward", "Flaring elbows out 90° straining shoulders"],
+            breathing: "Inhale lowering, exhale strongly pressing up."
+        },
+        ex_hm_incline_pushup: {
+            equipment: "Sturdy Wall / Table / Chair",
+            setup: "Place hands on a sturdy elevated surface or wall at chest height stepping feet back into a straight diagonal line.",
+            execution: "Lower chest gently toward surface keeping elbows tucked ~45°, then push back cleanly.",
+            mistakes: ["Using an unstable sliding surface", "Arching lower back"],
+            breathing: "Inhale down, exhale pushing back."
+        },
+        ex_hm_squat: {
+            equipment: "Bodyweight / Loaded Backpack",
+            setup: "Stand shoulder-width apart with toes slightly turned out, chest tall, arms extended forward.",
+            execution: "Sit hips back and down until thighs reach parallel, then drive through heels to stand squeezing glutes.",
+            mistakes: ["Knees caving inward", "Heels lifting off floor"],
+            breathing: "Deep inhale descending, strong exhale standing up."
+        },
+        ex_hm_lunge: {
+            equipment: "Bodyweight / Water Bottles",
+            setup: "Stand tall and step smoothly forward or backward keeping torso upright.",
+            execution: "Lower back knee toward floor until both knees form 90° angles, push through front heel to stand and alternate.",
+            mistakes: ["Front knee collapsing inward or shooting past toes", "Forward torso lean"],
+            breathing: "Inhale descending, exhale driving back up."
+        },
+        ex_hm_row: {
+            equipment: "Dumbbell / Loaded Backpack + Chair",
+            setup: "Rest one knee and hand flat on a sturdy chair/bench with a flat back and grip weight in free hand.",
+            execution: "Pull weight smoothly toward hip leading with elbow squeezing shoulder blade, then lower slowly to stretch.",
+            mistakes: ["Twisting torso to heave weight", "Shrugging shoulder toward ear"],
+            breathing: "Exhale pulling up, inhale stretching down."
+        },
+        ex_hm_dips: {
+            equipment: "Sturdy Chair or Couch",
+            setup: "Sit on edge with palms beside hips fingers forward, slide hips slightly off edge.",
+            execution: "Bend elbows straight back to ~90° keeping torso close to edge, then press palms down to lockout triceps.",
+            mistakes: ["Shifting hips too far forward straining shoulders", "Shrugging shoulders up toward ears"],
+            breathing: "Inhale lowering, exhale pressing up."
+        },
+        ex_hm_bridge: {
+            equipment: "Exercise Mat",
+            setup: "Lie on back knees bent feet hip-width flat, arms resting beside torso.",
+            execution: "Drive through heels lifting hips to a straight shoulder-to-knee line squeezing glutes for 2 seconds, then lower slowly.",
+            mistakes: ["Hyperextending lower back at top", "Pushing through toes instead of heels"],
+            breathing: "Exhale lifting and squeezing, inhale lowering."
+        },
+        ex_hm_superman: {
+            equipment: "Exercise Mat",
+            setup: "Lie face down extending arms forward and legs straight back looking gently at mat.",
+            execution: "Lift chest, arms and thighs slightly off floor by engaging back and glutes, pause 1s, lower calmly.",
+            mistakes: ["Hyperextending neck looking upward", "Jerky ballistic bouncing"],
+            breathing: "Exhale lifting and holding, inhale lowering."
+        },
+        ex_hm_plank: {
+            equipment: "Exercise Mat",
+            setup: "Support body on forearms directly under shoulders and toes with core and glutes braced.",
+            execution: "Hold a rigid straight body line for 30–60 seconds without sagging hips.",
+            mistakes: ["Lower back sagging downward", "Holding breath"],
+            breathing: "Continuous calm deep breaths throughout the hold."
+        },
+        ex_hm_calf: {
+            equipment: "Step / Stair Edge",
+            setup: "Stand on balls of feet at a step edge holding railing or wall for balance.",
+            execution: "Lower heels slowly into deep stretch, then press high onto toes pausing 1s at peak contraction.",
+            mistakes: ["Fast bouncing without bottom pause", "Bending knees during raise"],
+            breathing: "Exhale pressing up, inhale lowering."
+        },
+        ex_hm_wallsit: {
+            equipment: "Flat Wall",
+            setup: "Press back and head against flat wall and slide down until thighs are parallel to floor at 90°.",
+            execution: "Keep weight in heels, hands off thighs, and hold 30–60 seconds breathing evenly.",
+            mistakes: ["Pushing hands against thighs", "Knees sliding far past toes"],
+            breathing: "Steady calm breathing without breath-holding."
+        },
+        ex_hm_jacks: {
+            equipment: "Bodyweight (Home Cardio)",
+            setup: "Stand tall feet together, arms at sides with gentle core brace.",
+            execution: "Hop briskly jumping feet out while raising arms overhead (or step side-to-side low impact) at a steady tempo.",
+            mistakes: ["Heavy flat-footed landing", "Tensing shoulders toward ears"],
+            breathing: "Continuous rhythmic breaths every two hops."
+        },
+        ex_cs_breathing: {
+            equipment: "Mat or Bed (OB/GYN Cleared)",
+            setup: "Lie on back knees bent or sit upright with one hand on chest and one on lower ribs/belly.",
+            execution: "Inhale 4s through nose expanding ribs 360° gently; exhale slowly 6s through mouth drawing lower belly gently inward/upward like zipping up from pelvic floor.",
+            mistakes: ["Chest-only shallow breathing shrugging shoulders", "Forcing abs harshly outward or holding breath"],
+            breathing: "4s slow 360° nasal inhale, 6s gentle exhale with TVA zip-up."
+        },
+        ex_cs_pelvic_floor: {
+            equipment: "No Equipment (Seated or Supine)",
+            setup: "Sit or lie in neutral pelvic posture keeping thighs and glutes completely relaxed.",
+            execution: "On a gentle exhale, lift and squeeze pelvic floor softly inward for 3–5s, then release and fully relax on inhale.",
+            mistakes: ["Clenching glutes or squeezing inner thighs", "Skipping full relaxation between reps"],
+            breathing: "Soft exhale on gentle lift, full belly inhale on complete release."
+        },
+        ex_cs_pelvic_tilt: {
+            equipment: "Exercise Mat (6+ Weeks / Doctor Cleared)",
+            setup: "Lie flat knees bent feet flat, spine in a comfortable neutral curve.",
+            execution: "On exhale, gently tilt pelvis upward flattening lower back softly onto mat with mild TVA draw-in for 3s; relax on inhale. Stop if incision pulls.",
+            mistakes: ["Pushing strongly with feet lifting hips early", "Abdominal coning/doming along midline"],
+            breathing: "Exhale flattening lower back gently, inhale returning."
+        },
+        ex_cs_dead_bug: {
+            equipment: "Exercise Mat",
+            setup: "Lie on back knees bent feet resting on floor (start with heel slides before lifting legs).",
+            execution: "Exhale engaging deep core and slowly slide one heel along mat extending leg, inhale drawing back cleanly; progress to modified Dead Bug only after 12+ weeks with zero doming.",
+            mistakes: ["Lifting both legs before core stabilizes spine", "Allowing midline doming or lower back arching"],
+            breathing: "Long steady exhale extending heel, inhale returning."
+        },
+        ex_cs_bridge: {
+            equipment: "Exercise Mat (6–8+ Weeks / Doctor Cleared)",
+            setup: "Lie on back knees hip-width bent, arms flat beside sides.",
+            execution: "Exhale gently activating pelvic floor & deep core, press heels softly to lift hips without arching low back, pause 2s and lower calmly.",
+            mistakes: ["Overarching lumbar spine at top", "Jerking hips upward straining lower belly"],
+            breathing: "Exhale lifting and squeezing glutes, inhale lowering."
+        },
+        ex_cs_cat_cow: {
+            equipment: "Padded Exercise Mat",
+            setup: "Come onto hands and knees (wrists under shoulders, knees under hips) with neutral spine.",
+            execution: "Inhale lowering chest gently without pulling incision; exhale softly rounding upper/mid back drawing navel lightly inward.",
+            mistakes: ["Dropping belly aggressively feeling scar stretch", "Rushing movement out of sync with breath"],
+            breathing: "Calm inhale relaxing spine, long exhale gently rounding and engaging core."
+        },
+        ex_cs_bird_dog: {
+            equipment: "Exercise Mat",
+            setup: "Start on hands and knees keeping neck long and pelvis level with gentle core engagement.",
+            execution: "Exhale extending one arm and opposite leg slowly in line with torso (or slide foot on mat first), hold 2s keeping hips square, switch sides.",
+            mistakes: ["Tilting/twisting pelvis upward", "Sagging lower back and belly"],
+            breathing: "Exhale reaching out calmly, inhale returning."
+        },
+        ex_cs_wall_pushup: {
+            equipment: "Flat Wall (Zero Floor Belly Pressure)",
+            setup: "Stand an arm's length from wall placing palms shoulder-width at chest height with light core brace.",
+            execution: "Bend elbows slowly at 45° bringing chest near wall, then exhale pressing gently back without breath-holding.",
+            mistakes: ["Dropping to floor pushups too early post-op", "Holding breath increasing abdominal pressure"],
+            breathing: "Inhale approaching wall, gentle exhale pressing away."
+        },
+        ex_cs_band_row: {
+            equipment: "Light Resistance Band",
+            setup: "Sit tall on chair or mat wrapping light band around a sturdy post or flat feet.",
+            execution: "Pull handles back toward waist squeezing shoulder blades together to open nursing/postpartum rounded chest, return slowly.",
+            mistakes: ["Hunching shoulders toward ears", "Using heavy resistance causing belly strain"],
+            breathing: "Exhale pulling back and opening chest, inhale returning."
+        },
+        ex_cs_walking: {
+            equipment: "Supportive Walking Shoes (Flat Surface)",
+            setup: "Start only after doctor clearance with 10–15 min gentle flat walks, tall posture, empty hands (no heavy lifting).",
+            execution: "Walk smoothly breathing naturally, increasing duration +5 min weekly if pain-free; stop immediately if pain, bleeding increase, or heaviness occurs.",
+            mistakes: ["Power-walking too fast/far in first 6 weeks", "Walking uphill or pushing heavy strollers too early"],
+            breathing: "Comfortable conversational pace (Talk Test)."
         }
     },
 
