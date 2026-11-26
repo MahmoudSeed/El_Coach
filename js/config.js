@@ -39,6 +39,7 @@ const IronConfig = {
         vodafoneCash: "01274300663",
         instapayUser: "mahmoudsaeed291997@instapay",
         stcPay: "966563055827",
+        barqWallet: "966563055827",
         bankName: "مصرف الراجحي (Al Rajhi Bank)",
         bankIban: "SA4180000644608017933823",
         paymentLink: "",

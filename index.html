@@ -185,17 +185,30 @@
                     </button>
                 </div>
 
-                <!-- 1. لوحة تسجيل الدخول (اسم مستخدم / جوال + كلمة مرور أو جوال OTP) -->
+                <!-- 1. لوحة تسجيل الدخول (رقم الجوال بكود الدولة/المحافظة + الرقم السري) -->
                 <div id="loginPanel" class="space-y-4 relative z-10">
                     <form id="loginForm" onsubmit="IronApp.handleLogin(event)" class="space-y-4">
                         <div>
-                            <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="login_username">اسم المستخدم أو رقم الجوال</label>
-                            <input type="text" id="loginUsername" required placeholder="أدخل اسم المستخدم أو رقم الجوال..." data-i18n-placeholder="login_username_ph"
-                                class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white font-bold placeholder-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                            <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="login_username">رقم الجوال (بكود الدولة / المحافظة) *</label>
+                            <div class="flex gap-2" dir="ltr">
+                                <select id="loginCountryCode" class="bg-slate-950/90 border border-slate-700/80 rounded-xl px-2.5 py-3 text-xs text-emerald-400 font-black outline-none focus:border-emerald-500 flex-shrink-0">
+                                    <option value="+966">🇸🇦 +966 (السعودية)</option>
+                                    <option value="+20">🇪🇬 +20 (مصر)</option>
+                                    <option value="+971">🇦🇪 +971 (الإمارات)</option>
+                                    <option value="+965">🇰🇼 +965 (الكويت)</option>
+                                    <option value="+974">🇶🇦 +974 (قطر)</option>
+                                    <option value="+973">🇧🇭 +973 (البحرين)</option>
+                                    <option value="+968">🇴🇲 +968 (عمان)</option>
+                                    <option value="+962">🇯🇴 +962 (الأردن)</option>
+                                    <option value="custom">🌍 كود آخر (+)</option>
+                                </select>
+                                <input type="text" id="loginUsername" required dir="ltr" placeholder="05xxxxxxxx / 01xxxxxxxx" data-i18n-placeholder="login_username_ph"
+                                    class="flex-1 min-w-0 bg-slate-950/80 border border-slate-700/80 rounded-xl px-3.5 py-3 text-sm text-white font-bold placeholder-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                            </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="login_password">كلمة المرور (Password)</label>
+                            <label class="block text-xs font-bold text-gray-300 mb-1.5" data-i18n="login_password">الرقم السري (Password) *</label>
                             <input type="password" id="loginPassword" required placeholder="••••••••" 
                                 class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white font-bold placeholder-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                         </div>
@@ -211,12 +224,12 @@
                     <div id="loginPhoneOtpSection" class="space-y-3 pt-2">
                         <div class="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">
                             <div class="h-px flex-1 bg-slate-800"></div>
-                            <span data-i18n="login_or_phone_otp">أو تسجيل الدخول برقم الجوال (OTP)</span>
+                            <span data-i18n="login_or_phone_otp">أو تسجيل الدخول برمز الجوال السريع (OTP)</span>
                             <div class="h-px flex-1 bg-slate-800"></div>
                         </div>
 
                         <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="tel" id="loginPhoneInput" dir="ltr" placeholder="مثال: +201012345678" data-i18n-placeholder="signup_phone_ph"
+                            <input type="tel" id="loginPhoneInput" dir="ltr" placeholder="05xxxxxxxx / 01xxxxxxxx" data-i18n-placeholder="signup_phone_ph"
                                 class="w-full sm:flex-1 min-w-0 bg-slate-950/80 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold placeholder-gray-500 focus:border-emerald-500 outline-none">
                             <button type="button" id="sendLoginOtpBtn" onclick="IronApp.sendLoginOtp()" class="w-full sm:w-auto px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/35 font-black text-xs rounded-xl whitespace-nowrap transition" data-i18n="login_phone_otp_btn">
                                 دخول برمز الجوال 📱
@@ -284,16 +297,29 @@
                                 <input type="text" id="regOauthName" required placeholder="اكتب اسمك كما سيظهر للكوتش..." data-i18n-placeholder="signup_oauth_name_ph" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="signup_phone_lbl">رقم الجوال مع كود الدولة *</label>
-                                <input type="tel" id="regOauthPhone" dir="ltr" placeholder="مثال: +201012345678" data-i18n-placeholder="signup_phone_ph" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                                <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="signup_phone_lbl">رقم الجوال (بكود الدولة / المحافظة) *</label>
+                                <div class="flex gap-2" dir="ltr">
+                                    <select id="regOauthCountryCode" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2.5 text-xs text-emerald-400 font-black outline-none focus:border-emerald-500 flex-shrink-0">
+                                        <option value="+966">🇸🇦 +966 (السعودية)</option>
+                                        <option value="+20">🇪🇬 +20 (مصر)</option>
+                                        <option value="+971">🇦🇪 +971 (الإمارات)</option>
+                                        <option value="+965">🇰🇼 +965 (الكويت)</option>
+                                        <option value="+974">🇶🇦 +974 (قطر)</option>
+                                        <option value="+973">🇧🇭 +973 (البحرين)</option>
+                                        <option value="+968">🇴🇲 +968 (عمان)</option>
+                                        <option value="+962">🇯🇴 +962 (الأردن)</option>
+                                        <option value="custom">🌍 كود آخر (+)</option>
+                                    </select>
+                                    <input type="tel" id="regOauthPhone" required dir="ltr" placeholder="05xxxxxxxx / 01xxxxxxxx" data-i18n-placeholder="signup_phone_ph" class="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                                </div>
                             </div>
                             <div>
                                 <label id="regOauthEmailLbl" class="block text-xs font-bold text-gray-300 mb-1" data-i18n="signup_oauth_email_opt">البريد الإلكتروني (اختياري إذا أدخلت الجوال)</label>
                                 <input type="email" id="regOauthEmail" dir="ltr" placeholder="name@gmail.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
                             </div>
                             <div id="regOauthPassWrap">
-                                <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="signup_pass_lbl">كلمة المرور لحسابك *</label>
-                                <input type="password" id="regOauthPassword" placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                                <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="signup_pass_lbl">الرقم السري لحسابك (لتسجيل الدخول به لاحقاً) *</label>
+                                <input type="password" id="regOauthPassword" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
                             </div>
                             <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-emerald-500/20 transition" data-i18n="signup_oauth_continue">
                                 متابعة لتحديد خطتك البدنية ←
@@ -343,14 +369,18 @@
                             <button type="button" onclick="IronApp.backToSignupMethod()" class="text-[11px] font-bold text-gray-400 hover:text-white underline" data-i18n="signup_change_method">تغيير طريقة التسجيل</button>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2.5">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-300 mb-1" data-i18n="modal_tr_fullname">اسم المتدرب بالكامل *</label>
                                 <input type="text" id="regName" required placeholder="مثال: محمد السيد" data-i18n-placeholder="modal_tr_fullname_ph" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-gray-300 mb-1" data-i18n="modal_tr_phone">رقم الهاتف / الواتساب</label>
-                                <input type="tel" id="regProfilePhone" dir="ltr" placeholder="+2010..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                                <label class="block text-[11px] font-bold text-gray-300 mb-1" data-i18n="modal_tr_phone">رقم الجوال (بكود الدولة) *</label>
+                                <input type="tel" id="regProfilePhone" required dir="ltr" placeholder="+9665... / +201..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-300 mb-1" data-i18n="signup_pass_lbl">الرقم السري للدخول *</label>
+                                <input type="password" id="regProfilePassword" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
                             </div>
                         </div>
 
@@ -436,7 +466,7 @@
                 <div id="expiredBadgeWrap" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-black mb-3">
                     <span id="expiredBadgeText" data-i18n="expired_badge">⏳ انتهت مدة الاشتراك</span>
                 </div>
-                <h2 id="expiredTitleText" class="text-2xl font-black text-white" data-i18n="expired_title">انتهت مدة اشتراكك (30 يوماً)</h2>
+                <h2 id="expiredTitleText" class="text-2xl font-black text-white" data-i18n="expired_title">انتهت مدة اشتراكك</h2>
                 <p id="expiredDescText" class="text-sm text-gray-300 mt-2 leading-relaxed" data-i18n="expired_desc">
                     شكراً لالتزامك يا بطل! لتجديد خطتك التدريبية والغذائية ومواصلة المتابعة مع الكوتش، يرجى تجديد الاشتراك عبر إحدى وسائل الدفع المعتمدة أدناه.
                 </p>
@@ -480,62 +510,66 @@
                         <strong class="text-emerald-400 font-black text-lg" id="expiredPriceDisplay">139 ر.س</strong>
                     </div>
 
-                    <!-- زر الدفع الفوري عبر Apple Pay -->
-                    <button type="button" onclick="IronApp.startApplePayCheckout()" class="w-full py-3 px-4 bg-black hover:bg-neutral-900 text-white font-black text-sm rounded-xl border border-white/25 shadow-lg flex items-center justify-center gap-2 transition">
-                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.96 6.33c.67-.81 1.12-1.94 1-3.08-.96.04-2.13.64-2.82 1.45-.61.71-1.15 1.86-1 2.96 1.07.08 2.16-.52 2.82-1.33z"/>
-                        </svg>
-                        <span data-i18n="pay_apple_pay_btn">Pay — الدفع السريع عبر Apple Pay</span>
-                    </button>
-
-                    <!-- وسائل التحويل المباشر المفعّلة (البنكي + انستاباي + المحفظة + STC Pay) -->
-                    <div class="space-y-2.5 text-xs pt-1">
-                        <!-- 1. الحساب البنكي / الآيبان IBAN (مصرف الراجحي) -->
-                        <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3 space-y-1.5">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-gray-200 font-bold" data-i18n="expired_iban">🏦 مصرف الراجحي (Al Rajhi IBAN):</span>
-                                <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="IronApp.triggerDirectTransfer('iban')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
-                                    <button type="button" onclick="IronApp.copyPaymentValue('iban')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
-                                </div>
+                    <!-- وسائل التحويل الـ 5 المعتمدة مرتبة بشكل منظم وسلس -->
+                    <div class="space-y-2 text-xs pt-1">
+                        <!-- 1. الحساب البنكي آيبان (مصرف الراجحي) -->
+                        <div class="bg-slate-900/90 border border-amber-500/35 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <span class="text-gray-200 font-black block" data-i18n="expired_iban">1. 🏦 الحساب البنكي (آيبان - الراجحي)</span>
+                                <strong class="text-amber-400 font-mono text-xs block break-all select-all mt-0.5" dir="ltr" id="expiredIbanDisplay">SA4180000644608017933823</strong>
                             </div>
-                            <strong class="text-amber-400 font-mono text-xs block break-all select-all" dir="ltr" id="expiredIbanDisplay">SA4180000644608017933823</strong>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button type="button" onclick="IronApp.triggerDirectTransfer('iban')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                <button type="button" onclick="IronApp.copyPaymentValue('iban')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                            </div>
                         </div>
 
-                        <!-- 2. انستاباي InstaPay -->
-                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-gray-300 font-bold" data-i18n="expired_instapay">⚡ تطبيق انستاباي (InstaPay):</span>
-                                <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="IronApp.triggerDirectTransfer('instapay')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
-                                    <button type="button" onclick="IronApp.copyPaymentValue('instapay')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
-                                </div>
+                        <!-- 2. STC Pay -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <span class="text-gray-200 font-black block" data-i18n="expired_stc">2. 🇸🇦 محفظة STC Pay</span>
+                                <strong class="text-white font-mono text-xs block select-all mt-0.5" dir="ltr" id="expiredStcDisplay">966563055827</strong>
                             </div>
-                            <strong class="text-white font-mono text-xs block break-all select-all" dir="ltr" id="expiredInstapayDisplay">mahmoudsaeed291997@instapay</strong>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button type="button" onclick="IronApp.triggerDirectTransfer('stc')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                <button type="button" onclick="IronApp.copyPaymentValue('stc')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                            </div>
                         </div>
 
-                        <!-- 3. محفظة الهاتف / فودافون كاش -->
-                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-gray-300 font-bold" data-i18n="expired_vodafone">📱 المحفظة الإلكترونية / فودافون كاش:</span>
-                                <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="IronApp.triggerDirectTransfer('vodafone')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_ussd">تحويل فوري 📲</button>
-                                    <button type="button" onclick="IronApp.copyPaymentValue('vodafone')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
-                                </div>
+                        <!-- 3. محفظة برق (Barq) -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <span class="text-gray-200 font-black block" data-i18n="expired_barq">3. ⚡ محفظة برق (Barq)</span>
+                                <strong class="text-cyan-400 font-mono text-xs block select-all mt-0.5" dir="ltr" id="expiredBarqDisplay">966563055827</strong>
                             </div>
-                            <strong class="text-white font-mono text-xs block select-all" dir="ltr" id="expiredVodafoneDisplay">01274300663</strong>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button type="button" onclick="IronApp.triggerDirectTransfer('barq')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                <button type="button" onclick="IronApp.copyPaymentValue('barq')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                            </div>
                         </div>
 
-                        <!-- 4. STC Pay -->
-                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-gray-300 font-bold" data-i18n="expired_stc">🇸🇦 محفظة STC Pay:</span>
-                                <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="IronApp.triggerDirectTransfer('stc')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
-                                    <button type="button" onclick="IronApp.copyPaymentValue('stc')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
-                                </div>
+                        <!-- 4. أورانج كاش (محفظة) -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <span class="text-gray-200 font-black block" data-i18n="expired_vodafone">4. 🍊 أورانج كاش (محفظة)</span>
+                                <strong class="text-amber-300 font-mono text-xs block select-all mt-0.5" dir="ltr" id="expiredVodafoneDisplay">01274300663</strong>
                             </div>
-                            <strong class="text-white font-mono text-xs block select-all" dir="ltr" id="expiredStcDisplay">966563055827</strong>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button type="button" onclick="IronApp.triggerDirectTransfer('vodafone')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                <button type="button" onclick="IronApp.copyPaymentValue('vodafone')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                            </div>
+                        </div>
+
+                        <!-- 5. انستا باي (InstaPay) -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <span class="text-gray-200 font-black block" data-i18n="expired_instapay">5. 📲 انستا باي (InstaPay)</span>
+                                <strong class="text-emerald-300 font-mono text-xs block break-all select-all mt-0.5" dir="ltr" id="expiredInstapayDisplay">mahmoudsaeed291997@instapay</strong>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button type="button" onclick="IronApp.triggerDirectTransfer('instapay')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                <button type="button" onclick="IronApp.copyPaymentValue('instapay')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1306,35 +1340,33 @@
                     <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_wa">رقم الواتساب لاستقبال المتابعات (مع كود الدولة دون +)</label>
                     <input type="text" name="coachWhatsapp" id="cfgWhatsapp" placeholder="201000000000" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                 </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_iban">1. 🏦 الحساب البنكي / الآيبان (IBAN - الراجحي)</label>
+                    <input type="text" name="coachIban" id="cfgIban" dir="ltr" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-amber-400 font-mono outline-none">
+                </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_vodafone">رقم فودافون كاش / محفظة</label>
-                        <input type="text" name="coachVodafone" id="cfgVodafone" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_stc">2. 🇸🇦 STC Pay</label>
+                        <input type="text" name="coachStc" id="cfgStc" dir="ltr" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_instapay">معرف انستاباي (InstaPay)</label>
-                        <input type="text" name="coachInstapay" id="cfgInstapay" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_barq">3. ⚡ محفظة برق (Barq)</label>
+                        <input type="text" name="coachBarq" id="cfgBarq" dir="ltr" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-cyan-400 font-mono outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_stc">STC Pay (للمشتركين بالسعودية)</label>
-                        <input type="text" name="coachStc" id="cfgStc" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_vodafone">4. 🍊 أورانج كاش (محفظة)</label>
+                        <input type="text" name="coachVodafone" id="cfgVodafone" dir="ltr" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_card">رابط دفع ببطاقة (Stripe/Tap)</label>
-                        <input type="url" name="coachPaymentLink" id="cfgPaymentLink" placeholder="https://..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
+                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_instapay">5. 📲 انستا باي (InstaPay)</label>
+                        <input type="text" name="coachInstapay" id="cfgInstapay" dir="ltr" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_iban">رقم الحساب البنكي / الآيبان (IBAN)</label>
-                        <input type="text" name="coachIban" id="cfgIban" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_pass">تغيير كلمة مرور الكوتش (اختياري)</label>
-                        <input type="password" name="coachNewPassword" id="cfgNewPassword" placeholder="اتركه فارغاً للإبقاء على الحالية" data-i18n-placeholder="modal_cfg_pass_ph" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none">
-                    </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-300 mb-1" data-i18n="modal_cfg_pass">تغيير كلمة مرور الكوتش (اختياري)</label>
+                    <input type="password" name="coachNewPassword" id="cfgNewPassword" placeholder="اتركه فارغاً للإبقاء على الحالية" data-i18n-placeholder="modal_cfg_pass_ph" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none">
                 </div>
                 <button type="submit" class="w-full py-3 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition mt-2" data-i18n="modal_cfg_submit">
                     حفظ الإعدادات وبيانات الدفع ✅
@@ -1343,11 +1375,11 @@
         </div>
     </div>
 
-    <!-- 8. نافذة تجديد الاشتراك والدفع الفعلي (Apple Pay + بنكي + انستاباي + محفظة + STC Pay) -->
+    <!-- 8. نافذة تجديد الاشتراك والدفع الفعلي (بنكي IBAN + STC Pay + برق + أورانج كاش + انستا باي) -->
     <div id="renewModal" class="modal-overlay">
         <div class="modal-container p-6 max-w-lg">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                <h3 class="text-base font-black text-white" data-i18n="modal_renew_title">تجديد وتفعيل الاشتراك الشهري (30 يوماً)</h3>
+                <h3 class="text-base font-black text-white" data-i18n="modal_renew_title">تجديد وتفعيل العضوية</h3>
                 <button onclick="closeModal('renewModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
             </div>
             <div class="space-y-4">
@@ -1383,73 +1415,71 @@
                     <div class="text-xl font-black text-emerald-400" id="renewModalPrice">139 ر.س</div>
                 </div>
 
-                <!-- 1. الدفع عبر Apple Pay والبطاقة البنكية -->
-                <div class="space-y-2">
-                    <button type="button" onclick="IronApp.startApplePayCheckout()" class="w-full py-3.5 px-4 bg-black hover:bg-neutral-900 text-white font-black text-sm rounded-xl border border-white/25 shadow-lg flex items-center justify-center gap-2 transition">
-                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.96 6.33c.67-.81 1.12-1.94 1-3.08-.96.04-2.13.64-2.82 1.45-.61.71-1.15 1.86-1 2.96 1.07.08 2.16-.52 2.82-1.33z"/>
-                        </svg>
-                        <span data-i18n="pay_apple_pay_btn">Pay — الدفع السريع عبر Apple Pay</span>
-                    </button>
-
-                    <a id="renewStripeLink" href="#" target="_blank" onclick="return IronApp.handleCardPaymentLinkClick(event)" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 flex items-center justify-center gap-2 transition">
-                        <span data-i18n="modal_renew_card">💳 الدفع بالبطاقة البنكية أونلاين (مدى / فيزا / ماستركارد)</span>
-                    </a>
-                </div>
-
                 <!-- شريط توجيه التحويل الفوري النشط -->
                 <div id="activeTransferActionBox" class="hidden bg-emerald-500/10 border border-emerald-500/35 rounded-xl p-3 text-xs space-y-1.5"></div>
 
-                <!-- 2. وسائل التحويل الفعلي المباشر (البنكي IBAN + انستاباي + المحفظة + STC Pay) -->
+                <!-- خيارات الدفع والتحويل الـ 5 المعتمدة مرتبة بشكل منظم وسلس -->
                 <div class="border-t border-slate-800 pt-3">
-                    <h5 class="text-xs font-bold text-white mb-2" data-i18n="modal_renew_wallets">أو اضغط للتحويل الفوري المباشر عبر الحساب البنكي والمحافظ:</h5>
+                    <h5 class="text-xs font-bold text-white mb-2.5" data-i18n="modal_renew_wallets">اختر وسيلة التحويل المناسبة لك واضغط (تحويل الآن أو نسخ):</h5>
                     <div class="space-y-2 text-xs">
-                        <!-- الحساب البنكي / الآيبان (مصرف الراجحي) -->
-                        <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/30 space-y-1">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-gray-200 font-bold" data-i18n="modal_renew_iban_lbl">🏦 مصرف الراجحي (Al Rajhi IBAN):</span>
-                                <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="IronApp.triggerDirectTransfer('iban')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
-                                    <button type="button" onclick="IronApp.copyPaymentValue('iban')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
-                                </div>
+                        <!-- 1. الحساب البنكي / الآيبان (مصرف الراجحي) -->
+                        <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/35 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <span class="text-gray-200 font-black block" data-i18n="modal_renew_iban_lbl">1. 🏦 الحساب البنكي (آيبان - الراجحي)</span>
+                                <strong class="text-amber-400 font-mono text-xs block break-all select-all mt-0.5" dir="ltr" id="renewModalIban">SA4180000644608017933823</strong>
                             </div>
-                            <strong class="text-amber-400 font-mono text-xs block break-all select-all" dir="ltr" id="renewModalIban">SA4180000644608017933823</strong>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button type="button" onclick="IronApp.triggerDirectTransfer('iban')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                <button type="button" onclick="IronApp.copyPaymentValue('iban')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                            </div>
                         </div>
 
-                        <!-- انستاباي InstaPay -->
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-gray-300 font-bold" data-i18n="modal_renew_insta_lbl">⚡ انستاباي (InstaPay):</span>
-                                <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="IronApp.triggerDirectTransfer('instapay')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
-                                    <button type="button" onclick="IronApp.copyPaymentValue('instapay')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
-                                </div>
+                        <!-- 2. STC Pay -->
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <span class="text-gray-200 font-black block" data-i18n="modal_renew_stc_lbl">2. 🇸🇦 محفظة STC Pay</span>
+                                <strong class="text-white font-mono text-xs block select-all mt-0.5" dir="ltr" id="renewModalStc">966563055827</strong>
                             </div>
-                            <strong class="text-white font-mono text-xs block break-all select-all" dir="ltr" id="renewModalInstapay">mahmoudsaeed291997@instapay</strong>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button type="button" onclick="IronApp.triggerDirectTransfer('stc')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                <button type="button" onclick="IronApp.copyPaymentValue('stc')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                            </div>
                         </div>
 
-                        <!-- فودافون كاش / المحفظة -->
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-gray-300 font-bold" data-i18n="modal_renew_voda_lbl">📱 محفظة فودافون كاش:</span>
-                                <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="IronApp.triggerDirectTransfer('vodafone')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_ussd">تحويل فوري 📲</button>
-                                    <button type="button" onclick="IronApp.copyPaymentValue('vodafone')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
-                                </div>
+                        <!-- 3. محفظة برق (Barq) -->
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <span class="text-gray-200 font-black block" data-i18n="modal_renew_barq_lbl">3. ⚡ محفظة برق (Barq)</span>
+                                <strong class="text-cyan-400 font-mono text-xs block select-all mt-0.5" dir="ltr" id="renewModalBarq">966563055827</strong>
                             </div>
-                            <strong class="text-white font-mono text-xs block select-all" dir="ltr" id="renewModalVodafone">01274300663</strong>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button type="button" onclick="IronApp.triggerDirectTransfer('barq')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                <button type="button" onclick="IronApp.copyPaymentValue('barq')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                            </div>
                         </div>
 
-                        <!-- STC Pay -->
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-gray-300 font-bold" data-i18n="modal_renew_stc_lbl">🇸🇦 محفظة STC Pay:</span>
-                                <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="IronApp.triggerDirectTransfer('stc')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
-                                    <button type="button" onclick="IronApp.copyPaymentValue('stc')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
-                                </div>
+                        <!-- 4. أورانج كاش (محفظة) -->
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <span class="text-gray-200 font-black block" data-i18n="modal_renew_voda_lbl">4. 🍊 أورانج كاش (محفظة)</span>
+                                <strong class="text-amber-300 font-mono text-xs block select-all mt-0.5" dir="ltr" id="renewModalVodafone">01274300663</strong>
                             </div>
-                            <strong class="text-white font-mono text-xs block select-all" dir="ltr" id="renewModalStc">966563055827</strong>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button type="button" onclick="IronApp.triggerDirectTransfer('vodafone')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                <button type="button" onclick="IronApp.copyPaymentValue('vodafone')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                            </div>
+                        </div>
+
+                        <!-- 5. انستا باي InstaPay -->
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <span class="text-gray-200 font-black block" data-i18n="modal_renew_insta_lbl">5. 📲 انستا باي (InstaPay)</span>
+                                <strong class="text-emerald-300 font-mono text-xs block break-all select-all mt-0.5" dir="ltr" id="renewModalInstapay">mahmoudsaeed291997@instapay</strong>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button type="button" onclick="IronApp.triggerDirectTransfer('instapay')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-black transition" data-i18n="pay_action_transfer">تحويل الآن 🚀</button>
+                                <button type="button" onclick="IronApp.copyPaymentValue('instapay')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-200 text-[11px] font-bold transition" data-i18n="pay_action_copy">📋 نسخ</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1462,7 +1492,7 @@
                 </div>
 
                 <button onclick="IronApp.confirmRenewalPayment()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:opacity-90 transition" data-i18n="modal_renew_submit">
-                    تأكيد إرسال الإيصال وتفعيل الـ 30 يوماً ✅
+                    إرسال الإيصال للمراجعة وتأكيد التحويل ✅
                 </button>
             </div>
         </div>

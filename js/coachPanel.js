@@ -498,6 +498,7 @@ const IronCoachPanel = {
         setVal("cfgVodafone", config.coachInfo.vodafoneCash);
         setVal("cfgInstapay", config.coachInfo.instapayUser);
         setVal("cfgStc", config.coachInfo.stcPay);
+        setVal("cfgBarq", config.coachInfo.barqWallet || config.coachInfo.stcPay || "966563055827");
         setVal("cfgPaymentLink", config.coachInfo.paymentLink);
         setVal("cfgIban", config.coachInfo.bankIban);
         setVal("cfgMonthlyPrice", config.subscriptionPrice?.monthly || 500);
@@ -520,8 +521,13 @@ const IronCoachPanel = {
             config.coachInfo.vodafoneCash = form.coachVodafone.value.trim();
             config.coachInfo.instapayUser = form.coachInstapay.value.trim();
             config.coachInfo.stcPay = form.coachStc.value.trim();
+            if (form.coachBarq) {
+                config.coachInfo.barqWallet = form.coachBarq.value.trim();
+            }
             config.coachInfo.bankIban = form.coachIban.value.trim();
-            config.coachInfo.paymentLink = form.coachPaymentLink.value.trim();
+            if (form.coachPaymentLink) {
+                config.coachInfo.paymentLink = form.coachPaymentLink.value.trim();
+            }
 
             if (form.coachMonthlyPrice) {
                 config.subscriptionPrice.monthly = parseInt(form.coachMonthlyPrice.value) || 500;

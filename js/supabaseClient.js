@@ -131,6 +131,7 @@ const IronSupabase = {
                 vodafoneCash: row.vodafone_cash || base.coachInfo.vodafoneCash,
                 instapayUser: row.instapay_user || base.coachInfo.instapayUser,
                 stcPay: row.stc_pay || base.coachInfo.stcPay,
+                barqWallet: row.barq_wallet || row.stc_pay || base.coachInfo.barqWallet || "966563055827",
                 bankName: row.bank_name || base.coachInfo.bankName,
                 bankIban: row.bank_iban || base.coachInfo.bankIban,
                 paymentLink: row.payment_link || base.coachInfo.paymentLink
@@ -177,6 +178,7 @@ const IronSupabase = {
             vodafone_cash: ci.vodafoneCash || "",
             instapay_user: ci.instapayUser || "",
             stc_pay: ci.stcPay || "",
+            barq_wallet: ci.barqWallet || ci.stcPay || "",
             bank_name: ci.bankName || "",
             bank_iban: ci.bankIban || "",
             payment_link: ci.paymentLink || "",

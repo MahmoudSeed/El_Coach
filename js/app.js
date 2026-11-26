@@ -52,9 +52,10 @@ const IronApp = {
     },
 
     async init() {
-        // 1. تهيئة النمط (الداكن / الفاتح) واللغة (العربية / الإنجليزية)
+        // 1. تهيئة النمط (الداكن / الفاتح) واللغة (العربية / الإنجليزية) وكود الاتصال المحفوظ
         this.initTheme();
         this.initLanguage();
+        this.initDialCodeSelectors();
         this.initEventListeners();
 
         // 2. تحميل إعدادات الكوتش والدفع من Supabase وجلب الجلسة السحابية
@@ -342,6 +343,8 @@ const IronApp = {
             document.getElementById("expiredStcDisplay").innerText = config.coachInfo.stcPay || "966563055827";
             const expIbanEl = document.getElementById("expiredIbanDisplay");
             if (expIbanEl) expIbanEl.innerText = config.coachInfo.bankIban || "SA4180000644608017933823";
+            const expBarqEl = document.getElementById("expiredBarqDisplay");
+            if (expBarqEl) expBarqEl.innerText = config.coachInfo.barqWallet || config.coachInfo.stcPay || "966563055827";
             this.selectSubscriptionTier(this.selectedSubscriptionMonths !== undefined ? this.selectedSubscriptionMonths : 1);
 
             const badgeWrap = document.getElementById("expiredBadgeWrap");
@@ -2016,10 +2019,49 @@ const IronApp = {
         });
     },
 
-    // تسجيل الدخول
+    initDialCodeSelectors() {
+        const savedCode = localStorage.getItem("iron_dial_code") || "+966";
+        ["loginCountryCode", "regOauthCountryCode"].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if ([...el.options].some(o => o.value === savedCode)) {
+                el.value = savedCode;
+            }
+            el.addEventListener("change", () => {
+                localStorage.setItem("iron_dial_code", el.value);
+                ["loginCountryCode", "regOauthCountryCode"].forEach(otherId => {
+                    const other = document.getElementById(otherId);
+                    if (other && other !== el && [...other.options].some(o => o.value === el.value)) {
+                        other.value = el.value;
+                    }
+                });
+            });
+        });
+    },
+
+    // دمج كود الدولة/المحافظة مع رقم الجوال (يحذف الصفر الأول) — أو إرجاع اسم المستخدم كما هو للكوتش
+    buildFullPhone(countryCode, rawInput) {
+        const raw = String(rawInput || "").trim();
+        if (!raw) return "";
+        if (/[a-zA-Z_@]/.test(raw)) return raw;
+        if (raw.startsWith("+") || raw.startsWith("00")) return "+" + raw.replace(/\D/g, "").replace(/^00/, "");
+        let digits = raw.replace(/\D/g, "");
+        if (!digits) return "";
+        if (!countryCode || countryCode === "custom") {
+            return "+" + digits;
+        }
+        const code = String(countryCode).replace(/\D/g, "");
+        if (digits.startsWith(code) && digits.length > code.length + 7) return "+" + digits;
+        digits = digits.replace(/^0+/, "");
+        return `+${code}${digits}`;
+    },
+
+    // تسجيل الدخول برقم الجوال (بكود الدولة/المحافظة) + الرقم السري
     async handleLogin(e) {
         e.preventDefault();
-        const u = document.getElementById("loginUsername").value;
+        const code = document.getElementById("loginCountryCode")?.value || "+966";
+        localStorage.setItem("iron_dial_code", code);
+        const u = this.buildFullPhone(code, document.getElementById("loginUsername").value);
         const p = document.getElementById("loginPassword").value;
         const err = document.getElementById("loginError");
         const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -2255,6 +2297,8 @@ const IronApp = {
         if (instapay) instapay.innerText = config.coachInfo.instapayUser || "mahmoudsaeed291997@instapay";
         if (stc) stc.innerText = config.coachInfo.stcPay || "966563055827";
         if (iban) iban.innerText = config.coachInfo.bankIban || "SA4180000644608017933823";
+        const barq = document.getElementById("renewModalBarq");
+        if (barq) barq.innerText = config.coachInfo.barqWallet || config.coachInfo.stcPay || "966563055827";
         if (stripe) {
             const link = (config.coachInfo.paymentLink || "").trim();
             const isValidGateway = link && !link.includes("buy.stripe.com/demo");
@@ -2291,7 +2335,7 @@ const IronApp = {
                 currencyTxt
             },
             vodafone: {
-                label: isEn ? "Mobile Wallet / Vodafone Cash" : "محفظة فودافون كاش",
+                label: isEn ? "Orange Cash (Wallet)" : "أورانج كاش (محفظة)",
                 value: ci.vodafoneCash || "01274300663",
                 amount,
                 currencyTxt
@@ -2299,6 +2343,12 @@ const IronApp = {
             stc: {
                 label: "STC Pay",
                 value: ci.stcPay || "966563055827",
+                amount,
+                currencyTxt
+            },
+            barq: {
+                label: isEn ? "Barq Wallet" : "محفظة برق (Barq)",
+                value: ci.barqWallet || ci.stcPay || "966563055827",
                 amount,
                 currencyTxt
             }
@@ -2347,14 +2397,26 @@ const IronApp = {
 
         if (method === "vodafone") {
             const cleanDigits = info.value.replace(/\D/g, "");
-            const ussdUri = `tel:*9*7*${cleanDigits}*${info.amount}%23`;
+            const ussdUri = `tel:%237115%23`;
             instructionHtml = isEn
-                ? `Wallet number <strong class="text-white font-mono">${info.value}</strong> copied! Tap below on mobile to dial the instant Vodafone Cash transfer code (*9*7#) for <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong>, then attach the receipt below.`
-                : `تم نسخ رقم المحفظة <strong class="text-white font-mono">${info.value}</strong> تلقائياً! اضغط الزر أدناه على الجوال لطلب كود التحويل الفوري (*9*7#) أو حوّل من تطبيق المحفظة ثم ارفع صورة الإيصال بالأسفل.`;
+                ? `Orange Cash number <strong class="text-white font-mono">${info.value}</strong> copied! Open the Orange Cash app (or dial #7115#) and send <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong>, then attach the receipt below.`
+                : `تم نسخ رقم محفظة أورانج كاش <strong class="text-white font-mono">${info.value}</strong> تلقائياً! افتح تطبيق أورانج كاش (أو اطلب ‎#7115#) وحوّل مبلغ <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong> ثم ارفع صورة الإيصال بالأسفل.`;
             actionButtonHtml = `
-                <a href="${ussdUri}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition">
-                    <span>📲 ${isEn ? `Dial Instant Transfer (*9*7*${cleanDigits}#)` : `اتصال كود التحويل الفوري (*9*7#)`}</span>
+                <a href="${ussdUri}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400 transition">
+                    <span>🍊 ${isEn ? "Dial Orange Cash (#7115#)" : "فتح أورانج كاش (#7115#)"}</span>
                 </a>
+                <button type="button" onclick="document.getElementById('receiptUploadInput')?.click()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition">
+                    <span>📸 ${isEn ? `Attach Receipt (${cleanDigits})` : "إرفاق الإيصال"}</span>
+                </button>
+            `;
+        } else if (method === "barq") {
+            instructionHtml = isEn
+                ? `Barq wallet number <strong class="text-white font-mono">${info.value}</strong> copied! Open the Barq app and transfer <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong> to this number, then attach the receipt below.`
+                : `تم نسخ رقم محفظة برق <strong class="text-white font-mono">${info.value}</strong> تلقائياً! افتح تطبيق برق وحوّل مبلغ <strong class="text-emerald-400">${info.amount} ${info.currencyTxt}</strong> للرقم المنسوخ ثم ارفع صورة الإيصال بالأسفل.`;
+            actionButtonHtml = `
+                <button type="button" onclick="document.getElementById('receiptUploadInput')?.click()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition">
+                    <span>📸 ${isEn ? "Attach Barq Receipt" : "إرفاق إيصال تحويل برق"}</span>
+                </button>
             `;
         } else if (method === "instapay") {
             const isAndroid = /Android/i.test(navigator.userAgent || "");
@@ -2403,123 +2465,6 @@ const IronApp = {
             `;
             activeBox.classList.remove("hidden");
         }
-    },
-
-    handleCardPaymentLinkClick(event) {
-        const config = getAppConfig();
-        const link = (config.coachInfo?.paymentLink || "").trim();
-        if (link && !link.includes("buy.stripe.com/demo")) {
-            return true;
-        }
-        if (event) event.preventDefault();
-        this.startApplePayCheckout();
-        return false;
-    },
-
-    async startApplePayCheckout() {
-        const config = getAppConfig();
-        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
-        const link = (config.coachInfo?.paymentLink || "").trim();
-        const tier = this.getSubscriptionTierInfo(this.selectedSubscriptionMonths !== undefined ? this.selectedSubscriptionMonths : 1);
-        const amount = tier.price;
-        const currencyTxt = tier.currencyTxt;
-
-        const renewModal = document.getElementById("renewModal");
-        if (renewModal && !renewModal.classList.contains("active")) {
-            this.openRenewPaymentModal();
-        }
-
-        // 1. إذا كان الكوتش قد أضاف رابط بوابة دفع خارجية تدعم Apple Pay (مثل Tap أو Moyasar أو Stripe)
-        if (link && !link.includes("buy.stripe.com/demo")) {
-            window.open(link, "_blank", "noopener,noreferrer");
-            return;
-        }
-
-        // 2. محاولة فتح نافذة الدفع الأصلية للمتصفح (Apple Pay / PaymentRequest API المرتبطة بحساب مصرف الراجحي)
-        const ibanNum = config.coachInfo?.bankIban || "SA4180000644608017933823";
-        const stcNum = config.coachInfo?.stcPay || "966563055827";
-        if (typeof window !== "undefined" && "PaymentRequest" in window) {
-            try {
-                const supportedInstruments = [
-                    {
-                        supportedMethods: "https://apple.com/apple-pay",
-                        data: {
-                            version: 3,
-                            merchantIdentifier: "merchant.com.ironcoach.alrajhi",
-                            merchantCapabilities: ["supports3DS"],
-                            supportedNetworks: ["mada", "visa", "masterCard"],
-                            countryCode: "SA"
-                        }
-                    }
-                ];
-                const details = {
-                    total: {
-                        label: isEn
-                            ? `IronCoach Pro (${tier.title}) -> Al Rajhi ${ibanNum}`
-                            : `أيرون كوتش (${tier.title}) - مصرف الراجحي ${ibanNum}`,
-                        amount: { currency: "SAR", value: amount.toFixed(2) }
-                    }
-                };
-                const request = new PaymentRequest(supportedInstruments, details);
-                const canMake = await request.canMakePayment().catch(() => false);
-                if (canMake) {
-                    const response = await request.show();
-                    await response.complete("success");
-                    showToast(isEn ? "Apple Pay authorized! Please attach confirmation to activate immediately." : "تم تفويض Apple Pay! يرجى إرفاق الإيصال لتفعيل الاشتراك فوراً.", "success");
-                    return;
-                }
-            } catch {}
-        }
-
-        // 3. ربط ونسخ آيبان مصرف الراجحي (SA4180000644608017933823) مباشرة عند الضغط على Apple Pay
-        try {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(ibanNum);
-            }
-        } catch {}
-
-        const activeBox = document.getElementById("activeTransferActionBox");
-        if (activeBox) {
-            activeBox.innerHTML = `
-                <div class="font-black text-white flex items-center justify-between">
-                    <span class="flex items-center gap-1.5">🍎 ${isEn ? "Apple Pay — Linked to Al Rajhi Bank" : "الدفع عبر Apple Pay — مربوط بحساب مصرف الراجحي"}</span>
-                    <span class="font-mono text-emerald-400">${amount} ${currencyTxt}</span>
-                </div>
-                <div class="bg-slate-950/90 border border-amber-500/35 rounded-xl p-2.5 text-xs space-y-1 my-1">
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-400">${isEn ? "Bank:" : "البنك المستفيد:"}</span>
-                        <strong class="text-white">${isEn ? "Al Rajhi Bank (مصرف الراجحي)" : "مصرف الراجحي (Al Rajhi Bank)"}</strong>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-400">${isEn ? "IBAN (Copied ✅):" : "رقم الآيبان (تم نسخه تلقائياً ✅):"}</span>
-                        <strong class="text-amber-400 font-mono select-all" dir="ltr">${ibanNum}</strong>
-                    </div>
-                </div>
-                <p class="text-gray-200 leading-relaxed text-[11px]">
-                    ${isEn
-                        ? `Al Rajhi IBAN <strong class="text-amber-400 font-mono">${ibanNum}</strong> has been copied! Complete the transfer of <strong class="text-emerald-400">${amount} ${currencyTxt}</strong> via Al Rajhi / Apple Pay (or STC Pay ${stcNum}) and attach the receipt screenshot below.`
-                        : `تم نسخ آيبان مصرف الراجحي <strong class="text-amber-400 font-mono">${ibanNum}</strong> تلقائياً! حوّل مبلغ <strong class="text-emerald-400">${amount} ${currencyTxt}</strong> إلى الحساب المرفق (أو عبر Apple Pay في STC Pay / تطبيق الراجحي) ثم ارفع صورة الإيصال بالأسفل للتفعيل الفوري.`}
-                </p>
-                <div class="pt-1 flex flex-wrap items-center gap-2">
-                    <button type="button" onclick="IronApp.copyPaymentValue('iban')" class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400 transition">
-                        🏦 ${isEn ? `Copy Al Rajhi IBAN` : `نسخ آيبان مصرف الراجحي`}
-                    </button>
-                    <button type="button" onclick="IronApp.copyPaymentValue('stc')" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition">
-                        🇸🇦 ${isEn ? `Copy STC Pay (${stcNum})` : `نسخ STC Pay (${stcNum})`}
-                    </button>
-                    <button type="button" onclick="document.getElementById('receiptUploadInput')?.click()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold text-xs transition">
-                        📸 ${isEn ? "Attach Payment Receipt" : "إرفاق صورة الإيصال"}
-                    </button>
-                </div>
-            `;
-            activeBox.classList.remove("hidden");
-        }
-        showToast(
-            isEn
-                ? `Al Rajhi Bank IBAN (${ibanNum}) copied for Apple Pay / Instant Transfer! 🏦`
-                : `تم نسخ آيبان مصرف الراجحي (${ibanNum}) المربوط بالدفع الفوري! 🏦`,
-            "success"
-        );
     },
 
     // رفع إيصال التحويل إلى التخزين السحابي وإرساله لمراجعة الكوتش
@@ -2649,17 +2594,19 @@ const IronApp = {
         const phoneInput = document.getElementById("loginPhoneInput");
         const errBox = document.getElementById("loginOtpError");
         const sendBtn = document.getElementById("sendLoginOtpBtn");
-        const phoneVal = (phoneInput?.value || "").trim();
-        const digits = phoneVal.replace(/\D/g, "");
+        const code = document.getElementById("loginCountryCode")?.value || "+966";
+        const rawPhone = (phoneInput?.value || "").trim();
+        const digitsOnly = rawPhone.replace(/\D/g, "");
 
         if (errBox) errBox.classList.add("hidden");
-        if (digits.length < 8) {
+        if (digitsOnly.length < 8) {
             if (errBox) {
                 errBox.innerText = this.t("signup_err_phone");
                 errBox.classList.remove("hidden");
             }
             return;
         }
+        const phoneVal = this.buildFullPhone(code, rawPhone);
 
         if (sendBtn) sendBtn.disabled = true;
         try {
@@ -2866,16 +2813,22 @@ const IronApp = {
         e.preventDefault();
         const name = (document.getElementById("regOauthName")?.value || "").trim();
         const email = (document.getElementById("regOauthEmail")?.value || "").trim().toLowerCase();
-        const phone = (document.getElementById("regOauthPhone")?.value || "").trim();
-        const password = (document.getElementById("regOauthPassword")?.value || "").trim() || "123456";
+        const code = document.getElementById("regOauthCountryCode")?.value || "+966";
+        localStorage.setItem("iron_dial_code", code);
+        const phone = this.buildFullPhone(code, document.getElementById("regOauthPhone")?.value || "");
+        const password = (document.getElementById("regOauthPassword")?.value || "").trim();
         const phoneDigits = phone.replace(/\D/g, "");
 
         if (!name) {
             this.showSignupError(this.t("signup_err_name"));
             return;
         }
-        if (!email && phoneDigits.length < 8) {
-            this.showSignupError(this.t("signup_err_contact"));
+        if (phoneDigits.length < 9) {
+            this.showSignupError(this.t("signup_err_phone"));
+            return;
+        }
+        if (password.length < 4) {
+            this.showSignupError(this.t("signup_err_pass"));
             return;
         }
         if (email && !email.includes("@")) {
@@ -2883,6 +2836,7 @@ const IronApp = {
             return;
         }
 
+        this.signupState.countryCode = code;
         this.signupState.verifiedName = name;
         this.signupState.verifiedEmail = email;
         this.signupState.verifiedPhone = phone;
@@ -2893,12 +2847,15 @@ const IronApp = {
     async sendSignupOtp() {
         const phoneInput = document.getElementById("regPhoneInput");
         const sendBtn = document.getElementById("sendOtpBtn");
-        const phoneVal = (phoneInput?.value || "").trim();
-        const digits = phoneVal.replace(/\D/g, "");
+        const code = document.getElementById("regOauthCountryCode")?.value || document.getElementById("loginCountryCode")?.value || "+966";
+        const rawPhone = (phoneInput?.value || "").trim();
+        const digits = rawPhone.replace(/\D/g, "");
         if (digits.length < 8) {
             this.showSignupError(this.t("signup_err_phone"));
             return;
         }
+        const phoneVal = this.buildFullPhone(code, rawPhone);
+        this.signupState.countryCode = code;
 
         this.showSignupError("");
         if (sendBtn) sendBtn.disabled = true;
@@ -2987,6 +2944,8 @@ const IronApp = {
             phoneEl.value = this.signupState.verifiedPhone || "";
             phoneEl.readOnly = this.signupState.provider === "phone";
         }
+        const passEl = document.getElementById("regProfilePassword");
+        if (passEl) passEl.value = this.signupState.verifiedPassword || "";
         this.refreshSignupHeaderLabels();
         this.updateSignupCalPreview();
     },
@@ -3020,6 +2979,19 @@ const IronApp = {
             return;
         }
 
+        const activeCode = this.signupState.countryCode || document.getElementById("regOauthCountryCode")?.value || document.getElementById("loginCountryCode")?.value || "+966";
+        const profilePhoneRaw = (document.getElementById("regProfilePhone")?.value || this.signupState.verifiedPhone || "").trim();
+        const profilePhone = this.buildFullPhone(activeCode, profilePhoneRaw);
+        const profilePass = (document.getElementById("regProfilePassword")?.value || this.signupState.verifiedPassword || "").trim();
+        if (profilePhone.replace(/\D/g, "").length < 9) {
+            this.showSignupError(this.t("signup_err_phone"));
+            return;
+        }
+        if (!this.signupState.otpToken && profilePass.length < 4) {
+            this.showSignupError(this.t("signup_err_pass"));
+            return;
+        }
+
         const submitBtn = e.target.querySelector('button[type="submit"]');
         if (submitBtn) submitBtn.disabled = true;
         this.showSignupError("");
@@ -3027,8 +2999,8 @@ const IronApp = {
         const payload = {
             name,
             email: this.signupState.verifiedEmail,
-            phone: (document.getElementById("regProfilePhone")?.value || this.signupState.verifiedPhone || "").trim(),
-            password: this.signupState.verifiedPassword || "",
+            phone: profilePhone,
+            password: profilePass,
             otpToken: this.signupState.otpToken || "",
             authProvider: this.signupState.provider || "password",
             gender: document.getElementById("regGender")?.value || "male",
