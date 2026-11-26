@@ -242,9 +242,49 @@ html[data-theme="light"] .brand-logo-img {
 
 @media (max-width: 1023px) {
     body {
-        padding-bottom: 92px !important;
+        padding-bottom: 84px !important;
     }
     .desktop-sidebar {
         display: none !important;
+    }
+}
+
+/* تحسين العرض المخصص لشاشات الهواتف الصغيرة (أقل من 640px) */
+@media (max-width: 639px) {
+    .modal-overlay {
+        padding: 8px;
+    }
+    .modal-container {
+        border-radius: 20px;
+        max-height: 92vh;
+        max-height: 92dvh;
+    }
+    .theme-toggle-btn {
+        padding: 5px 8px;
+        font-size: 11px;
+        gap: 4px;
+        border-radius: 10px;
+    }
+    .theme-toggle-btn .theme-icon {
+        font-size: 13px;
+    }
+    .trainee-avatar-ring {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+    }
+    #toastContainer {
+        bottom: 76px;
+        width: 94%;
+    }
+    #gymTimerBox,
+    html[dir="ltr"] #gymTimerBox {
+        left: 10px;
+        right: 10px;
+        bottom: 78px;
+    }
+    #gymTimerBox > div {
+        min-width: 0 !important;
+        width: 100%;
     }
 }

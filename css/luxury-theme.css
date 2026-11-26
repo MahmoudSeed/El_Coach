@@ -54,6 +54,11 @@ html[data-theme="light"] {
     color-scheme: light;
 }
 
+html {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
 * {
     box-sizing: border-box;
     font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -66,23 +71,34 @@ body {
     margin: 0;
     padding: 0;
     min-height: 100vh;
+    min-height: 100dvh;
+    max-width: 100%;
     overflow-x: hidden;
     position: relative;
     transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* طبقة الخلفية النارية الثابتة تتجنب تشوّه التمدد على شاشات الجوال */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-color: var(--bg-main);
     background-image:
         radial-gradient(circle at 15% 15%, rgba(249, 115, 22, 0.34) 0%, transparent 42%),
         radial-gradient(circle at 85% 18%, rgba(225, 29, 72, 0.28) 0%, transparent 45%),
         radial-gradient(circle at 50% 88%, rgba(245, 158, 11, 0.26) 0%, transparent 50%),
         radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.16) 0%, transparent 42%),
         linear-gradient(135deg, rgba(16, 6, 7, 0.86) 0%, rgba(24, 9, 8, 0.82) 50%, rgba(14, 7, 11, 0.88) 100%),
-        url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80') !important;
-    background-size: cover !important;
-    background-position: center center !important;
-    background-attachment: fixed !important;
+        url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center center;
 }
 
 /* طبقة الشرار والتوهج الناري التحفيزي في الخلفية */
-body::before {
+body::after {
     content: "";
     position: fixed;
     inset: 0;
@@ -203,8 +219,8 @@ button:focus-visible {
     bottom: 0;
     left: 0;
     right: 0;
-    min-height: 68px;
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    min-height: 64px;
+    padding: 5px 6px calc(6px + env(safe-area-inset-bottom, 0px));
     background: var(--nav-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -212,26 +228,35 @@ button:focus-visible {
     display: flex;
     justify-content: space-around;
     align-items: center;
+    gap: 2px;
     z-index: 1000;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
 }
 
+.mobile-bottom-nav.hidden {
+    display: none !important;
+}
+
 .nav-item {
     display: flex;
+    flex: 1 1 0%;
+    min-width: 0;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: 10px;
+    line-height: 1.15;
     font-weight: 700;
     text-decoration: none;
     cursor: pointer;
     transition: all 0.2s ease;
-    padding: 6px 10px;
-    border-radius: 14px;
+    padding: 5px 2px;
+    border-radius: 12px;
     border: none;
     background: transparent;
     position: relative;
+    white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -286,7 +311,7 @@ html[data-theme="light"] #impersonatingBanner {
 }
 
 /* البطاقات والحاويات الرئيسية في الوضع الفاتح الناري */
-html[data-theme="light"] body {
+html[data-theme="light"] body::before {
     background-image:
         radial-gradient(circle at 15% 15%, rgba(249, 115, 22, 0.45) 0%, transparent 45%),
         radial-gradient(circle at 85% 20%, rgba(239, 68, 68, 0.35) 0%, transparent 45%),
@@ -297,6 +322,7 @@ html[data-theme="light"] body {
 
 html[data-theme="light"] .bg-slate-900,
 html[data-theme="light"] .bg-slate-900\/80,
+html[data-theme="light"] .bg-slate-900\/85,
 html[data-theme="light"] .bg-slate-900\/90,
 html[data-theme="light"] .bg-slate-900\/95,
 html[data-theme="light"] .bg-slate-900\/60 {
@@ -310,7 +336,8 @@ html[data-theme="light"] .bg-slate-900\/60 {
 html[data-theme="light"] .bg-slate-950,
 html[data-theme="light"] .bg-slate-950\/60,
 html[data-theme="light"] .bg-slate-950\/70,
-html[data-theme="light"] .bg-slate-950\/80 {
+html[data-theme="light"] .bg-slate-950\/80,
+html[data-theme="light"] .bg-slate-950\/90 {
     background-color: rgba(255, 244, 230, 0.92) !important;
 }
 
@@ -436,4 +463,15 @@ html[data-theme="light"] .wo-ex-pill-partial {
     background-color: #fffbeb !important;
     color: #78350f !important;
     border-color: #d97706 !important;
+}
+
+/* شبكة تبويبات تمارين التمرين التفاعلي (عمودان على الجوال، صفان متناسقان على التابلت والكمبيوتر) */
+.live-gym-ex-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 640px) {
+    .live-gym-ex-tabs {
+        grid-template-columns: repeat(var(--gym-cols, 4), minmax(0, 1fr));
+    }
 }

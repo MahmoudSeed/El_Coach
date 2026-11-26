@@ -245,7 +245,7 @@ const IronApp = {
 
         if (!user) {
             area.innerHTML = `
-                <button onclick="IronApp.showAuthScreen()" class="px-4 py-2 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition">
+                <button onclick="IronApp.showAuthScreen()" class="px-2.5 sm:px-4 py-1.5 sm:py-2 bg-emerald-500 text-slate-950 font-black text-[11px] sm:text-xs rounded-xl shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition whitespace-nowrap">
                     ${this.t("btn_login")}
                 </button>
             `;
@@ -254,8 +254,8 @@ const IronApp = {
 
         if (user.role === "coach") {
             area.innerHTML = `
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <button onclick="IronAuth.logout()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-xs rounded-xl border border-slate-700 transition">
+                <div class="flex items-center gap-1.5 sm:gap-3">
+                    <button onclick="IronAuth.logout()" class="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-[11px] sm:text-xs rounded-xl border border-slate-700 transition whitespace-nowrap">
                         ${this.t("btn_logout")} 🚪
                     </button>
                 </div>
@@ -274,27 +274,27 @@ const IronApp = {
             const avatarData = user.traineeData?.avatar;
             const initial = (displayName || "U").trim().charAt(0).toUpperCase();
             const headerAvatar = avatarData
-                ? `<img src="${avatarData}" alt="${displayName}" class="w-8 h-8 rounded-full object-cover border-2 border-emerald-500/50 cursor-pointer flex-shrink-0" onclick="document.getElementById('traineeAvatarInput')?.click()" title="${this.t("avatar_change")}">`
-                : `<button type="button" onclick="document.getElementById('traineeAvatarInput')?.click()" class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black text-xs flex-shrink-0 hover:bg-emerald-500/25 transition" title="${this.t("avatar_add")}">${initial}</button>`;
+                ? `<img src="${avatarData}" alt="${displayName}" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border-2 border-emerald-500/50 cursor-pointer flex-shrink-0" onclick="document.getElementById('traineeAvatarInput')?.click()" title="${this.t("avatar_change")}">`
+                : `<button type="button" onclick="document.getElementById('traineeAvatarInput')?.click()" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black text-xs flex-shrink-0 hover:bg-emerald-500/25 transition" title="${this.t("avatar_add")}">${initial}</button>`;
 
             area.innerHTML = `
-                <div class="flex items-center gap-1.5 sm:gap-2.5">
+                <div class="flex items-center justify-end flex-wrap gap-1.5 sm:gap-2.5">
                     ${user.isImpersonating ? `
-                        <button onclick="IronAuth.returnToCoachDashboard()" class="px-2.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 font-black text-[11px] rounded-xl transition flex items-center gap-1">
+                        <button onclick="IronAuth.returnToCoachDashboard()" class="px-2 sm:px-2.5 py-1 sm:py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 font-black text-[10px] sm:text-[11px] rounded-xl transition flex items-center gap-1 whitespace-nowrap">
                             <span>${this.t("back_to_coach")}</span>
                         </button>
                     ` : ''}
                     ${headerAvatar}
-                    <div class="text-end">
-                        <div class="text-[11px] sm:text-xs font-black text-white truncate max-w-[115px] sm:max-w-none">${displayName}</div>
-                        <div class="text-[9px] sm:text-[10px] ${statusColor} px-2 py-0.5 rounded-full border inline-block font-bold">
+                    <div class="text-end min-w-0">
+                        <div class="text-[11px] sm:text-xs font-black text-white truncate max-w-[85px] sm:max-w-[160px]">${displayName}</div>
+                        <div class="text-[9px] sm:text-[10px] ${statusColor} px-1.5 sm:px-2 py-0.5 rounded-full border inline-block font-bold whitespace-nowrap">
                             ${statusText}
                         </div>
                     </div>
-                    <button onclick="IronApp.openRenewPaymentModal()" class="px-2.5 py-1.5 ${(user.status === "expired" || user.status === "pending") ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:bg-rose-600 animate-pulse' : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35'} font-bold text-xs rounded-xl transition">
+                    <button onclick="IronApp.openRenewPaymentModal()" class="px-2 sm:px-2.5 py-1 sm:py-1.5 ${(user.status === "expired" || user.status === "pending") ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:bg-rose-600 animate-pulse' : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35'} font-bold text-[11px] sm:text-xs rounded-xl transition whitespace-nowrap">
                         ${this.t("status_renew_short")}
                     </button>
-                    <button onclick="IronAuth.logout()" class="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-xs rounded-xl border border-slate-700 transition">
+                    <button onclick="IronAuth.logout()" class="px-2 sm:px-3 py-1 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-[11px] sm:text-xs rounded-xl border border-slate-700 transition whitespace-nowrap">
                         <span class="hidden sm:inline">${this.t("btn_logout")}</span> 🚪
                     </button>
                 </div>
@@ -823,11 +823,11 @@ const IronApp = {
             : this.t("water_rem_next", { time: this.formatRemainingTime(remainingMs) });
 
         box.innerHTML = `
-            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex-1">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-xs font-black text-white flex items-center gap-1.5">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
+                            <span class="text-xs font-black text-white flex items-center gap-1.5 flex-wrap">
                                 <span>${this.t("water_title")}</span>
                                 <span class="text-[11px] text-cyan-400 font-mono">(${consumedLiters} / ${targetLiters} ${this.t("liter")})</span>
                             </span>
@@ -941,10 +941,10 @@ const IronApp = {
         const pct = Math.min(100, Math.round((doneCount / totalMealsCount) * 100));
 
         box.innerHTML = `
-            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex-1">
-                        <div class="flex items-center justify-between mb-1.5">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
                             <span class="text-xs font-black text-white flex items-center gap-1.5">
                                 <span>${this.t("meals_tracker_title")}</span>
                             </span>
@@ -1165,7 +1165,7 @@ const IronApp = {
             }
 
             return `
-                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 wo-summary-card">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 sm:p-5 wo-summary-card">
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                         <h4 class="text-sm font-black wo-summary-heading flex items-center gap-2">
                             <span>${this.t("logs_title", { count: myLogs.length })}</span>
@@ -1185,11 +1185,11 @@ const IronApp = {
                                 ? `${log.completedSets}/${log.totalSets}`
                                 : `${log.completedSets}`;
                             return `
-                                <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5 text-xs space-y-2.5">
-                                    <div class="flex items-start justify-between gap-2">
-                                        <div class="min-w-0">
+                                <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 sm:p-3.5 text-xs space-y-2.5">
+                                    <div class="flex flex-wrap items-start justify-between gap-2">
+                                        <div class="min-w-0 flex-1">
                                             <div class="font-black wo-summary-heading truncate">${log.dayTitle}</div>
-                                            <div class="text-[10px] text-gray-400">${log.programName} • ${dateFormatted}</div>
+                                            <div class="text-[10px] text-gray-400 truncate">${log.programName} • ${dateFormatted}</div>
                                         </div>
                                         <div class="flex items-center gap-1.5 flex-shrink-0">
                                             <div class="text-end">
@@ -1584,7 +1584,7 @@ const IronApp = {
         const trCat = (arCat) => typeof IronI18n !== "undefined" ? IronI18n.translateMealCategory(arCat) : arCat;
 
         container.innerHTML = `
-            <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 sm:p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
                     <div class="flex items-center gap-3 flex-wrap">
                         <span class="text-xs text-gray-400">${this.t("diet_total")}</span>
@@ -1725,7 +1725,7 @@ const IronApp = {
         });
 
         container.innerHTML = `
-            <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 relative overflow-hidden">
+            <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-6 relative overflow-hidden">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div class="flex-1" dir="ltr">
                         <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -1792,10 +1792,10 @@ const IronApp = {
                     const hasAnyProgress = Boolean(latestDayLog || hasActiveDraftForDay);
 
                     return `
-                    <div class="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-5">
+                    <div class="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-3.5 sm:p-5">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3 mb-4">
-                            <div dir="ltr" class="text-left">
-                                <h4 class="font-black text-white text-base">${day.title}</h4>
+                            <div dir="ltr" class="text-left min-w-0">
+                                <h4 class="font-black text-white text-sm sm:text-base">${day.title}</h4>
                                 <div class="text-xs text-emerald-400 font-bold mt-0.5">${day.targetMuscles} • ${day.exercises.length} Exercises</div>
                             </div>
                             <div class="flex items-center gap-2 flex-wrap">
@@ -1810,7 +1810,7 @@ const IronApp = {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" dir="ltr">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3" dir="ltr">
                             ${day.exercises.map((item, idx) => {
                                 const ex = getExerciseById(item.exerciseId);
                                 if (!ex) return '';
@@ -1832,22 +1832,22 @@ const IronApp = {
                                     : '';
 
                                 return `
-                                    <div onclick="IronApp.openExerciseDetail('${ex.id}', '${safeExLabel}')" class="${cardBorder} border rounded-xl p-3 flex items-center gap-3 hover:border-emerald-500/40 cursor-pointer transition text-left">
-                                        <div class="w-8 h-8 rounded-lg ${isFullDone ? 'bg-emerald-500 text-slate-950' : 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-400'} flex items-center justify-center font-black text-xs flex-shrink-0">
+                                    <div onclick="IronApp.openExerciseDetail('${ex.id}', '${safeExLabel}')" class="${cardBorder} border rounded-xl p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 hover:border-emerald-500/40 cursor-pointer transition text-left">
+                                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg ${isFullDone ? 'bg-emerald-500 text-slate-950' : 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-400'} flex items-center justify-center font-black text-xs flex-shrink-0">
                                             ${isFullDone ? '✓' : badgeNum}
                                         </div>
-                                        <img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${exLabel}')" class="w-14 h-14 rounded-lg object-contain bg-slate-950 border border-slate-800 flex-shrink-0" alt="${exLabel}" loading="lazy">
+                                        <img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${exLabel}')" class="w-11 h-11 sm:w-14 sm:h-14 rounded-lg object-contain bg-slate-950 border border-slate-800 flex-shrink-0" alt="${exLabel}" loading="lazy">
                                         <div class="flex-1 min-w-0">
-                                            <div class="flex items-center justify-between gap-1.5">
+                                            <div class="flex flex-wrap items-center justify-between gap-1">
                                                 <h5 class="font-black text-white text-xs truncate">${exLabel}</h5>
                                                 ${doneBadge}
                                             </div>
-                                            <div class="flex items-center gap-2 text-[11px] font-bold mt-1">
+                                            <div class="flex items-center gap-2 text-[11px] font-bold mt-1 flex-wrap">
                                                 <span class="text-emerald-400">${item.sets} × ${item.reps}</span>
                                                 <span class="text-gray-400">• Rest ${item.restSec}s</span>
                                             </div>
                                         </div>
-                                        <div class="text-gray-400 hover:text-white text-xs">ℹ️</div>
+                                        <div class="text-gray-400 hover:text-white text-xs flex-shrink-0">ℹ️</div>
                                     </div>
                                 `;
                             }).join('')}
@@ -2577,13 +2577,13 @@ const IronApp = {
         if (this.signupState.mode === "signup") {
             if (loginPanel) loginPanel.classList.add("hidden");
             if (signupCont) signupCont.classList.remove("hidden");
-            if (tabSignup) tabSignup.className = "py-2.5 px-3 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 transition";
-            if (tabLogin) tabLogin.className = "py-2.5 px-3 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition";
+            if (tabSignup) tabSignup.className = "py-2 px-1.5 sm:px-3 rounded-xl text-[10.5px] sm:text-xs font-black bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 transition whitespace-nowrap";
+            if (tabLogin) tabLogin.className = "py-2 px-1.5 sm:px-3 rounded-xl text-[10.5px] sm:text-xs font-bold text-gray-300 hover:text-white transition whitespace-nowrap";
         } else {
             if (signupCont) signupCont.classList.add("hidden");
             if (loginPanel) loginPanel.classList.remove("hidden");
-            if (tabLogin) tabLogin.className = "py-2.5 px-3 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 transition";
-            if (tabSignup) tabSignup.className = "py-2.5 px-3 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition";
+            if (tabLogin) tabLogin.className = "py-2 px-1.5 sm:px-3 rounded-xl text-[10.5px] sm:text-xs font-black bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 transition whitespace-nowrap";
+            if (tabSignup) tabSignup.className = "py-2 px-1.5 sm:px-3 rounded-xl text-[10.5px] sm:text-xs font-bold text-gray-300 hover:text-white transition whitespace-nowrap";
         }
         this.refreshSignupHeaderLabels();
     },

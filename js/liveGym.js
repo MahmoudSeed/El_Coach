@@ -381,24 +381,24 @@ const IronLiveGym = {
             .filter(Boolean);
 
         modal.innerHTML = `
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
-                <div dir="ltr" class="text-left">
-                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${w.programName}</span>
-                    <h3 class="text-lg font-black text-white mt-1">${w.dayTitle}</h3>
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-3 sm:mb-4">
+                <div dir="ltr" class="text-left min-w-0 flex-1">
+                    <span class="text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 inline-block max-w-full truncate">${w.programName}</span>
+                    <h3 class="text-base sm:text-lg font-black text-white mt-1 truncate">${w.dayTitle}</h3>
                 </div>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <button onclick="IronLiveGym.resetAllWorkoutSets()" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs rounded-lg transition">
+                <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <button onclick="IronLiveGym.resetAllWorkoutSets()" class="px-2 sm:px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[11px] sm:text-xs rounded-lg transition whitespace-nowrap">
                         ${txt("gym_reset_all_btn")}
                     </button>
-                    <button onclick="IronLiveGym.finishWorkout()" class="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-lg shadow-lg shadow-emerald-500/20 hover:opacity-90">
+                    <button onclick="IronLiveGym.finishWorkout()" class="px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-[11px] sm:text-xs rounded-lg shadow-lg shadow-emerald-500/20 hover:opacity-90 whitespace-nowrap">
                         ${txt("gym_finish")}
                     </button>
                     <button onclick="closeModal('liveGymModal')" class="text-gray-400 hover:text-white text-xl p-1">✕</button>
                 </div>
             </div>
 
-            <!-- مؤشر التنقل بين تمارين اليوم (على صفين بدون شريط تمرير) -->
-            <div class="grid gap-2 mb-3" dir="ltr" style="grid-template-columns: repeat(${Math.max(2, Math.ceil(w.exercises.length / 2))}, minmax(0, 1fr));">
+            <!-- مؤشر التنقل بين تمارين اليوم (عمودان على الجوال، صفان متناسقان على الشاشات الأوسع) -->
+            <div class="live-gym-ex-tabs grid gap-1.5 sm:gap-2 mb-3" dir="ltr" style="--gym-cols: ${Math.max(2, Math.ceil(w.exercises.length / 2))};">
                 ${w.exercises.map((item, idx) => {
                     const label = item.displayNameEn || item.details?.nameEn || `Exercise ${idx + 1}`;
                     const prefix = item.pair ? `${item.pair}.` : `${idx + 1}.`;
@@ -436,9 +436,9 @@ const IronLiveGym = {
             ` : ''}
 
             <!-- بطاقة التمرين الحالي النشط -->
-            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 mb-4">
-                <div class="flex flex-col sm:flex-row gap-4 items-center">
-                    <div class="relative w-full sm:w-44 h-44 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex-shrink-0">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 sm:p-4 mb-3 sm:mb-4">
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center">
+                    <div class="relative w-full sm:w-44 h-36 sm:h-44 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex-shrink-0">
                         <img src="${details.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${exerciseTitleEn}')" class="w-full h-full object-contain" alt="${exerciseTitleEn}">
                         ${ex.pair ? `
                             <div class="absolute top-2 left-2 bg-amber-500 text-slate-950 px-2 py-0.5 rounded text-[11px] font-black">
@@ -447,34 +447,34 @@ const IronLiveGym = {
                         ` : ''}
                     </div>
 
-                    <div class="flex-1 w-full">
+                    <div class="flex-1 w-full min-w-0">
                         <div class="flex justify-between items-start gap-2">
-                            <div dir="ltr" class="text-left">
+                            <div dir="ltr" class="text-left min-w-0">
                                 <div class="text-[11px] text-emerald-400 font-bold uppercase tracking-wide mb-0.5">
                                     ${txt("gym_ex_of", { idx: this.activeExerciseIndex + 1, total: w.exercises.length })}
                                 </div>
-                                <h2 class="text-xl font-black text-white leading-tight">${exerciseTitleEn}</h2>
+                                <h2 class="text-lg sm:text-xl font-black text-white leading-tight break-words">${exerciseTitleEn}</h2>
                                 <div class="text-xs text-gray-400 font-mono mt-1">${details.equipment || ''}</div>
                             </div>
                             <!-- زر اقتراح بديل للجهاز المشغول -->
                             <button onclick="IronLiveGym.openAlternativesModal(${this.activeExerciseIndex})" 
-                                class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1 flex-shrink-0">
+                                class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-[11px] sm:text-xs font-bold transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
                                 <span>${txt("gym_busy")}</span>
                             </button>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-2 text-center text-xs my-3 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80" dir="ltr">
+                        <div class="grid grid-cols-3 gap-1.5 sm:gap-2 text-center text-xs my-2.5 sm:my-3 bg-slate-950/60 p-2 sm:p-2.5 rounded-xl border border-slate-800/80" dir="ltr">
                             <div>
-                                <div class="text-gray-400 font-bold">Sets</div>
-                                <div class="font-black text-white text-base">${ex.setsTarget}</div>
+                                <div class="text-[11px] sm:text-xs text-gray-400 font-bold">Sets</div>
+                                <div class="font-black text-white text-sm sm:text-base">${ex.setsTarget}</div>
                             </div>
                             <div>
-                                <div class="text-gray-400 font-bold">Reps</div>
-                                <div class="font-black text-emerald-400 text-base">${ex.repsTarget}</div>
+                                <div class="text-[11px] sm:text-xs text-gray-400 font-bold">Reps</div>
+                                <div class="font-black text-emerald-400 text-sm sm:text-base">${ex.repsTarget}</div>
                             </div>
                             <div>
-                                <div class="text-gray-400 font-bold">Rest</div>
-                                <div class="font-black text-amber-400 text-base">${ex.restSec}s</div>
+                                <div class="text-[11px] sm:text-xs text-gray-400 font-bold">Rest</div>
+                                <div class="font-black text-amber-400 text-sm sm:text-base">${ex.restSec}s</div>
                             </div>
                         </div>
 
@@ -484,32 +484,32 @@ const IronLiveGym = {
             </div>
 
             <!-- جدول الجولات وتسجيل الأوزان -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 sm:p-4">
                 <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
-                    <h4 class="font-black text-sm text-white flex items-center gap-2">
+                    <h4 class="font-black text-xs sm:text-sm text-white flex items-center gap-2">
                         <span>${txt("gym_log_title")} (${ex.setsTarget} × ${ex.repsTarget})</span>
                     </h4>
                     <div class="flex items-center gap-2">
                         <span class="text-xs text-gray-400 hidden sm:inline">${txt("gym_log_hint")}</span>
                         <button type="button" onclick="IronLiveGym.resetExerciseSets(${this.activeExerciseIndex})"
-                            class="px-2.5 py-1 bg-slate-800 hover:bg-rose-500/20 text-gray-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/30 rounded-lg text-[11px] font-bold transition">
+                            class="px-2.5 py-1 bg-slate-800 hover:bg-rose-500/20 text-gray-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/30 rounded-lg text-[11px] font-bold transition whitespace-nowrap">
                             ${txt("gym_reset_ex_btn")}
                         </button>
                     </div>
                 </div>
 
-                <div class="space-y-2 max-h-[38vh] overflow-y-auto pr-1">
-                    <div class="grid grid-cols-12 gap-2 text-center text-[11px] font-bold text-gray-400 px-2" dir="ltr">
+                <div class="space-y-2 max-h-[38vh] overflow-y-auto pr-0.5 sm:pr-1">
+                    <div class="grid grid-cols-12 gap-1.5 sm:gap-2 text-center text-[10px] sm:text-[11px] font-bold text-gray-400 px-1.5 sm:px-2" dir="ltr">
                         <div class="col-span-2">Set</div>
-                        <div class="col-span-3">Weight (kg)</div>
-                        <div class="col-span-3">Reps (${ex.repsTarget})</div>
+                        <div class="col-span-3">Weight</div>
+                        <div class="col-span-3">Reps</div>
                         <div class="col-span-4">Done</div>
                     </div>
 
                     ${ex.sets.map((s, sIdx) => `
-                        <div class="grid grid-cols-12 gap-2 items-center p-2 rounded-xl border transition ${s.completed ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-slate-950/60 border-slate-800'}">
-                            <div class="col-span-2 text-center font-black ${s.completed ? 'text-emerald-400' : 'text-gray-300'} text-xs" dir="ltr">
-                                Set ${s.setNumber}
+                        <div class="grid grid-cols-12 gap-1.5 sm:gap-2 items-center p-1.5 sm:p-2 rounded-xl border transition ${s.completed ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-slate-950/60 border-slate-800'}">
+                            <div class="col-span-2 text-center font-black ${s.completed ? 'text-emerald-400' : 'text-gray-300'} text-[11px] sm:text-xs" dir="ltr">
+                                #${s.setNumber}
                             </div>
                             <div class="col-span-3">
                                 <input type="number" placeholder="kg" value="${s.weight}" 
@@ -523,8 +523,8 @@ const IronLiveGym = {
                             </div>
                             <div class="col-span-4 flex items-center justify-center">
                                 <button onclick="IronLiveGym.toggleSetComplete(${this.activeExerciseIndex}, ${sIdx})"
-                                    class="w-full py-1.5 rounded-lg font-bold text-xs transition flex items-center justify-center gap-1 ${s.completed ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : 'bg-slate-800 hover:bg-slate-700 text-gray-300'}">
-                                    <span>${s.completed ? 'Completed ✓' : 'Complete'}</span>
+                                    class="w-full py-1.5 px-1 rounded-lg font-bold text-[11px] sm:text-xs transition flex items-center justify-center gap-1 whitespace-nowrap ${s.completed ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' : 'bg-slate-800 hover:bg-slate-700 text-gray-300'}">
+                                    <span>${s.completed ? 'Done ✓' : 'Complete'}</span>
                                 </button>
                             </div>
                         </div>

@@ -57,33 +57,33 @@ const IronCoachPanel = {
         const displayTitle = typeof IronI18n !== "undefined" ? IronI18n.trCoachTitle(config.coachInfo.title) : config.coachInfo.title;
 
         container.innerHTML = `
-            <div class="space-y-6">
+            <div class="space-y-5 sm:space-y-6">
                 <!-- شريط الترحيب والإحصائيات السريعة -->
-                <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/40 border border-slate-800 rounded-3xl p-6 relative overflow-hidden">
+                <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/40 border border-slate-800 rounded-3xl p-4 sm:p-6 relative overflow-hidden">
                     <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div class="flex items-center gap-4">
-                            <div class="brand-logo-frame w-20 sm:w-24 flex-shrink-0 flex items-center justify-center">
+                        <div class="flex items-center gap-3 sm:gap-4">
+                            <div class="brand-logo-frame w-14 sm:w-24 flex-shrink-0 flex items-center justify-center">
                                 <img src="LOGO.png" alt="Coach Logo" class="brand-logo-img" onerror="this.style.display='none';this.parentElement.innerText='👑'">
                             </div>
-                            <div>
-                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-2">
+                            <div class="min-w-0">
+                                <div class="inline-flex items-center gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] sm:text-xs font-bold mb-1.5 sm:mb-2">
                                     <span>${txt("coach_badge")}</span>
                                 </div>
-                                <h2 class="text-2xl font-black text-white">${txt("coach_welcome")}</h2>
+                                <h2 class="text-xl sm:text-2xl font-black text-white">${txt("coach_welcome")}</h2>
                                 <p class="text-xs text-gray-400 mt-1">${txt("coach_sub", { title: displayTitle })}</p>
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <button onclick="openModal('addTraineeModal')" class="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5">
+                            <button onclick="openModal('addTraineeModal')" class="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5">
                                 <span>${txt("coach_add_btn")}</span>
                             </button>
-                            <button onclick="IronCoachPanel.openSettingsModal()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+                            <button onclick="IronCoachPanel.openSettingsModal()" class="px-3 sm:px-3.5 py-2 sm:py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5">
                                 <span>${txt("coach_settings_btn")}</span>
                             </button>
-                            <button onclick="IronCoachPanel.exportBackup()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+                            <button onclick="IronCoachPanel.exportBackup()" class="px-3 sm:px-3.5 py-2 sm:py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5">
                                 <span>${txt("coach_backup_btn")}</span>
                             </button>
-                            <label class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer">
+                            <label class="px-3 sm:px-3.5 py-2 sm:py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer">
                                 <span>${txt("coach_restore_btn")}</span>
                                 <input type="file" accept=".json,application/json" onchange="IronCoachPanel.importBackup(this)" class="hidden">
                             </label>
@@ -91,22 +91,22 @@ const IronCoachPanel = {
                     </div>
 
                     <!-- شبكة الإحصائيات -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 text-center">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 mt-5 sm:mt-6">
+                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-3 sm:p-4 text-center">
                             <div class="text-xs text-gray-400 font-bold mb-1">${txt("coach_stat_total")}</div>
-                            <div class="text-2xl font-black text-white">${trainees.length}</div>
+                            <div class="text-xl sm:text-2xl font-black text-white">${trainees.length}</div>
                         </div>
-                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 text-center">
+                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-3 sm:p-4 text-center">
                             <div class="text-xs text-emerald-400 font-bold mb-1">${txt("coach_stat_active")}</div>
-                            <div class="text-2xl font-black text-emerald-400">${activeCount}</div>
+                            <div class="text-xl sm:text-2xl font-black text-emerald-400">${activeCount}</div>
                         </div>
-                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 text-center">
+                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-3 sm:p-4 text-center">
                             <div class="text-xs text-amber-400 font-bold mb-1">${txt("coach_stat_expiring")}</div>
-                            <div class="text-2xl font-black text-amber-400">${expiringCount}</div>
+                            <div class="text-xl sm:text-2xl font-black text-amber-400">${expiringCount}</div>
                         </div>
-                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 text-center">
+                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-3 sm:p-4 text-center">
                             <div class="text-xs text-rose-400 font-bold mb-1">${txt("coach_stat_expired")}</div>
-                            <div class="text-2xl font-black text-rose-400">${expiredCount}</div>
+                            <div class="text-xl sm:text-2xl font-black text-rose-400">${expiredCount}</div>
                         </div>
                     </div>
                 </div>
@@ -128,15 +128,15 @@ const IronCoachPanel = {
                 ${this.activeSection === 'programs' ? this.renderCoachProgramsSection(trainees, isEn, txt) : `
 
                 <!-- شريط البحث وفلترة المشتركين -->
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
-                    <div class="flex items-center gap-3 flex-1">
-                        <h3 class="text-base font-black text-white whitespace-nowrap">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 sm:p-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                        <h3 class="text-sm sm:text-base font-black text-white whitespace-nowrap">
                             <span>${txt("coach_list_title", { count: filteredTrainees.length })}</span>
                         </h3>
                         <input type="text" id="coachTraineeSearchInput" value="${this.searchQuery}"
                             oninput="IronCoachPanel.handleSearch(this.value)"
                             placeholder="${txt("coach_search_ph")}"
-                            class="w-full max-w-sm bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-bold placeholder-gray-500 outline-none">
+                            class="w-full sm:max-w-sm bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-bold placeholder-gray-500 outline-none">
                     </div>
                     <div class="flex items-center gap-2 flex-wrap">
                         <button onclick="IronCoachPanel.setFilter('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${this.filterStatus === 'all' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-gray-300'}">${txt("coach_filter_all", { count: trainees.length })}</button>
@@ -199,7 +199,7 @@ const IronCoachPanel = {
                                 : `<div class="w-10 h-10 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-sm flex-shrink-0">${initial}</div>`;
 
                             return `
-                                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-emerald-500/40 transition flex flex-col justify-between">
+                                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 sm:p-5 hover:border-emerald-500/40 transition flex flex-col justify-between">
                                     <div>
                                         <div class="flex justify-between items-start gap-2 mb-3">
                                             <div class="flex items-center gap-2.5 min-w-0">
@@ -237,34 +237,34 @@ const IronCoachPanel = {
                                     </div>
 
                                     <div class="space-y-2 pt-3 border-t border-slate-800 mt-2">
-                                        <div class="flex items-center gap-1 flex-wrap">
-                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}', 1)" class="px-2 py-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 rounded-xl text-[10px] font-black transition" title="1 SAR">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}', 1)" class="px-2 py-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 rounded-xl text-[10px] font-black transition whitespace-nowrap" title="1 SAR">
                                                 ${isEn ? '⚡ +1d' : '⚡ +1 يوم'}
                                             </button>
-                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}', 30)" class="flex-1 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-[10px] font-black transition" title="139">
+                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}', 30)" class="flex-1 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-[10px] font-black transition whitespace-nowrap" title="139">
                                                 ${isEn ? '+1M' : '+1 شهر'}
                                             </button>
-                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}', 60)" class="flex-1 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-[10px] font-black transition" title="239">
+                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}', 60)" class="flex-1 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-[10px] font-black transition whitespace-nowrap" title="239">
                                                 ${isEn ? '+2M' : '+2 شهر'}
                                             </button>
-                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}', 90)" class="flex-1 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-xl text-[10px] font-black transition" title="299">
+                                            <button onclick="IronCoachPanel.renewTrainee('${t.id}', 90)" class="flex-1 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-xl text-[10px] font-black transition whitespace-nowrap" title="299">
                                                 ${isEn ? '+3M 🔥' : '+3 شهور 🔥'}
                                             </button>
-                                            <button onclick="IronCoachPanel.impersonateTrainee('${t.id}')" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-200 rounded-xl text-[10px] font-bold transition">
+                                            <button onclick="IronCoachPanel.impersonateTrainee('${t.id}')" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-200 rounded-xl text-[10px] font-bold transition whitespace-nowrap">
                                                 <span>${txt("coach_view_btn")}</span>
                                             </button>
                                         </div>
-                                        <div class="flex items-center gap-2">
-                                            <button onclick="IronCoachPanel.openEditTraineeModal('${t.id}')" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-200 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1">
+                                        <div class="flex items-center flex-wrap gap-1.5 sm:gap-2">
+                                            <button onclick="IronCoachPanel.openEditTraineeModal('${t.id}')" class="flex-1 min-w-[70px] py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-200 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 whitespace-nowrap">
                                                 <span>${txt("coach_edit_btn")}</span>
                                             </button>
-                                            <button onclick="IronCoachPanel.resetTraineeWorkouts('${t.id}')" class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/25 rounded-xl text-[11px] font-bold transition" title="${txt("coach_reset_wo_btn")}">
+                                            <button onclick="IronCoachPanel.resetTraineeWorkouts('${t.id}')" class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/25 rounded-xl text-[11px] font-bold transition whitespace-nowrap" title="${txt("coach_reset_wo_btn")}">
                                                 <span>${txt("coach_reset_wo_btn")}</span>
                                             </button>
-                                            <button onclick="IronCoachPanel.messageTraineeWhatsapp('${t.id}')" class="px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 rounded-xl text-[11px] font-bold transition">
+                                            <button onclick="IronCoachPanel.messageTraineeWhatsapp('${t.id}')" class="px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 rounded-xl text-[11px] font-bold transition whitespace-nowrap">
                                                 <span>${txt("coach_wa_btn")}</span>
                                             </button>
-                                            <button onclick="IronCoachPanel.deleteTrainee('${t.id}')" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 rounded-xl text-[11px] font-bold transition">
+                                            <button onclick="IronCoachPanel.deleteTrainee('${t.id}')" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 rounded-xl text-[11px] font-bold transition whitespace-nowrap">
                                                 <span>🗑️</span>
                                             </button>
                                         </div>
@@ -321,14 +321,14 @@ const IronCoachPanel = {
                 </div>
 
                 <!-- تفاصيل البرنامج التدريبي المحدد (الأيام + التمارين + الجولات والتكرارات والراحة) -->
-                <div class="bg-slate-900/85 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-5">
+                <div class="bg-slate-900/85 border border-slate-800 rounded-3xl p-4 sm:p-6 space-y-5">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
                         <div class="space-y-1.5 flex-1">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 text-xs font-black">${selectedProg.level}</span>
                                 <span class="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/25 text-xs font-bold">${selectedProg.frequency}</span>
                             </div>
-                            <h3 class="text-xl font-black text-white">${isEn ? selectedProg.nameEn : selectedProg.nameAr}</h3>
+                            <h3 class="text-lg sm:text-xl font-black text-white">${isEn ? selectedProg.nameEn : selectedProg.nameAr}</h3>
                             <p class="text-xs text-gray-300 leading-relaxed" dir="ltr">${selectedProg.description}</p>
                         </div>
                         ${selectedProg.image ? `
@@ -340,28 +340,28 @@ const IronCoachPanel = {
 
                     <div class="space-y-4">
                         ${selectedProg.days.map(day => `
-                            <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 sm:p-5">
+                            <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 sm:p-5">
                                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-3.5" dir="ltr">
                                     <div>
-                                        <h4 class="font-black text-white text-base">${day.title}</h4>
+                                        <h4 class="font-black text-white text-sm sm:text-base">${day.title}</h4>
                                         <div class="text-xs text-amber-400 font-bold mt-0.5">${day.targetMuscles}</div>
                                     </div>
                                     <span class="px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 text-xs font-black text-cyan-400">
                                         ${day.exercises.length} ${isEn ? 'Exercises' : 'تمرين'}
                                     </span>
                                 </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3" dir="ltr">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3" dir="ltr">
                                     ${day.exercises.map((item, idx) => {
                                         const ex = typeof getExerciseById === "function" ? getExerciseById(item.exerciseId) : null;
                                         const exLabel = item.displayNameEn || ex?.nameEn || item.exerciseId;
                                         const safeExLabel = exLabel.replace(/'/g, "\\'");
                                         const badgeNum = item.pair || `${idx + 1}`;
                                         return `
-                                            <div ${ex ? `onclick="IronApp.openExerciseDetail('${ex.id}', '${safeExLabel}')"` : ''} class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center gap-3 hover:border-amber-500/45 cursor-pointer transition text-left">
-                                                <div class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-400 flex items-center justify-center font-black text-xs flex-shrink-0">
+                                            <div ${ex ? `onclick="IronApp.openExerciseDetail('${ex.id}', '${safeExLabel}')"` : ''} class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 hover:border-amber-500/45 cursor-pointer transition text-left">
+                                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-400 flex items-center justify-center font-black text-xs flex-shrink-0">
                                                     ${badgeNum}
                                                 </div>
-                                                ${ex ? `<img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${exLabel}')" class="w-12 h-12 rounded-lg object-contain bg-slate-950 border border-slate-800 flex-shrink-0" alt="${exLabel}" loading="lazy">` : ''}
+                                                ${ex ? `<img src="${ex.gif}" onerror="this.onerror=null;this.src=IronApp.getExerciseFallbackSvg('${exLabel}')" class="w-11 h-11 sm:w-12 sm:h-12 rounded-lg object-contain bg-slate-950 border border-slate-800 flex-shrink-0" alt="${exLabel}" loading="lazy">` : ''}
                                                 <div class="flex-1 min-w-0">
                                                     <h5 class="font-black text-white text-xs truncate">${exLabel}</h5>
                                                     ${ex?.nameAr ? `<div class="text-[11px] text-gray-400 truncate">${ex.nameAr}</div>` : ''}
@@ -371,7 +371,7 @@ const IronCoachPanel = {
                                                         ${ex?.equipment ? `<span class="text-amber-400/90">• ${ex.equipment}</span>` : ''}
                                                     </div>
                                                 </div>
-                                                <div class="text-gray-400 text-xs">ℹ️</div>
+                                                <div class="text-gray-400 text-xs flex-shrink-0">ℹ️</div>
                                             </div>
                                         `;
                                     }).join("")}
