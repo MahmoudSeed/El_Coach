@@ -104,6 +104,7 @@ const IronSupabase = {
             program: row.program || "PPL (Push Pull Legs)",
             coachNote: row.coach_note || "",
             avatar: row.avatar_url || "",
+            onboardingProfile: (row.onboarding_profile && typeof row.onboarding_profile === "object") ? row.onboarding_profile : {},
             lastRenewalReceipt: row.last_renewal_receipt || null,
             history: Array.isArray(row.history) ? row.history : []
         };

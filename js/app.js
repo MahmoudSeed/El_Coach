@@ -583,6 +583,7 @@ const IronApp = {
         this.renderMealsTracker(trainee);
         this.startWaterReminderLoop();
         this.renderMealsGrid();
+        this.updateConditionalWorkoutVisibility();
         this.switchWorkoutSubSection(this.currentWorkoutSubSection || "assigned");
         this.renderWorkoutLogs();
         this.renderExercisesGrid();
@@ -1508,7 +1509,7 @@ const IronApp = {
         );
 
         if (!plan || !plan.breakfast || !plan.lunch || !plan.dinner || !plan.snack || targetChanged) {
-            plan = IronMealsEngine.generateFullDayPlan(targetCal);
+            plan = IronMealsEngine.generateFullDayPlan(targetCal, user?.traineeData?.onboardingProfile || null);
             this.saveDietPlanForCurrentUser(plan);
         } else {
             plan.difference = Math.round(plan.totalCalories - targetCal);
@@ -1967,8 +1968,43 @@ const IronApp = {
         container.prepend(banner);
     },
 
+    getTraineeFeatureAccess(userOrTrainee) {
+        const u = userOrTrainee || (typeof IronAuth !== "undefined" ? IronAuth.getCurrentUser() : null);
+        if (!u || u.role === "coach") {
+            return { allowHome: true, allowCSection: true };
+        }
+        const tr = u.traineeData || u;
+        const obs = (tr.onboardingProfile && typeof tr.onboardingProfile === "object") ? tr.onboardingProfile : {};
+        const progId = this.resolveProgramIdFromName(tr.program || "");
+        const allowHome = obs.trainingLocation === "home" || progId === "prog_home";
+        const allowCSection = (tr.gender === "female" && Boolean(obs.postCSection)) || progId === "prog_csection";
+        return { allowHome, allowCSection };
+    },
+
+    updateConditionalWorkoutVisibility(userOrTrainee) {
+        const access = this.getTraineeFeatureAccess(userOrTrainee);
+        const tabsBar = document.getElementById("workoutSubSectionTabs");
+        if (tabsBar) {
+            const visibleCount = 2 + (access.allowHome ? 1 : 0) + (access.allowCSection ? 1 : 0);
+            tabsBar.className = `grid gap-2 mb-5 ${visibleCount === 2 ? "grid-cols-2" : visibleCount === 3 ? "grid-cols-3" : "grid-cols-2 lg:grid-cols-4"}`;
+        }
+        document.querySelectorAll(".ex-muscle-btn").forEach(btn => {
+            const m = btn.getAttribute("data-muscle");
+            if (m === "تمارين منزلية") btn.classList.toggle("hidden", !access.allowHome);
+            if (m === "بعد الولادة القيصرية") btn.classList.toggle("hidden", !access.allowCSection);
+        });
+        if ((this.currentExerciseMuscle === "تمارين منزلية" && !access.allowHome) ||
+            (this.currentExerciseMuscle === "بعد الولادة القيصرية" && !access.allowCSection)) {
+            this.currentExerciseMuscle = "all";
+        }
+        return access;
+    },
+
     switchWorkoutSubSection(section = "assigned") {
-        const allowed = ["assigned", "cardio", "home", "csection"];
+        const access = this.updateConditionalWorkoutVisibility();
+        const allowed = ["assigned", "cardio"];
+        if (access.allowHome) allowed.push("home");
+        if (access.allowCSection) allowed.push("csection");
         const sec = allowed.includes(section) ? section : "assigned";
         this.currentWorkoutSubSection = sec;
 
@@ -1987,10 +2023,12 @@ const IronApp = {
 
         document.querySelectorAll(".wo-subsec-btn").forEach(btn => {
             const key = btn.getAttribute("data-wo-sec");
+            const isHidden = (key === "home" && !access.allowHome) || (key === "csection" && !access.allowCSection);
+            const hideCls = isHidden ? " hidden" : "";
             if (key === sec) {
-                btn.className = `wo-subsec-btn px-3 py-2.5 rounded-2xl border text-xs font-black transition flex items-center justify-center gap-1.5 ${styleMap[key]}`;
+                btn.className = `wo-subsec-btn px-3 py-2.5 rounded-2xl border text-xs font-black transition flex items-center justify-center gap-1.5 ${styleMap[key]}${hideCls}`;
             } else {
-                btn.className = `wo-subsec-btn px-3 py-2.5 rounded-2xl border text-xs font-bold transition flex items-center justify-center gap-1.5 bg-slate-950 border-slate-800 ${idleTextMap[key] || "text-gray-300"}`;
+                btn.className = `wo-subsec-btn px-3 py-2.5 rounded-2xl border text-xs font-bold transition flex items-center justify-center gap-1.5 bg-slate-950 border-slate-800 ${idleTextMap[key] || "text-gray-300"}${hideCls}`;
             }
         });
 
@@ -2527,8 +2565,13 @@ const IronApp = {
         const grid = document.getElementById("exercisesGrid");
         if (!grid) return;
 
+        const access = this.updateConditionalWorkoutVisibility();
         const query = (document.getElementById("exerciseSearchInput")?.value || "").toLowerCase();
-        let list = exercisesDatabase;
+        let list = exercisesDatabase.filter(e => {
+            if (e.muscle === "تمارين منزلية" && !access.allowHome) return false;
+            if (e.muscle === "بعد الولادة القيصرية" && !access.allowCSection) return false;
+            return true;
+        });
 
         if (this.currentExerciseMuscle !== "all") {
             list = list.filter(e => e.muscle === this.currentExerciseMuscle);
@@ -2570,12 +2613,20 @@ const IronApp = {
     },
 
     setExerciseMuscle(muscle) {
+        const access = this.getTraineeFeatureAccess();
+        if ((muscle === "تمارين منزلية" && !access.allowHome) ||
+            (muscle === "بعد الولادة القيصرية" && !access.allowCSection)) {
+            muscle = "all";
+        }
         this.currentExerciseMuscle = muscle;
         document.querySelectorAll(".ex-muscle-btn").forEach(btn => {
-            if (btn.getAttribute("data-muscle") === muscle) {
-                btn.className = "ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950";
+            const btnMuscle = btn.getAttribute("data-muscle");
+            const isHidden = (btnMuscle === "تمارين منزلية" && !access.allowHome) || (btnMuscle === "بعد الولادة القيصرية" && !access.allowCSection);
+            const hideCls = isHidden ? " hidden" : "";
+            if (btnMuscle === muscle) {
+                btn.className = `ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950${hideCls}`;
             } else {
-                btn.className = "ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300";
+                btn.className = `ex-muscle-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-gray-300${hideCls}`;
             }
         });
         this.renderExercisesGrid();
@@ -2822,7 +2873,11 @@ const IronApp = {
             goal: form.tGoal?.value || "تنشيف وخسارة دهون",
             calories: parseInt(form.tCalories.value) || 2000,
             program: form.tProgram.value,
-            coachNote: form.tCoachNote ? form.tCoachNote.value.trim() : ""
+            coachNote: form.tCoachNote ? form.tCoachNote.value.trim() : "",
+            onboardingProfile: {
+                trainingLocation: (form.tAllowHome?.checked || this.resolveProgramIdFromName(form.tProgram.value) === "prog_home") ? "home" : "gym",
+                postCSection: (form.tGender?.value === "female") && (Boolean(form.tAllowCSection?.checked) || this.resolveProgramIdFromName(form.tProgram.value) === "prog_csection")
+            }
         };
 
         try {
@@ -3204,6 +3259,79 @@ const IronApp = {
         verifiedPassword: ""
     },
 
+    signupWizard: {
+        step: 1,
+        gender: "male",
+        age: 26,
+        height: 175,
+        weight: 78,
+        targetWeight: 72,
+        goal: "تنشيف وخسارة دهون",
+        fitnessLevel: "متوسط",
+        injuries: ["لا يوجد إصابات"],
+        trainingLocation: "gym",
+        postCSection: false,
+        preferredFoods: [],
+        dislikedFoods: [],
+        name: "",
+        phone: "",
+        countryCode: localStorage.getItem("iron_dial_code") || "+966",
+        password: "",
+        selectedPackageMonths: 1
+    },
+
+    WIZARD_INJURIES_LIST: [
+        { key: "لا يوجد إصابات", ar: "لا يوجد إصابات", en: "No Injuries" },
+        { key: "إصابات الظهر", ar: "إصابات الظهر", en: "Back Injury" },
+        { key: "إصابات الكتف", ar: "إصابات الكتف", en: "Shoulder Injury" },
+        { key: "إصابات الركبة", ar: "إصابات الركبة", en: "Knee Injury" },
+        { key: "إصابات الكوع", ar: "إصابات الكوع", en: "Elbow Injury" },
+        { key: "إصابات الرسغ واليد", ar: "إصابات الرسغ واليد", en: "Wrist / Hand Injury" },
+        { key: "التمزقات العضلية", ar: "التمزقات العضلية", en: "Muscle Tears" },
+        { key: "إصابات الأربطة والمفاصل", ar: "إصابات الأربطة والمفاصل", en: "Ligaments & Joints" },
+        { key: "إصابات الرقبة", ar: "إصابات الرقبة", en: "Neck Injury" },
+        { key: "الفتق", ar: "الفتق", en: "Hernia" },
+        { key: "السكري", ar: "السكري", en: "Diabetes" }
+    ],
+
+    WIZARD_LIKED_FOODS: [
+        { key: "بيض", ar: "بيض", en: "Eggs" },
+        { key: "صدور دجاج", ar: "صدور دجاج", en: "Chicken Breast" },
+        { key: "لحم", ar: "لحم", en: "Beef" },
+        { key: "جمبري", ar: "جمبري", en: "Shrimp" },
+        { key: "سمك", ar: "سمك", en: "Fish" },
+        { key: "سلمون", ar: "سلمون", en: "Salmon" },
+        { key: "تونة", ar: "تونة", en: "Tuna" },
+        { key: "أرز", ar: "أرز", en: "Rice" },
+        { key: "بطاطس", ar: "بطاطس", en: "Potatoes" },
+        { key: "بطاطا حلوة", ar: "بطاطا حلوة", en: "Sweet Potato" },
+        { key: "جبنة", ar: "جبنة", en: "Cheese" },
+        { key: "مكرونة", ar: "مكرونة", en: "Pasta" },
+        { key: "زبادي", ar: "زبادي", en: "Yogurt" },
+        { key: "توست بر", ar: "توست بر", en: "Whole Wheat Toast" },
+        { key: "حليب", ar: "حليب", en: "Milk" },
+        { key: "شوفان", ar: "شوفان", en: "Oats" }
+    ],
+
+    WIZARD_DISLIKED_FOODS: [
+        { key: "بروكلي", ar: "بروكلي", en: "Broccoli" },
+        { key: "خيار", ar: "خيار", en: "Cucumber" },
+        { key: "موز", ar: "موز", en: "Banana" },
+        { key: "زيت زيتون", ar: "زيت زيتون", en: "Olive Oil" },
+        { key: "لوز", ar: "لوز", en: "Almonds" },
+        { key: "زبدة الفول السوداني", ar: "زبدة الفول السوداني", en: "Peanut Butter" },
+        { key: "سيريلاك الأرز", ar: "سيريلاك الأرز", en: "Rice Cereal" },
+        { key: "حمص", ar: "حمص", en: "Chickpeas" },
+        { key: "عدس", ar: "عدس", en: "Lentils" },
+        { key: "فاصوليا", ar: "فاصوليا", en: "Beans" },
+        { key: "حليب اللوز غير المحلى", ar: "حليب اللوز غير المحلى", en: "Almond Milk" },
+        { key: "حليب الشوفان", ar: "حليب الشوفان", en: "Oat Milk" },
+        { key: "حليب الصويا", ar: "حليب الصويا", en: "Soy Milk" },
+        { key: "بازلاء", ar: "بازلاء", en: "Green Peas" },
+        { key: "فول", ar: "فول", en: "Fava Beans" },
+        { key: "توست الحبوب الكاملة", ar: "توست الحبوب الكاملة", en: "Multigrain Toast" }
+    ],
+
     showSignupError(msg = "") {
         const box = document.getElementById("signupError");
         if (!box) return;
@@ -3218,6 +3346,7 @@ const IronApp = {
 
     switchAuthMode(mode = "login") {
         this.signupState.mode = mode === "signup" ? "signup" : "login";
+        const cardCont = document.getElementById("authCardContainer");
         const loginPanel = document.getElementById("loginPanel");
         const signupCont = document.getElementById("signupContainer");
         const tabLogin = document.getElementById("authTabLogin");
@@ -3230,11 +3359,22 @@ const IronApp = {
         if (loginOtpErr) loginOtpErr.classList.add("hidden");
 
         if (this.signupState.mode === "signup") {
+            if (cardCont) {
+                cardCont.classList.remove("max-w-md");
+                cardCont.classList.add("max-w-lg");
+            }
             if (loginPanel) loginPanel.classList.add("hidden");
             if (signupCont) signupCont.classList.remove("hidden");
             if (tabSignup) tabSignup.className = "py-2 px-1.5 sm:px-3 rounded-xl text-[10.5px] sm:text-xs font-black bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 transition whitespace-nowrap";
             if (tabLogin) tabLogin.className = "py-2 px-1.5 sm:px-3 rounded-xl text-[10.5px] sm:text-xs font-bold text-gray-300 hover:text-white transition whitespace-nowrap";
+            document.getElementById("signupStepMethod")?.classList.add("hidden");
+            document.getElementById("signupStepWizard")?.classList.remove("hidden");
+            this.renderSignupWizard();
         } else {
+            if (cardCont) {
+                cardCont.classList.remove("max-w-lg");
+                cardCont.classList.add("max-w-md");
+            }
             if (signupCont) signupCont.classList.add("hidden");
             if (loginPanel) loginPanel.classList.remove("hidden");
             if (tabLogin) tabLogin.className = "py-2 px-1.5 sm:px-3 rounded-xl text-[10.5px] sm:text-xs font-black bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 transition whitespace-nowrap";
@@ -3359,16 +3499,11 @@ const IronApp = {
 
     switchToSignupWithPhone() {
         const phoneVal = (document.getElementById("loginPhoneInput")?.value || "").trim();
+        const codeVal = document.getElementById("loginCountryCode")?.value || "+966";
+        this.signupWizard.phone = phoneVal;
+        this.signupWizard.countryCode = codeVal;
+        this.signupWizard.step = 1;
         this.switchAuthMode("signup");
-        this.startPasswordSignup();
-        const regOauthPhone = document.getElementById("regOauthPhone");
-        if (regOauthPhone && phoneVal) {
-            regOauthPhone.value = phoneVal;
-        }
-        const regPhone = document.getElementById("regPhoneInput");
-        if (regPhone && phoneVal) {
-            regPhone.value = phoneVal;
-        }
     },
 
     refreshSignupHeaderLabels() {
@@ -3388,6 +3523,9 @@ const IronApp = {
             const stepBadge = document.getElementById("signupVerifiedBadge");
             if (badge) badge.innerText = `${icon} ${provName}`;
             if (stepBadge) stepBadge.innerText = `✅ ${provName}`;
+        }
+        if (isSignup && typeof this.renderSignupWizard === "function") {
+            this.renderSignupWizard();
         }
     },
 
@@ -3593,81 +3731,232 @@ const IronApp = {
     enterSignupProfileStep() {
         this.showSignupError("");
         document.getElementById("signupStepMethod")?.classList.add("hidden");
-        document.getElementById("signupStepProfile")?.classList.remove("hidden");
-
-        const nameEl = document.getElementById("regName");
-        const phoneEl = document.getElementById("regProfilePhone");
-        if (nameEl) nameEl.value = this.signupState.verifiedName || "";
-        if (phoneEl) {
-            phoneEl.value = this.signupState.verifiedPhone || "";
-            phoneEl.readOnly = this.signupState.provider === "phone";
+        document.getElementById("signupStepWizard")?.classList.remove("hidden");
+        if (this.signupState.verifiedName) this.signupWizard.name = this.signupState.verifiedName;
+        if (this.signupState.verifiedPhone) this.signupWizard.phone = this.signupState.verifiedPhone;
+        if (this.signupState.verifiedPassword) this.signupWizard.password = this.signupState.verifiedPassword;
+        if (this.signupState.countryCode) this.signupWizard.countryCode = this.signupState.countryCode;
+        if (!this.signupWizard.step || this.signupWizard.step < 1 || this.signupWizard.step > 14) {
+            this.signupWizard.step = 1;
         }
-        const passEl = document.getElementById("regProfilePassword");
-        if (passEl) passEl.value = this.signupState.verifiedPassword || "";
         this.refreshSignupHeaderLabels();
-        this.updateSignupCalPreview();
+        this.renderSignupWizard();
     },
 
-    backToSignupMethod() {
+    openSignupMethodShortcut() {
         this.showSignupError("");
-        this.signupState.isOAuthOnboarding = false;
-        document.getElementById("signupStepProfile")?.classList.add("hidden");
+        document.getElementById("signupStepWizard")?.classList.add("hidden");
         document.getElementById("signupStepMethod")?.classList.remove("hidden");
     },
 
-    updateSignupCalPreview() {
-        const previewEl = document.getElementById("regCalPreview");
-        if (!previewEl || typeof IronCalculator === "undefined") return;
-        const gender = document.getElementById("regGender")?.value || "male";
-        const age = document.getElementById("regAge")?.value || 26;
-        const weight = document.getElementById("regWeight")?.value || 78;
-        const height = document.getElementById("regHeight")?.value || 175;
-        const activity = document.getElementById("regActivity")?.value || 1.55;
-        const goalStr = document.getElementById("regGoal")?.value || "";
-        const goalOffset = goalStr.includes("تضخيم") ? 350 : (goalStr.includes("تثبيت") || goalStr.includes("نحت")) ? 0 : -500;
-        const calc = IronCalculator.calculate({ gender, age, weight, height, activity, goal: goalOffset });
-        previewEl.innerText = `${calc.targetCalories} kcal`;
+    closeSignupMethodShortcut() {
+        this.showSignupError("");
+        document.getElementById("signupStepMethod")?.classList.add("hidden");
+        document.getElementById("signupStepWizard")?.classList.remove("hidden");
+        this.renderSignupWizard();
     },
 
-    async handleCompleteClientSignup(e) {
-        e.preventDefault();
-        const name = (document.getElementById("regName")?.value || "").trim();
-        if (!name) {
+    backToSignupMethod() {
+        this.openSignupMethodShortcut();
+    },
+
+    syncWizardCredentialInputs() {
+        const w = this.signupWizard;
+        const nameEl = document.getElementById("wizardName");
+        const phoneEl = document.getElementById("wizardPhone");
+        const codeEl = document.getElementById("wizardCountryCode");
+        const passEl = document.getElementById("wizardPassword");
+        if (nameEl) w.name = nameEl.value;
+        if (phoneEl) w.phone = phoneEl.value;
+        if (codeEl) w.countryCode = codeEl.value;
+        if (passEl) w.password = passEl.value;
+    },
+
+    setWizardField(field, value, rerender = true) {
+        this.syncWizardCredentialInputs();
+        this.signupWizard[field] = value;
+        if (field === "gender" && value !== "female") {
+            this.signupWizard.postCSection = false;
+        }
+        if (field === "trainingLocation" && value === "home") {
+            // يحتفظ باختيار المنزل
+        }
+        if (field === "countryCode") {
+            localStorage.setItem("iron_dial_code", value);
+        }
+        if (rerender) {
+            this.renderSignupWizard();
+        }
+    },
+
+    adjustWizardNum(field, delta, min, max) {
+        this.syncWizardCredentialInputs();
+        const cur = Number(this.signupWizard[field]) || min;
+        const next = Math.max(min, Math.min(max, Math.round((cur + delta) * 2) / 2));
+        this.signupWizard[field] = next;
+        this.renderSignupWizard();
+    },
+
+    toggleWizardArrayItem(field, itemKey, exclusiveNoneKey = null) {
+        this.syncWizardCredentialInputs();
+        const arr = Array.isArray(this.signupWizard[field]) ? [...this.signupWizard[field]] : [];
+        if (exclusiveNoneKey && itemKey === exclusiveNoneKey) {
+            this.signupWizard[field] = [exclusiveNoneKey];
+            this.renderSignupWizard();
+            return;
+        }
+        const cleaned = exclusiveNoneKey ? arr.filter(x => x !== exclusiveNoneKey) : arr;
+        const idx = cleaned.indexOf(itemKey);
+        if (idx !== -1) {
+            cleaned.splice(idx, 1);
+        } else {
+            cleaned.push(itemKey);
+        }
+        if (exclusiveNoneKey && cleaned.length === 0) {
+            cleaned.push(exclusiveNoneKey);
+        }
+        this.signupWizard[field] = cleaned;
+        this.renderSignupWizard();
+    },
+
+    getWizardActivityFactor() {
+        const lvl = this.signupWizard.fitnessLevel;
+        if (lvl === "مبتدئ") return 1.375;
+        if (lvl === "متقدم") return 1.725;
+        return 1.55;
+    },
+
+    computeWizardCalAndProgram() {
+        const w = this.signupWizard;
+        const activity = this.getWizardActivityFactor();
+        const goalOffset = w.goal.includes("تضخيم") ? 350 : (w.goal.includes("تثبيت") || w.goal.includes("نحت")) ? 0 : -500;
+        const calc = typeof IronCalculator !== "undefined"
+            ? IronCalculator.calculate({ gender: w.gender, age: w.age, weight: w.weight, height: w.height, activity, goal: goalOffset })
+            : { targetCalories: 2000 };
+
+        let program = "PPL (Push Pull Legs)";
+        if (w.gender === "female" && w.postCSection) {
+            program = "Post-C-Section Recovery";
+        } else if (w.trainingLocation === "home") {
+            program = "Home Workouts (No Equipment)";
+        } else if (w.goal.includes("تضخيم")) {
+            program = "PPL (Bulking 3×10)";
+        } else if (w.goal.includes("تثبيت") || w.goal.includes("نحت")) {
+            program = "Upper / Lower Split";
+        }
+
+        return {
+            calories: calc.targetCalories,
+            activity,
+            program
+        };
+    },
+
+    prevWizardStep() {
+        this.syncWizardCredentialInputs();
+        this.showSignupError("");
+        if (this.signupWizard.step <= 1) {
+            this.switchAuthMode("login");
+            return;
+        }
+        this.signupWizard.step--;
+        this.renderSignupWizard();
+    },
+
+    nextWizardStep() {
+        this.syncWizardCredentialInputs();
+        this.showSignupError("");
+        const w = this.signupWizard;
+
+        if (w.step === 12) {
+            const cleanName = (w.name || "").trim();
+            const phoneDigits = String(w.phone || "").replace(/\D/g, "");
+            const rawPass = (w.password || "").trim();
+            if (!cleanName) {
+                this.showSignupError(this.t("signup_err_name"));
+                return;
+            }
+            if (phoneDigits.length < 8) {
+                this.showSignupError(this.t("signup_err_phone"));
+                return;
+            }
+            if (!this.signupState.otpToken && rawPass.length < 4) {
+                this.showSignupError(this.t("signup_err_pass"));
+                return;
+            }
+        }
+
+        if (w.step < 14) {
+            w.step++;
+            this.renderSignupWizard();
+        }
+    },
+
+    updateSignupCalPreview() {
+        const previewEl = document.getElementById("wizardCalPreview");
+        if (!previewEl) return;
+        const plan = this.computeWizardCalAndProgram();
+        previewEl.innerText = `${plan.calories} kcal`;
+    },
+
+    async completeWizardAccount({ openPayment = true } = {}) {
+        this.syncWizardCredentialInputs();
+        this.showSignupError("");
+        const w = this.signupWizard;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+
+        const cleanName = (w.name || this.signupState.verifiedName || "").trim();
+        if (!cleanName) {
+            w.step = 12;
+            this.renderSignupWizard();
             this.showSignupError(this.t("signup_err_name"));
             return;
         }
 
-        const activeCode = this.signupState.countryCode || document.getElementById("regOauthCountryCode")?.value || document.getElementById("loginCountryCode")?.value || "+966";
-        const profilePhoneRaw = (document.getElementById("regProfilePhone")?.value || this.signupState.verifiedPhone || "").trim();
-        const profilePhone = this.buildFullPhone(activeCode, profilePhoneRaw);
-        const profilePass = (document.getElementById("regProfilePassword")?.value || this.signupState.verifiedPassword || "").trim();
-        if (profilePhone.replace(/\D/g, "").length < 9) {
+        const activeCode = w.countryCode || this.signupState.countryCode || "+966";
+        const rawPhone = (w.phone || this.signupState.verifiedPhone || "").trim();
+        const fullPhone = this.buildFullPhone(activeCode, rawPhone);
+        const rawPass = (w.password || this.signupState.verifiedPassword || "").trim();
+        if (fullPhone.replace(/\D/g, "").length < 9) {
+            w.step = 12;
+            this.renderSignupWizard();
             this.showSignupError(this.t("signup_err_phone"));
             return;
         }
-        if (!this.signupState.otpToken && profilePass.length < 4) {
+        if (!this.signupState.otpToken && rawPass.length < 4) {
+            w.step = 12;
+            this.renderSignupWizard();
             this.showSignupError(this.t("signup_err_pass"));
             return;
         }
 
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        if (submitBtn) submitBtn.disabled = true;
-        this.showSignupError("");
+        const actionBtn = document.getElementById("wizardPayNowBtn") || document.getElementById("wizardLaterBtn");
+        if (actionBtn) actionBtn.disabled = true;
 
+        const computed = this.computeWizardCalAndProgram();
         const payload = {
-            name,
-            email: this.signupState.verifiedEmail,
-            phone: profilePhone,
-            password: profilePass,
+            name: cleanName,
+            email: this.signupState.verifiedEmail || "",
+            phone: fullPhone,
+            password: rawPass,
             otpToken: this.signupState.otpToken || "",
             authProvider: this.signupState.provider || "password",
-            gender: document.getElementById("regGender")?.value || "male",
-            age: document.getElementById("regAge")?.value || 26,
-            weight: document.getElementById("regWeight")?.value || 78,
-            height: document.getElementById("regHeight")?.value || 175,
-            activity: document.getElementById("regActivity")?.value || 1.55,
-            goal: document.getElementById("regGoal")?.value || "تنشيف وخسارة دهون",
-            program: document.getElementById("regProgram")?.value || "PPL (Push Pull Legs)"
+            gender: w.gender === "female" ? "female" : "male",
+            age: Number(w.age) || 26,
+            weight: Number(w.weight) || 78,
+            height: Number(w.height) || 175,
+            activity: computed.activity,
+            goal: w.goal || "تنشيف وخسارة دهون",
+            program: computed.program,
+            onboardingProfile: {
+                targetWeight: Number(w.targetWeight) || Number(w.weight) || 72,
+                fitnessLevel: w.fitnessLevel || "متوسط",
+                trainingLocation: w.trainingLocation === "home" ? "home" : "gym",
+                postCSection: w.gender === "female" ? Boolean(w.postCSection) : false,
+                injuries: Array.isArray(w.injuries) ? w.injuries : ["لا يوجد إصابات"],
+                preferredFoods: Array.isArray(w.preferredFoods) ? w.preferredFoods : [],
+                dislikedFoods: Array.isArray(w.dislikedFoods) ? w.dislikedFoods : []
+            }
         };
 
         try {
@@ -3676,20 +3965,551 @@ const IronApp = {
                 : await IronAuth.registerClient(payload);
 
             if (res && res.success) {
+                this.selectedSubscriptionMonths = Number(w.selectedPackageMonths ?? 1);
                 showToast(this.t("signup_created_toast"), "success");
                 this.renderUserHeader(res.user);
                 this.updateImpersonationBanner(res.user);
                 this.renderAppViews(res.user);
-                this.openRenewPaymentModal();
+                if (openPayment) {
+                    this.openRenewPaymentModal();
+                }
             } else {
                 const msg = res?.error === "ACCOUNT_EXISTS"
                     ? this.t("signup_err_exists")
-                    : (res?.message || res?.error || "Failed to create account");
+                    : (res?.message || res?.error || (isEn ? "Failed to create account" : "تعذر إنشاء الحساب"));
+                w.step = 12;
+                this.renderSignupWizard();
                 this.showSignupError(msg);
             }
         } finally {
-            if (submitBtn) submitBtn.disabled = false;
+            if (actionBtn) actionBtn.disabled = false;
         }
+    },
+
+    renderSignupWizard() {
+        const container = document.getElementById("signupStepWizard");
+        if (!container) return;
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        const w = this.signupWizard;
+        const step = Math.max(1, Math.min(14, Number(w.step) || 1));
+
+        let headerTitle = "";
+        let counterText = "";
+        let progressPct = 0;
+
+        if (step <= 5) {
+            headerTitle = isEn ? "Personal Information" : "المعلومات الشخصية";
+            counterText = `${step}/5`;
+            progressPct = Math.round((step / 5) * 100);
+        } else if (step === 6) {
+            headerTitle = isEn ? "Personal Info Saved" : "المعلومات الشخصية";
+            counterText = "5/5 ✓";
+            progressPct = 100;
+        } else if (step <= 12) {
+            const hStep = step - 6;
+            headerTitle = isEn ? "Health & Training Profile" : "المعلومات الصحية";
+            counterText = `${hStep}/6`;
+            progressPct = Math.round((hStep / 6) * 100);
+        } else if (step === 13) {
+            headerTitle = isEn ? "Your Personalized Plan" : "خطتك الجاهزة";
+            counterText = "✓";
+            progressPct = 100;
+        } else {
+            headerTitle = isEn ? "Choose Package & Pay" : "الباقة والدفع";
+            counterText = "💳";
+            progressPct = 100;
+        }
+
+        const headerHtml = step === 6 ? "" : `
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between gap-2">
+                    <button type="button" onclick="IronApp.prevWizardStep()"
+                        class="w-9 h-9 rounded-full bg-slate-950 border border-slate-800 hover:border-emerald-500/50 text-white flex items-center justify-center text-sm font-black transition">
+                        ${isEn ? "‹" : "›"}
+                    </button>
+                    <div class="text-xs font-black text-white">${headerTitle}</div>
+                    <div class="text-xs font-black font-mono text-emerald-400 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25">${counterText}</div>
+                </div>
+                <div class="h-1.5 w-full rounded-full bg-slate-950 overflow-hidden border border-slate-800">
+                    <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300" style="width:${progressPct}%"></div>
+                </div>
+            </div>
+        `;
+
+        let bodyHtml = "";
+
+        if (step === 1) {
+            bodyHtml = `
+                <div class="space-y-4">
+                    <h3 class="text-base sm:text-lg font-black text-white">${isEn ? "Please select your gender" : "يرجى تحديد الجنس"}</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" onclick="IronApp.setWizardField('gender', 'male')"
+                            class="p-5 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-2.5 ${w.gender === 'male' ? 'wizard-pill-active' : 'bg-slate-950/75 border-slate-800 text-gray-300 hover:border-slate-700'}">
+                            <span class="text-4xl">♂️</span>
+                            <span class="text-sm font-black">${isEn ? "Male" : "ذكر"}</span>
+                        </button>
+                        <button type="button" onclick="IronApp.setWizardField('gender', 'female')"
+                            class="p-5 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-2.5 ${w.gender === 'female' ? 'wizard-pill-active' : 'bg-slate-950/75 border-slate-800 text-gray-300 hover:border-slate-700'}">
+                            <span class="text-4xl">♀️</span>
+                            <span class="text-sm font-black">${isEn ? "Female" : "أنثى"}</span>
+                        </button>
+                    </div>
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Next" : "التالي"}
+                    </button>
+                    <button type="button" onclick="IronApp.openSignupMethodShortcut()"
+                        class="w-full py-2 text-[11px] font-bold text-gray-400 hover:text-emerald-400 transition text-center">
+                        ${isEn ? "⚡ Or quick link with Google / iCloud / Phone OTP" : "⚡ أو الربط السريع عبر Google / iCloud / رمز الجوال OTP"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 2) {
+            const ages = [];
+            for (let a = Math.max(14, w.age - 3); a <= Math.min(80, w.age + 3); a++) ages.push(a);
+            const approxYear = new Date().getFullYear() - w.age;
+            bodyHtml = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="text-base sm:text-lg font-black text-white">${isEn ? "What is your age?" : "ما هو عمرك؟"}</h3>
+                        <span class="text-xs text-gray-400 font-bold">${isEn ? `Born ~${approxYear}` : `مواليد ~${approxYear}`}</span>
+                    </div>
+                    <div class="bg-slate-950/75 border border-slate-800 rounded-2xl p-4 space-y-3">
+                        <div class="space-y-1 max-w-xs mx-auto">
+                            ${ages.map(a => {
+                                const isSel = a === Number(w.age);
+                                const dist = Math.abs(a - Number(w.age));
+                                return `
+                                    <button type="button" onclick="IronApp.setWizardField('age', ${a})"
+                                        class="w-full py-1.5 rounded-xl font-black font-mono transition ${isSel ? 'wizard-pill-active border text-xl py-2.5' : dist === 1 ? 'text-gray-300 text-base hover:bg-slate-900' : 'text-gray-500 text-xs hover:bg-slate-900'}">
+                                        ${a} ${isSel ? (isEn ? "yrs" : "سنة") : ""}
+                                    </button>
+                                `;
+                            }).join("")}
+                        </div>
+                        <div class="flex items-center justify-center gap-2 pt-2 border-t border-slate-800/80">
+                            <button type="button" onclick="IronApp.adjustWizardNum('age', -1, 14, 80)" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-black text-sm">−</button>
+                            <input type="number" min="14" max="80" value="${w.age}"
+                                onchange="IronApp.setWizardField('age', Math.max(14, Math.min(80, parseInt(this.value)||26)))"
+                                class="w-20 bg-slate-900 border border-emerald-500/40 rounded-xl py-1.5 text-center font-mono text-sm font-black text-emerald-400 outline-none">
+                            <button type="button" onclick="IronApp.adjustWizardNum('age', 1, 14, 80)" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-black text-sm">+</button>
+                        </div>
+                    </div>
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Next" : "التالي"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 3) {
+            const heights = [];
+            for (let h = Math.max(130, w.height - 3); h <= Math.min(220, w.height + 3); h++) heights.push(h);
+            bodyHtml = `
+                <div class="space-y-4">
+                    <h3 class="text-base sm:text-lg font-black text-white">${isEn ? "What is your height?" : "ما هو طولك؟"}</h3>
+                    <div class="bg-slate-950/75 border border-slate-800 rounded-2xl p-4 space-y-3">
+                        <div class="space-y-1 max-w-xs mx-auto">
+                            ${heights.map(h => {
+                                const isSel = h === Number(w.height);
+                                const dist = Math.abs(h - Number(w.height));
+                                return `
+                                    <button type="button" onclick="IronApp.setWizardField('height', ${h})"
+                                        class="w-full py-1.5 rounded-full font-black font-mono transition ${isSel ? 'wizard-pill-active border text-xl py-2.5' : dist === 1 ? 'text-gray-300 text-base hover:bg-slate-900' : 'text-gray-500 text-xs hover:bg-slate-900'}">
+                                        ${h} ${isSel ? (isEn ? "cm" : "سم") : ""}
+                                    </button>
+                                `;
+                            }).join("")}
+                        </div>
+                        <div class="flex items-center justify-center gap-2 pt-2 border-t border-slate-800/80">
+                            <button type="button" onclick="IronApp.adjustWizardNum('height', -1, 130, 220)" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-black text-sm">−</button>
+                            <input type="number" min="130" max="220" value="${w.height}"
+                                onchange="IronApp.setWizardField('height', Math.max(130, Math.min(220, parseInt(this.value)||175)))"
+                                class="w-24 bg-slate-900 border border-emerald-500/40 rounded-xl py-1.5 text-center font-mono text-sm font-black text-emerald-400 outline-none">
+                            <button type="button" onclick="IronApp.adjustWizardNum('height', 1, 130, 220)" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-black text-sm">+</button>
+                        </div>
+                    </div>
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Next" : "التالي"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 4) {
+            const renderWeightDial = (field, label) => {
+                const val = Number(w[field]) || 75;
+                const nums = [val - 2, val - 1, val, val + 1, val + 2].filter(n => n >= 35 && n <= 220);
+                return `
+                    <div class="bg-slate-950/75 border border-slate-800 rounded-2xl p-4 space-y-3">
+                        <div class="text-sm font-black text-white">${label}</div>
+                        <div class="flex items-center justify-center gap-2 sm:gap-3" dir="ltr">
+                            <button type="button" onclick="IronApp.adjustWizardNum('${field}', -1, 35, 220)" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-white font-black text-sm">−</button>
+                            ${nums.map(n => {
+                                const isSel = n === val;
+                                return `
+                                    <button type="button" onclick="IronApp.setWizardField('${field}', ${n})"
+                                        class="${isSel ? 'wizard-pill-active border w-14 h-14 rounded-full text-lg font-black' : 'text-gray-400 hover:text-white text-sm font-bold px-1.5'} font-mono transition flex flex-col items-center justify-center">
+                                        <span>${n}</span>
+                                    </button>
+                                `;
+                            }).join("")}
+                            <button type="button" onclick="IronApp.adjustWizardNum('${field}', 1, 35, 220)" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-white font-black text-sm">+</button>
+                        </div>
+                        <div class="flex items-center justify-center gap-1.5">
+                            <input type="number" step="0.5" min="35" max="220" value="${val}"
+                                onchange="IronApp.setWizardField('${field}', Math.max(35, Math.min(220, parseFloat(this.value)||75)))"
+                                class="w-20 bg-slate-900 border border-slate-700 rounded-lg py-1 text-center font-mono text-xs font-black text-emerald-400 outline-none">
+                            <span class="text-xs text-gray-400 font-bold">${isEn ? "kg" : "كجم"}</span>
+                        </div>
+                    </div>
+                `;
+            };
+            bodyHtml = `
+                <div class="space-y-3.5">
+                    ${renderWeightDial("weight", isEn ? "What is your current weight?" : "ما هو وزنك الحالي؟")}
+                    ${renderWeightDial("targetWeight", isEn ? "What is your target weight?" : "ما هو الوزن المستهدف؟")}
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Next" : "التالي"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 5) {
+            const goals = [
+                { val: "تنشيف وخسارة دهون", icon: "🔥", ar: "تنشيف (حرق الدهون)", en: "Cutting & Fat Loss" },
+                { val: "تضخيم وبناء عضلات", icon: "💪", ar: "تضخيم (بناء العضلات)", en: "Bulking & Muscle Gain" },
+                { val: "نحت الجسم وتثبيت الوزن", icon: "⚡", ar: "لياقة بدنية ونحت الجسم", en: "Fitness & Body Recomp" }
+            ];
+            bodyHtml = `
+                <div class="space-y-4">
+                    <h3 class="text-base sm:text-lg font-black text-white">${isEn ? "Please select your goal" : "برجاء تحديد هدفك"}</h3>
+                    <div class="space-y-2.5">
+                        ${goals.map(g => `
+                            <button type="button" onclick="IronApp.setWizardField('goal', '${g.val}')"
+                                class="w-full p-4 rounded-2xl border text-start font-black text-sm transition flex items-center justify-between ${w.goal === g.val ? 'wizard-pill-active' : 'bg-slate-950/75 border-slate-800 text-gray-200 hover:border-slate-700'}">
+                                <span>${g.icon} ${isEn ? g.en : g.ar}</span>
+                                <span class="text-xs">${w.goal === g.val ? "✓" : ""}</span>
+                            </button>
+                        `).join("")}
+                    </div>
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Complete Personal Info" : "إنهاء المعلومات الشخصية"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 6) {
+            bodyHtml = `
+                <div class="py-6 text-center space-y-5">
+                    <div class="w-20 h-20 rounded-full bg-emerald-500/15 border-2 border-emerald-500/45 mx-auto flex items-center justify-center text-4xl text-emerald-400 shadow-lg shadow-emerald-500/20">
+                        ✓
+                    </div>
+                    <div class="space-y-1.5">
+                        <h3 class="text-lg font-black text-white">${isEn ? "Personal Data Saved Successfully" : "تم حفظ البيانات الشخصية بنجاح"}</h3>
+                        <p class="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
+                            ${isEn ? "Now complete your health profile, training location, and food preferences so we tailor everything for you." : "يرجى إكمال المعلومات الصحية وتحديد مكان التمرين والأطعمة المفضلة لتخصيص برنامجك."}
+                        </p>
+                    </div>
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Next" : "التالي"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 7) {
+            const levels = [
+                { val: "مبتدئ", icon: "🌱", ar: "مبتدئ", subAr: "بداية جديدة أو عودة بعد انقطاع", en: "Beginner", subEn: "New or returning after a break" },
+                { val: "متوسط", icon: "🔥", ar: "متوسط", subAr: "أتمرن بانتظام من عدة أشهر", en: "Intermediate", subEn: "Consistent training for months" },
+                { val: "متقدم", icon: "⚡", ar: "متقدم", subAr: "خبرة عالية وأحمال تدريبية منتظمة", en: "Advanced", subEn: "Experienced lifter & high frequency" }
+            ];
+            bodyHtml = `
+                <div class="space-y-4">
+                    <h3 class="text-base sm:text-lg font-black text-white">${isEn ? "Please select your fitness level" : "من فضلك اختر مستواك"}</h3>
+                    <div class="space-y-2.5">
+                        ${levels.map(l => `
+                            <button type="button" onclick="IronApp.setWizardField('fitnessLevel', '${l.val}')"
+                                class="w-full p-4 rounded-2xl border text-start transition flex items-center justify-between gap-2 ${w.fitnessLevel === l.val ? 'wizard-pill-active' : 'bg-slate-950/75 border-slate-800 text-gray-200 hover:border-slate-700'}">
+                                <div>
+                                    <div class="font-black text-sm">${l.icon} ${isEn ? l.en : l.ar}</div>
+                                    <div class="text-[11px] opacity-80 mt-0.5">${isEn ? l.subEn : l.subAr}</div>
+                                </div>
+                                <span class="text-xs font-black">${w.fitnessLevel === l.val ? "✓" : ""}</span>
+                            </button>
+                        `).join("")}
+                    </div>
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Next" : "التالي"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 8) {
+            bodyHtml = `
+                <div class="space-y-4">
+                    <h3 class="text-base sm:text-lg font-black text-white">${isEn ? "Health conditions or injuries (if any)" : "برجاء تحديد الحالة الصحية أو الإصابات (إن وجدت)"}</h3>
+                    <div class="flex flex-wrap gap-2">
+                        ${this.WIZARD_INJURIES_LIST.map(inj => {
+                            const active = Array.isArray(w.injuries) && w.injuries.includes(inj.key);
+                            return `
+                                <button type="button" onclick="IronApp.toggleWizardArrayItem('injuries', '${inj.key}', 'لا يوجد إصابات')"
+                                    class="px-3.5 py-2 rounded-full border text-xs font-bold transition ${active ? 'wizard-pill-active' : 'bg-slate-950/75 border-slate-800 text-gray-300 hover:border-slate-700'}">
+                                    ${active ? "✓ " : ""}${isEn ? inj.en : inj.ar}
+                                </button>
+                            `;
+                        }).join("")}
+                    </div>
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Next" : "التالي"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 9) {
+            bodyHtml = `
+                <div class="space-y-4">
+                    <h3 class="text-base sm:text-lg font-black text-white">${isEn ? "Where would you like to train?" : "هل ترغب أن يكون التمرين في البيت (المنزل) أم في النادي؟"}</h3>
+                    <div class="space-y-2.5">
+                        <button type="button" onclick="IronApp.setWizardField('trainingLocation', 'gym')"
+                            class="w-full p-4 rounded-2xl border text-start transition flex items-center justify-between gap-2 ${w.trainingLocation === 'gym' ? 'wizard-pill-active' : 'bg-slate-950/75 border-slate-800 text-gray-200 hover:border-slate-700'}">
+                            <div>
+                                <div class="font-black text-sm">🏋️‍♂️ ${isEn ? "At the Gym (Machines & Weights)" : "في النادي الرياضي (الجيم بالأجهزة)"}</div>
+                                <div class="text-[11px] opacity-80 mt-0.5">${isEn ? "Full gym split + cardio evaluation inside workouts" : "جدول النادي الكامل + الكارديو داخل التمرين"}</div>
+                            </div>
+                            <span class="text-xs font-black">${w.trainingLocation === 'gym' ? "✓" : ""}</span>
+                        </button>
+                        <button type="button" onclick="IronApp.setWizardField('trainingLocation', 'home')"
+                            class="w-full p-4 rounded-2xl border text-start transition flex items-center justify-between gap-2 ${w.trainingLocation === 'home' ? 'wizard-pill-active' : 'bg-slate-950/75 border-slate-800 text-gray-200 hover:border-slate-700'}">
+                            <div>
+                                <div class="font-black text-sm">🏠 ${isEn ? "At Home (No Gym Equipment)" : "في البيت / المنزل (التمارين المنزلية)"}</div>
+                                <div class="text-[11px] opacity-80 mt-0.5">${isEn ? "Unlocks the full Home Workouts section tailored without gym machines" : "يفعّل لك قسم التمارين المنزلية الكامل بالصور بدون أجهزة"}</div>
+                            </div>
+                            <span class="text-xs font-black">${w.trainingLocation === 'home' ? "✓" : ""}</span>
+                        </button>
+                    </div>
+
+                    ${w.gender === "female" ? `
+                        <div class="pt-3 border-t border-slate-800 space-y-2.5">
+                            <div class="text-xs sm:text-sm font-black text-rose-300">🤱 ${isEn ? "Are you currently in Post-C-Section recovery?" : "هل أنتِ في مرحلة تأهيل ما بعد الولادة القيصرية؟"}</div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button type="button" onclick="IronApp.setWizardField('postCSection', false)"
+                                    class="p-3 rounded-xl border text-xs font-black text-start transition ${!w.postCSection ? 'wizard-pill-active' : 'bg-slate-950/75 border-slate-800 text-gray-300'}">
+                                    ${!w.postCSection ? "✓ " : ""}${isEn ? "No, regular training" : "لا، تمرين عادي حسب هدفي"}
+                                </button>
+                                <button type="button" onclick="IronApp.setWizardField('postCSection', true)"
+                                    class="p-3 rounded-xl border text-xs font-black text-start transition ${w.postCSection ? 'bg-rose-500/20 border-rose-400 text-white shadow-md shadow-rose-500/20' : 'bg-slate-950/75 border-slate-800 text-gray-300'}">
+                                    ${w.postCSection ? "✓ " : ""}${isEn ? "Yes, enable Post-C-Section section" : "نعم، أحتاج قسم ما بعد الولادة القيصرية"}
+                                </button>
+                            </div>
+                        </div>
+                    ` : ""}
+
+                    <div class="text-[11px] text-gray-400 bg-slate-950/60 border border-slate-800 rounded-xl p-2.5">
+                        💡 ${isEn ? "Your Home & Post-C-Section sections in the app appear based only on this choice." : "يعتمد ظهور قسم التمارين المنزلية وقسم ما بعد القيصرية في التطبيق على اختيارك هنا."}
+                    </div>
+
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Next" : "التالي"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 10) {
+            bodyHtml = `
+                <div class="space-y-4">
+                    <h3 class="text-base sm:text-lg font-black text-white">${isEn ? "What foods do you prefer?" : "ما هي الأطعمة التي تفضلها؟"}</h3>
+                    <div class="grid grid-cols-2 gap-2 max-h-[340px] overflow-y-auto wizard-wheel-scroll pr-0.5">
+                        ${this.WIZARD_LIKED_FOODS.map(f => {
+                            const active = Array.isArray(w.preferredFoods) && w.preferredFoods.includes(f.key);
+                            return `
+                                <button type="button" onclick="IronApp.toggleWizardArrayItem('preferredFoods', '${f.key}')"
+                                    class="py-2.5 px-3 rounded-2xl border text-xs font-bold text-center transition ${active ? 'wizard-pill-active' : 'bg-slate-950/75 border-slate-800 text-gray-300 hover:border-slate-700'}">
+                                    ${active ? "✓ " : ""}${isEn ? f.en : f.ar}
+                                </button>
+                            `;
+                        }).join("")}
+                    </div>
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Next" : "التالي"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 11) {
+            bodyHtml = `
+                <div class="space-y-4">
+                    <h3 class="text-base sm:text-lg font-black text-white">${isEn ? "What foods do you dislike?" : "ما هي الأطعمة التي لا تفضلها؟"}</h3>
+                    <div class="grid grid-cols-2 gap-2 max-h-[340px] overflow-y-auto wizard-wheel-scroll pr-0.5">
+                        ${this.WIZARD_DISLIKED_FOODS.map(f => {
+                            const active = Array.isArray(w.dislikedFoods) && w.dislikedFoods.includes(f.key);
+                            return `
+                                <button type="button" onclick="IronApp.toggleWizardArrayItem('dislikedFoods', '${f.key}')"
+                                    class="py-2.5 px-3 rounded-2xl border text-xs font-bold text-center transition ${active ? 'bg-rose-500/15 border-rose-400 text-white' : 'bg-slate-950/75 border-slate-800 text-gray-300 hover:border-slate-700'}">
+                                    ${active ? "✕ " : ""}${isEn ? f.en : f.ar}
+                                </button>
+                            `;
+                        }).join("")}
+                    </div>
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Next" : "التالي"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 12) {
+            const plan = this.computeWizardCalAndProgram();
+            const dialOpts = [
+                { v: "+966", t: "🇸🇦 +966" },
+                { v: "+20", t: "🇪🇬 +20" },
+                { v: "+971", t: "🇦🇪 +971" },
+                { v: "+965", t: "🇰🇼 +965" },
+                { v: "+974", t: "🇶🇦 +974" },
+                { v: "+973", t: "🇧🇭 +973" },
+                { v: "+968", t: "🇴🇲 +968" },
+                { v: "+962", t: "🇯🇴 +962" },
+                { v: "custom", t: "🌍 +" }
+            ];
+            const progDisp = typeof IronI18n !== "undefined" && IronI18n.trProgram ? IronI18n.trProgram(plan.program) : plan.program;
+            bodyHtml = `
+                <div class="space-y-3.5">
+                    <h3 class="text-base sm:text-lg font-black text-white">${isEn ? "Create Your Account & Review Plan" : "إنشاء بيانات حسابك وحفظ خطتك"}</h3>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300 mb-1">${isEn ? "Full Name *" : "الاسم بالكامل *"}</label>
+                        <input type="text" id="wizardName" value="${String(w.name || "").replace(/"/g, "&quot;")}"
+                            oninput="IronApp.signupWizard.name = this.value"
+                            placeholder="${isEn ? "e.g., Mohamed El-Sayed" : "مثال: محمد السيد"}"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300 mb-1">${isEn ? "Mobile Number (with country code) *" : "رقم الجوال (بكود الدولة) *"}</label>
+                        <div class="flex gap-1.5" dir="ltr">
+                            <select id="wizardCountryCode" onchange="IronApp.setWizardField('countryCode', this.value, false)"
+                                class="w-[105px] bg-slate-950 border border-slate-700 rounded-xl px-2 py-2.5 text-xs text-emerald-400 font-black outline-none">
+                                ${dialOpts.map(o => `<option value="${o.v}" ${w.countryCode === o.v ? "selected" : ""}>${o.t}</option>`).join("")}
+                            </select>
+                            <input type="tel" id="wizardPhone" value="${String(w.phone || "").replace(/"/g, "&quot;")}"
+                                ${this.signupState.provider === "phone" ? "readonly" : ""}
+                                oninput="IronApp.signupWizard.phone = this.value"
+                                dir="ltr" placeholder="05xxxxxxxx / 01xxxxxxxx"
+                                class="flex-1 min-w-0 bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                    ${!this.signupState.otpToken ? `
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-300 mb-1">${isEn ? "Password (min 4 chars) *" : "الرقم السري لحسابك *"}</label>
+                            <input type="password" id="wizardPassword" value="${String(w.password || "").replace(/"/g, "&quot;")}"
+                                oninput="IronApp.signupWizard.password = this.value"
+                                placeholder="••••••••"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold outline-none focus:border-emerald-500">
+                        </div>
+                    ` : ""}
+
+                    <div class="bg-slate-950/85 border border-emerald-500/30 rounded-2xl p-3 space-y-1.5 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 font-bold">${isEn ? "Calculated Daily Target:" : "السعرات المحسوبة لهدفك:"}</span>
+                            <strong id="wizardCalPreview" class="text-emerald-400 font-black font-mono text-sm">${plan.calories} kcal</strong>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 font-bold">${isEn ? "Tailored Program:" : "البرنامج المخصص لك:"}</span>
+                            <strong class="text-cyan-300 font-black text-[11px]">${progDisp}</strong>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        ${isEn ? "Review Plan & Continue →" : "مراجعة خطتك والمتابعة للاشتراك ←"}
+                    </button>
+                </div>
+            `;
+        } else if (step === 13) {
+            const perks = isEn ? [
+                "Custom workout program tailored to your goal",
+                "Daily meal plan matching your preferences & calories",
+                "Direct 1-on-1 follow-up with the Coach",
+                "Weight, measurements & cardio progress tracking",
+                "Continuous analytics for your progress"
+            ] : [
+                "برنامج تدريبي مخصص لهدفك",
+                "جدول غذائي يناسب احتياجك وأكلاتك المفضلة",
+                "متابعة شخصية مع الكوتش",
+                "متابعة القياسات والوزن",
+                "تحليل مستمر لتقدمك"
+            ];
+            bodyHtml = `
+                <div class="text-center space-y-4 py-1">
+                    <div class="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 mx-auto flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/25">
+                        👑
+                    </div>
+                    <div class="space-y-1">
+                        <span class="inline-block px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-black">
+                            👑 ${isEn ? "Premium Access" : "ميزة مميزة"}
+                        </span>
+                        <h3 class="text-xl font-black text-white">${isEn ? "Ready to Start?" : "جاهز تبدأ؟"}</h3>
+                        <p class="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
+                            ${isEn ? "Subscribe now to unlock your tailored workout and nutrition plans with direct coaching." : "اشترك الآن واستلم خطتك التدريبية والغذائية المصممة خصيصاً لك، واستمتع بمتابعة شخصية وتحليل مستمر لتقدمك حتى تحقق هدفك."}
+                        </p>
+                    </div>
+                    <div class="bg-slate-950/75 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-start text-xs">
+                        ${perks.map(p => `
+                            <div class="flex items-center gap-2.5 font-bold text-gray-200">
+                                <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[11px] flex-shrink-0">✓</span>
+                                <span>${p}</span>
+                            </div>
+                        `).join("")}
+                    </div>
+                    <button type="button" onclick="IronApp.nextWizardStep()"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        👑 ${isEn ? "Subscribe Now" : "اشترك الآن"}
+                    </button>
+                    <button type="button" id="wizardLaterBtn" onclick="IronApp.completeWizardAccount({ openPayment: false })"
+                        class="w-full py-2 text-xs font-bold text-gray-400 hover:text-white transition">
+                        ${isEn ? "Maybe later (Save account & pay later)" : "ربما لاحقاً"}
+                    </button>
+                </div>
+            `;
+        } else {
+            const tiers = [
+                { m: 0, titleAr: "تجربة يوم واحد ⚡", subAr: "يوم تجريبي كامل للتطبيق", titleEn: "1-Day Trial ⚡", subEn: "Full 1-day trial access", badge: "" },
+                { m: 1, titleAr: "باقة شهر واحد", subAr: "خطة متكاملة + متابعة أسبوعية لمدة 30 يوم", titleEn: "1-Month Plan", subEn: "30 days full workouts & diet coaching", badge: "" },
+                { m: 2, titleAr: "باقة شهرين", subAr: "60 يوماً • وفر 39 ر.س", titleEn: "2-Month Plan", subEn: "60 days • Save 39 SAR", badge: isEn ? "Save" : "وفر 39" },
+                { m: 3, titleAr: "باقة 3 شهور 🔥", subAr: "الخيار الأفضل للنتائج الواضحة لمدة 90 يوم • وفر 118", titleEn: "3-Month Plan 🔥", subEn: "90 days best value • Save 118 SAR", badge: isEn ? "Best Value" : "وفر 118" }
+            ];
+            bodyHtml = `
+                <div class="space-y-4">
+                    <h3 class="text-base sm:text-lg font-black text-white">${isEn ? "Choose Your Best Plan" : "اختر الباقة المناسبة معك"}</h3>
+                    <div class="space-y-2.5">
+                        ${tiers.map(tr => {
+                            const info = this.getSubscriptionTierInfo(tr.m);
+                            const sel = Number(w.selectedPackageMonths) === tr.m;
+                            return `
+                                <button type="button" onclick="IronApp.setWizardField('selectedPackageMonths', ${tr.m})"
+                                    class="w-full p-3.5 rounded-2xl border text-start transition flex items-center justify-between gap-3 ${sel ? 'wizard-pill-active' : 'bg-slate-950/75 border-slate-800 text-gray-200 hover:border-slate-700'}">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="font-black text-sm">${isEn ? tr.titleEn : tr.titleAr}</span>
+                                            ${tr.badge ? `<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black">${tr.badge}</span>` : ""}
+                                        </div>
+                                        <div class="text-[11px] opacity-80 mt-0.5">${isEn ? tr.subEn : tr.subAr}</div>
+                                    </div>
+                                    <div class="text-end flex-shrink-0">
+                                        <div class="text-base font-black text-emerald-400">${info.price} <span class="text-[11px]">${info.currencyTxt}</span></div>
+                                    </div>
+                                </button>
+                            `;
+                        }).join("")}
+                    </div>
+                    <button type="button" id="wizardPayNowBtn" onclick="IronApp.completeWizardAccount({ openPayment: true })"
+                        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+                        💳 ${isEn ? "Pay Now" : "ادفع الآن"}
+                    </button>
+                </div>
+            `;
+        }
+
+        container.innerHTML = `${headerHtml}${bodyHtml}`;
+    },
+
+    async handleCompleteClientSignup(e) {
+        if (e) e.preventDefault();
+        await this.completeWizardAccount({ openPayment: true });
     },
 
     initEventListeners() {

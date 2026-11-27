@@ -323,6 +323,7 @@ const IronAuth = {
             calories: targetCalories,
             macros,
             program: data.program || "PPL (Push Pull Legs)",
+            onboarding_profile: (data.onboardingProfile && typeof data.onboardingProfile === "object") ? data.onboardingProfile : {},
             history: [{ date: todayStr, weight, waist: null }]
         });
 
@@ -367,6 +368,10 @@ const IronAuth = {
         const username = (fields.username || existing.username).trim().toLowerCase();
         const phone = fields.phone !== undefined ? fields.phone : existing.phone;
         const coachNote = fields.coachNote !== undefined ? fields.coachNote.trim() : (existing.coachNote || "");
+        const existingObs = (existing.onboardingProfile && typeof existing.onboardingProfile === "object") ? existing.onboardingProfile : {};
+        const onboardingProfile = (fields.onboardingProfile && typeof fields.onboardingProfile === "object")
+            ? { ...existingObs, ...fields.onboardingProfile }
+            : existingObs;
 
         const proteinGrams = Math.round(weight * 2.0);
         const fatGrams = Math.round((calories * 0.25) / 9);
@@ -387,7 +392,8 @@ const IronAuth = {
             calories,
             macros,
             program,
-            coach_note: coachNote
+            coach_note: coachNote,
+            onboarding_profile: onboardingProfile
         };
 
         if (fields.daysLeft !== undefined && fields.daysLeft !== "") {

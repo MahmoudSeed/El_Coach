@@ -426,7 +426,11 @@ const IronI18n = {
             ex_home: "التمارين المنزلية",
             ex_csection: "ما بعد الولادة القيصرية",
             csection_safety_title: "🩺 تنبيه طبي مهم لتأهيل ما بعد الولادة القيصرية:",
-            csection_safety_desc: "ابدئي هذه التمارين فقط بعد مرور 6 إلى 8 أسابيع وموافقة طبيب النساء/الجراحة. توقفي فوراً إذا شعرتِ بألم في الجرح أو زيادة في النزيف أو لاحظتِ بروزاً في منتصف البطن (Doming)، وتجنبي تمارين البطن التقليدية (Crunches) في المراحل الأولى."
+            csection_safety_desc: "ابدئي هذه التمارين فقط بعد مرور 6 إلى 8 أسابيع وموافقة طبيب النساء/الجراحة. توقفي فوراً إذا شعرتِ بألم في الجرح أو زيادة في النزيف أو لاحظتِ بروزاً في منتصف البطن (Doming)، وتجنبي تمارين البطن التقليدية (Crunches) في المراحل الأولى.",
+            signup_quick_link_title: "⚡ الربط السريع بحساب جاهز أو OTP",
+            wizard_back_btn: "العودة للخطوات ←",
+            coach_allow_home: "🏠 تفعيل قسم التمارين المنزلية",
+            coach_allow_csection: "🤱 تفعيل قسم ما بعد القيصرية"
         },
         en: {
             brand_name: "IronCoach",
@@ -840,7 +844,11 @@ const IronI18n = {
             ex_home: "Home Workouts",
             ex_csection: "Post-C-Section Rehab",
             csection_safety_title: "🩺 Important Post-C-Section Medical Safety Note:",
-            csection_safety_desc: "Begin only after 6–8+ weeks and official OB/GYN medical clearance. Stop immediately if you feel incision pain, heavier bleeding, or notice abdominal midline doming/coning, and avoid traditional crunches or breath-holding early on."
+            csection_safety_desc: "Begin only after 6–8+ weeks and official OB/GYN medical clearance. Stop immediately if you feel incision pain, heavier bleeding, or notice abdominal midline doming/coning, and avoid traditional crunches or breath-holding early on.",
+            signup_quick_link_title: "⚡ Quick Connect via OAuth or OTP",
+            wizard_back_btn: "← Back to Steps",
+            coach_allow_home: "🏠 Enable Home Workouts Section",
+            coach_allow_csection: "🤱 Enable Post-C-Section Rehab Section"
         }
     },
 

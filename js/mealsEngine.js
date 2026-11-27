@@ -478,17 +478,56 @@ const IronMealsEngine = {
         return pool[Math.floor(Math.random() * pool.length)];
     },
 
+    // فلترة القوالب وفق الأطعمة المفضلة والمستبعدة من استبيان التسجيل
+    pickBlueprintByPreferences(arr, preferences = null, excludeCode = null) {
+        let pool = excludeCode ? arr.filter(x => x.code !== excludeCode) : [...arr];
+        if (pool.length === 0) pool = [...arr];
+        if (preferences && typeof preferences === "object") {
+            const disliked = Array.isArray(preferences.dislikedFoods) ? preferences.dislikedFoods.filter(Boolean) : [];
+            const preferred = Array.isArray(preferences.preferredFoods) ? preferences.preferredFoods.filter(Boolean) : [];
+            const bpText = (bp) => [
+                bp.nameAr || "", bp.nameEn || "",
+                bp.protein?.nameAr || "", bp.carb?.nameAr || "",
+                bp.fat?.nameAr || "", bp.veg?.nameAr || ""
+            ].join(" ").toLowerCase();
+
+            if (disliked.length > 0) {
+                const safePool = pool.filter(bp => {
+                    const txt = bpText(bp);
+                    return !disliked.some(d => {
+                        const tok = String(d).trim().toLowerCase();
+                        return tok && txt.includes(tok);
+                    });
+                });
+                if (safePool.length > 0) pool = safePool;
+            }
+            if (preferred.length > 0) {
+                const favPool = pool.filter(bp => {
+                    const txt = bpText(bp);
+                    return preferred.some(p => {
+                        const tok = String(p).trim().toLowerCase().replace(/^صدور\s+/, "");
+                        return tok && txt.includes(tok);
+                    });
+                });
+                if (favPool.length > 0 && Math.random() < 0.8) {
+                    pool = favPool;
+                }
+            }
+        }
+        return pool[Math.floor(Math.random() * pool.length)];
+    },
+
     // خوارزمية "مولد الدايت الذكي" لليوم الكامل — تصمم وجبات مخصصة مطابقة تماماً لسعرات الحاسبة
-    generateFullDayPlan(targetCalories) {
+    generateFullDayPlan(targetCalories, preferences = null) {
         targetCalories = Math.max(1000, Math.round(parseFloat(targetCalories) || 2000));
 
         const targetB = Math.round(targetCalories * 0.25);
         const targetL = Math.round(targetCalories * 0.37);
         const targetD = Math.round(targetCalories * 0.24);
 
-        const bBp = this.pickRandom(this.CHEF_BLUEPRINTS.breakfast);
-        const lBp = this.pickRandom(this.CHEF_BLUEPRINTS.lunch);
-        const dBp = this.pickRandom(this.CHEF_BLUEPRINTS.dinner);
+        const bBp = this.pickBlueprintByPreferences(this.CHEF_BLUEPRINTS.breakfast, preferences);
+        const lBp = this.pickBlueprintByPreferences(this.CHEF_BLUEPRINTS.lunch, preferences);
+        const dBp = this.pickBlueprintByPreferences(this.CHEF_BLUEPRINTS.dinner, preferences);
 
         const breakfast = this.composeChefMeal(bBp, targetB, "إفطار");
         const lunch = this.composeChefMeal(lBp, targetL, "غداء");
@@ -500,7 +539,16 @@ const IronMealsEngine = {
         // تجربة قوالب السناك واختيار الأدق تطابقاً للوصول لأقرب رقم للسعرات المستهدفة
         let bestSnack = null;
         let smallestDayDiff = Infinity;
-        const shuffledSnacks = [...this.CHEF_BLUEPRINTS.snack].sort(() => Math.random() - 0.5);
+        const disliked = Array.isArray(preferences?.dislikedFoods) ? preferences.dislikedFoods : [];
+        let snackPool = [...this.CHEF_BLUEPRINTS.snack];
+        if (disliked.length > 0) {
+            const safeSnacks = snackPool.filter(bp => {
+                const txt = `${bp.nameAr || ""} ${bp.protein?.nameAr || ""} ${bp.carb?.nameAr || ""} ${bp.fat?.nameAr || ""}`.toLowerCase();
+                return !disliked.some(d => txt.includes(String(d).trim().toLowerCase()));
+            });
+            if (safeSnacks.length > 0) snackPool = safeSnacks;
+        }
+        const shuffledSnacks = snackPool.sort(() => Math.random() - 0.5);
         for (const sBp of shuffledSnacks) {
             const candidate = this.composeChefMeal(sBp, snackTarget, "سناكس");
             const diff = Math.abs((usedSoFar + candidate.calories) - targetCalories);

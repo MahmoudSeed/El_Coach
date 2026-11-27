@@ -234,6 +234,21 @@ const IronCoachPanel = {
                                             </div>
                                         </div>
                                         ${(() => {
+                                            const obs = (t.onboardingProfile && typeof t.onboardingProfile === 'object') ? t.onboardingProfile : null;
+                                            if (!obs || Object.keys(obs).length === 0) return '';
+                                            const tags = [];
+                                            if (obs.trainingLocation === 'home') tags.push(isEn ? '🏠 Home' : '🏠 منزلي');
+                                            else if (obs.trainingLocation === 'gym') tags.push(isEn ? '🏋️ Gym' : '🏋️ نادي');
+                                            if (t.gender === 'female' && obs.postCSection) tags.push(isEn ? '🤱 Post-C-Section' : '🤱 بعد القيصرية');
+                                            if (obs.fitnessLevel) tags.push(obs.fitnessLevel);
+                                            if (obs.targetWeight) tags.push(`${isEn ? 'Goal Wt' : 'الهدف'}: ${obs.targetWeight}kg`);
+                                            if (Array.isArray(obs.injuries) && obs.injuries.length && !obs.injuries.includes('لا يوجد إصابات')) {
+                                                tags.push(`⚠️ ${obs.injuries.slice(0, 2).join(', ')}`);
+                                            }
+                                            if (tags.length === 0) return '';
+                                            return `<div class="mt-2 flex flex-wrap gap-1">${tags.map(tg => `<span class="px-2 py-0.5 rounded-md bg-slate-950/70 border border-slate-800 text-[10px] font-bold text-gray-300">${tg}</span>`).join('')}</div>`;
+                                        })()}
+                                        ${(() => {
                                             const cTimeline = (typeof IronLiveGym !== 'undefined' && IronLiveGym.getTraineeCardioTimeline) ? IronLiveGym.getTraineeCardioTimeline(t.id, 3) : [];
                                             if (cTimeline.length === 0) {
                                                 return `<div class="mt-2 px-2.5 py-1.5 rounded-xl bg-slate-950/50 border border-slate-800/80 text-[11px] text-gray-400 flex items-center justify-between gap-2"><span>🏃 ${isEn ? 'Cardio Evaluation:' : 'تقييم الكارديو:'}</span><span class="font-bold text-gray-500">${isEn ? 'No cardio logged yet' : 'لم يُسجل بعد'}</span></div>`;
@@ -476,6 +491,31 @@ const IronCoachPanel = {
         setVal("editTProgram", t.program || "PPL (Push Pull Legs)");
         setVal("editTCoachNote", t.coachNote || "");
 
+        const obs = (t.onboardingProfile && typeof t.onboardingProfile === "object") ? t.onboardingProfile : {};
+        const homeChk = document.getElementById("editTAllowHome");
+        const csChk = document.getElementById("editTAllowCSection");
+        const resolvedId = (typeof IronApp !== "undefined" && IronApp.resolveProgramIdFromName) ? IronApp.resolveProgramIdFromName(t.program || "") : "";
+        if (homeChk) homeChk.checked = obs.trainingLocation === "home" || resolvedId === "prog_home";
+        if (csChk) csChk.checked = (t.gender === "female" && Boolean(obs.postCSection)) || resolvedId === "prog_csection";
+
+        const obsBox = document.getElementById("editTObsSummary");
+        if (obsBox) {
+            const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+            const parts = [];
+            if (obs.fitnessLevel) parts.push(`${isEn ? "Level" : "المستوى"}: ${obs.fitnessLevel}`);
+            if (obs.targetWeight) parts.push(`${isEn ? "Target Weight" : "الوزن المستهدف"}: ${obs.targetWeight} ${isEn ? "kg" : "كجم"}`);
+            if (Array.isArray(obs.injuries) && obs.injuries.length) parts.push(`${isEn ? "Health/Injuries" : "الحالة الصحية"}: ${obs.injuries.join("، ")}`);
+            if (Array.isArray(obs.preferredFoods) && obs.preferredFoods.length) parts.push(`${isEn ? "Likes" : "يفضل"}: ${obs.preferredFoods.join("، ")}`);
+            if (Array.isArray(obs.dislikedFoods) && obs.dislikedFoods.length) parts.push(`${isEn ? "Dislikes" : "لا يفضل"}: ${obs.dislikedFoods.join("، ")}`);
+            if (parts.length > 0) {
+                obsBox.innerHTML = `<strong class="text-emerald-400 block">${isEn ? "📋 Client Onboarding Answers:" : "📋 إجابات التسجيل الأولي للعميل:"}</strong>` + parts.map(p => `<div>• ${p}</div>`).join("");
+                obsBox.classList.remove("hidden");
+            } else {
+                obsBox.innerHTML = "";
+                obsBox.classList.add("hidden");
+            }
+        }
+
         openModal("editTraineeModal");
     },
 
@@ -488,6 +528,9 @@ const IronCoachPanel = {
         if (submitBtn) submitBtn.disabled = true;
 
         try {
+            const gender = document.getElementById("editTGender")?.value;
+            const allowHome = Boolean(document.getElementById("editTAllowHome")?.checked);
+            const allowCSection = gender === "female" && Boolean(document.getElementById("editTAllowCSection")?.checked);
             const updated = await IronAuth.editTrainee(id, {
                 name: document.getElementById("editTName")?.value.trim(),
                 phone: document.getElementById("editTPhone")?.value.trim(),
@@ -496,12 +539,16 @@ const IronCoachPanel = {
                 weight: document.getElementById("editTWeight")?.value,
                 height: document.getElementById("editTHeight")?.value,
                 age: document.getElementById("editTAge")?.value,
-                gender: document.getElementById("editTGender")?.value,
+                gender,
                 goal: document.getElementById("editTGoal")?.value,
                 calories: document.getElementById("editTCalories")?.value,
                 daysLeft: document.getElementById("editTDaysLeft")?.value,
                 program: document.getElementById("editTProgram")?.value,
-                coachNote: document.getElementById("editTCoachNote")?.value
+                coachNote: document.getElementById("editTCoachNote")?.value,
+                onboardingProfile: {
+                    trainingLocation: allowHome ? "home" : "gym",
+                    postCSection: allowCSection
+                }
             });
 
             if (updated) {
