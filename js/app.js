@@ -63,6 +63,18 @@ const IronApp = {
         await loadAppConfigFromCloud();
         const cloudState = await IronAuth.initFromCloud();
 
+        // التحقق من العودة من بوابة Tap Payments وتحديث حالة الاشتراك
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has("tap_id")) {
+            const cleanUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+            if (cloudState?.user?.status === "active") {
+                showToast(this.t("tap_return_activated"), "success");
+            } else {
+                showToast(this.t("tap_return_checking"), "success");
+            }
+        }
+
         if (cloudState?.needsOnboarding && cloudState.oauthUser) {
             const oauthUser = cloudState.oauthUser;
             const prov = oauthUser.app_metadata?.provider === "apple" ? "icloud" : (oauthUser.app_metadata?.provider || "google");
@@ -3023,6 +3035,34 @@ const IronApp = {
         if (activeBox) activeBox.classList.add("hidden");
 
         openModal("renewModal");
+    },
+
+    async startTapInstantPayment(btnEl = null) {
+        const isEn = typeof IronI18n !== "undefined" && IronI18n.isEn();
+        if (typeof IronSupabase === "undefined" || !IronSupabase.isAvailable()) {
+            showToast(isEn ? "Cloud service is unavailable" : "خدمة السحابة غير متاحة حالياً", "error");
+            return;
+        }
+        const months = this.selectedSubscriptionMonths !== undefined ? this.selectedSubscriptionMonths : 1;
+        const returnUrl = `${window.location.origin}${window.location.pathname}`;
+        if (btnEl) btnEl.disabled = true;
+        try {
+            const res = await IronSupabase.callFunction("create-tap-charge", {
+                tierMonths: months,
+                returnUrl
+            });
+            if (res?.ok && res.data?.checkoutUrl) {
+                window.location.href = res.data.checkoutUrl;
+                return;
+            }
+            if (res?.error === "TAP_NOT_CONFIGURED") {
+                showToast(this.t("tap_not_configured"), "error");
+            } else {
+                showToast(res?.data?.message || res?.error || (isEn ? "Failed to start instant payment" : "تعذر بدء الدفع الإلكتروني الفوري"), "error");
+            }
+        } finally {
+            if (btnEl) btnEl.disabled = false;
+        }
     },
 
     getPaymentMethodDetails(method) {

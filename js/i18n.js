@@ -430,7 +430,12 @@ const IronI18n = {
             signup_quick_link_title: "⚡ الربط السريع بحساب جاهز أو OTP",
             wizard_back_btn: "العودة للخطوات ←",
             coach_allow_home: "🏠 تفعيل قسم التمارين المنزلية",
-            coach_allow_csection: "🤱 تفعيل قسم ما بعد القيصرية"
+            coach_allow_csection: "🤱 تفعيل قسم ما بعد القيصرية",
+            tap_instant_title: "⚡ التفعيل الفوري التلقائي (بدون انتظار)",
+            tap_instant_btn: "💳 الدفع الإلكتروني الفوري وتفعيل الاشتراك تلقائياً ⚡",
+            tap_not_configured: "بوابة Tap بانتظار إضافة TAP_SECRET_KEY في إعدادات Supabase — يمكنك التحويل اليدوي ورفع الإيصال أدناه مؤقتاً.",
+            tap_return_activated: "تم الدفع وتفعيل اشتراكك فوراً! مرحباً بك 🔥",
+            tap_return_checking: "تم استلام عودتك من بوابة الدفع — جاري تأكيد التفعيل خلال ثوانٍ..."
         },
         en: {
             brand_name: "IronCoach",
@@ -848,7 +853,12 @@ const IronI18n = {
             signup_quick_link_title: "⚡ Quick Connect via OAuth or OTP",
             wizard_back_btn: "← Back to Steps",
             coach_allow_home: "🏠 Enable Home Workouts Section",
-            coach_allow_csection: "🤱 Enable Post-C-Section Rehab Section"
+            coach_allow_csection: "🤱 Enable Post-C-Section Rehab Section",
+            tap_instant_title: "⚡ Instant Auto-Activation (No Waiting)",
+            tap_instant_btn: "💳 Pay Online & Auto-Activate Instantly ⚡",
+            tap_not_configured: "Tap Payments is waiting for TAP_SECRET_KEY in Supabase Secrets — you can use manual transfer & receipt below for now.",
+            tap_return_activated: "Payment confirmed and subscription activated instantly! 🔥",
+            tap_return_checking: "Returned from payment gateway — confirming activation in a few seconds..."
         }
     },
 

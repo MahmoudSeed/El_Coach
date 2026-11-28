@@ -427,6 +427,18 @@
                         <strong class="text-emerald-400 font-black text-lg" id="expiredPriceDisplay">139 ر.س</strong>
                     </div>
 
+                    <!-- الدفع الإلكتروني الفوري عبر Tap (Apple Pay / مدى / تابي / تمارا) -->
+                    <div class="bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-cyan-500/15 border border-emerald-500/40 rounded-2xl p-3.5 space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-black text-emerald-300" data-i18n="tap_instant_title">⚡ التفعيل الفوري التلقائي (بدون انتظار)</span>
+                            <span class="text-[10px] font-bold text-gray-300">Apple Pay • مدى • Tabby • Tamara</span>
+                        </div>
+                        <button type="button" onclick="IronApp.startTapInstantPayment(this)"
+                            class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-95 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/25 transition" data-i18n="tap_instant_btn">
+                            💳 الدفع الإلكتروني الفوري وتفعيل الاشتراك تلقائياً ⚡
+                        </button>
+                    </div>
+
                     <!-- وسائل التحويل الـ 5 المعتمدة مرتبة بشكل منظم وسلس -->
                     <div class="space-y-2 text-xs pt-1">
                         <!-- 1. الحساب البنكي آيبان (مصرف الراجحي) -->
@@ -1393,6 +1405,18 @@
                 <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between">
                     <span class="text-xs text-gray-300 font-bold" id="modalSelectedTierText" data-i18n="modal_renew_price">قيمة الباقة المختارة:</span>
                     <div class="text-xl font-black text-emerald-400" id="renewModalPrice">139 ر.س</div>
+                </div>
+
+                <!-- الدفع الإلكتروني الفوري عبر Tap (Apple Pay / مدى / تابي / تمارا) -->
+                <div class="bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-cyan-500/15 border border-emerald-500/40 rounded-2xl p-3.5 space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-black text-emerald-300" data-i18n="tap_instant_title">⚡ التفعيل الفوري التلقائي (بدون انتظار)</span>
+                        <span class="text-[10px] font-bold text-gray-300">Apple Pay • مدى • Tabby • Tamara</span>
+                    </div>
+                    <button type="button" onclick="IronApp.startTapInstantPayment(this)"
+                        class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-95 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/25 transition" data-i18n="tap_instant_btn">
+                        💳 الدفع الإلكتروني الفوري وتفعيل الاشتراك تلقائياً ⚡
+                    </button>
                 </div>
 
                 <!-- شريط توجيه التحويل الفوري النشط -->
